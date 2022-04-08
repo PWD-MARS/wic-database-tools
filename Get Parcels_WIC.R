@@ -1,4 +1,5 @@
-# Connect to GISDATA DB Get the parcels layer from GISDATA 
+# Connect to GISDATA DB Get the parcels layer from GISDATA
+#dummy edit from Taylor
 
     GISDB <- dbConnect(odbc(),
                     Driver = "ODBC Driver 17 for SQL Server",

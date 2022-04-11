@@ -4,7 +4,7 @@
 
     GISDB <- dbConnect(odbc(),
                     Driver = "ODBC Driver 17 for SQL Server",
-                    Server = "pwdgis4",
+                    Server = "PWDGISSQL",
                     Database = "GISDATA",
                     uid = "gisread",
                     pwd= "gisread")
@@ -127,5 +127,6 @@
     FACID_ADD_XY <- union_all (FACID_ADD, WOID_Based_XY)
     FACID_ADD_XY <- unique(FACID_ADD_XY)
 # Place holder for writing the final table in Mars database 
-  
+    con <- dbConnect(odbc(), dsn = "mars_data")
+    dbWriteTable (con, SQL("fieldwork.gis_parcels"),FACID_ADD_XY)
    

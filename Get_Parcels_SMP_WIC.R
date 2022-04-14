@@ -81,6 +81,7 @@
       PARCELS_SPATIAL$FACILITYID<-gsub("}","",as.character(PARCELS_SPATIAL$FACILITYID), fixed=TRUE)
       Parcels_WIC_Filterd <- PARCELS_SPATIAL [PARCELS_SPATIAL$FACILITYID %in% WIC_ID, ]
       rm(PARCELS_SPATIAL)
+      Parcels_filtered_df <-as.data.frame(Parcels_WIC_Filterd)
       
       
 #set 25 ft buffer around the SMPs
@@ -139,5 +140,30 @@
       trench_inters <- st_intersects(trench_buffer , Parcels_WIC_Filterd)
       
       wetland_inters <- st_intersects(wetland_buffer,Parcels_WIC_Filterd)
+    
+      Inters_Obj <- Basin_inters
+      GSI <- as.data.frame(basin)
+      Buffer <- 25
+      output <- NULL
       
+      df <- NULL
+      for(i in 1:length(Inters_Obj)){
+        
+       
+       temp <- Inters_Obj[[i]]
+       
+       if (is.null(temp) != TRUE) {
+       FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
+       SMPID <- GSI [i,"SMP_ID"]
+       SMPID_Vec <- rep(SMPID, length(temp))
+       Buffer_Vec <-  rep(Buffer, length(temp))
+       
+       df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec)
+       output <- rbind(output, df ) }
+       names(output) <- c("SMP_ID", "FACILITYID","Buffer")
+       
+       
+      }
+      
+      output
       

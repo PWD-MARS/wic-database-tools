@@ -1,4 +1,4 @@
-#Written by: Farshad Ebrahimi
+#Written by: Farshad Ebrahimi_4/18/2022
 # Connect to MARS DB and get the SMP IDs and Facility IDs from external.assets
 
       con <- dbConnect(odbc(), dsn = "mars_data")

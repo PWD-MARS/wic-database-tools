@@ -149,7 +149,10 @@
       df <- NULL
       for(i in 1:length(Inters_Obj)){
         
-       
+# create a conditional loop, that loops through each element of the list column of intersect (sparse matrix) , gets the indeces of the 
+# WIC_parcels, and populates a data frame, consisting the SMP_ID, FACILITYID of the wic -parcel, and he size of buffer
+        
+        
        temp <- Inters_Obj[[i]]
        
        if (is.null(temp) != TRUE) {

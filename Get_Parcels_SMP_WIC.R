@@ -140,6 +140,11 @@
       trench_inters <- st_intersects(trench_buffer , Parcels_WIC_Filterd)
       
       wetland_inters <- st_intersects(wetland_buffer,Parcels_WIC_Filterd)
+      
+      
+# create a conditional loop, that loops through each element of the list column of intersect (sparse matrix) , gets the indeces of the 
+# WIC_parcels, and populates a data frame, consisting the SMP_ID, FACILITYID of the wic -parcel, and the size of buffer
+      
     
       Inters_Obj <- Basin_inters
       GSI <- as.data.frame(basin)
@@ -147,26 +152,22 @@
       output <- NULL
       
       df <- NULL
-      for(i in 1:length(Inters_Obj)){
+          for(i in 1:length(Inters_Obj)){
         
-# create a conditional loop, that loops through each element of the list column of intersect (sparse matrix) , gets the indeces of the 
-# WIC_parcels, and populates a data frame, consisting the SMP_ID, FACILITYID of the wic -parcel, and he size of buffer
-        
-        
-       temp <- Inters_Obj[[i]]
+             temp <- Inters_Obj[[i]]
        
-       if (is.null(temp) != TRUE) {
-       FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
-       SMPID <- GSI [i,"SMP_ID"]
-       SMPID_Vec <- rep(SMPID, length(temp))
-       Buffer_Vec <-  rep(Buffer, length(temp))
-       
-       df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec)
-       output <- rbind(output, df ) }
-       names(output) <- c("SMP_ID", "FACILITYID","Buffer")
+                if (is.null(temp) != TRUE) {
+                 FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
+                 SMPID <- GSI [i,"SMP_ID"]
+                 SMPID_Vec <- rep(SMPID, length(temp))
+                 Buffer_Vec <-  rep(Buffer, length(temp))
+                 
+                 df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec)
+                 output <- rbind(output, df ) }
+                 names(output) <- c("SMP_ID", "FACILITYID","Buffer")
        
        
-      }
+                                           }
       
       output
       

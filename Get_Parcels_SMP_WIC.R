@@ -84,70 +84,59 @@
       Parcels_filtered_df <-as.data.frame(Parcels_WIC_Filterd)
       
       
+      
+      
+      
+      
+# Drop columns except the SMP_ID  and Merge all SMPs
+      
+      basin <- basin %>% select(SMP_ID)
+      
+      blueroof<- blueroof %>% select(SMP_ID)
+      
+      bumpout <- bumpout %>% select(SMP_ID)
+      
+      cistern <- cistern %>% select(SMP_ID)
+      
+      drainagewell <- drainagewell %>% select(SMP_ID)
+      
+      greenroof<- greenroof %>% select(SMP_ID)
+      
+      permeablepavement <- permeablepavement %>% select(SMP_ID)
+      
+      planter<- planter %>% select(SMP_ID)
+      
+      raingarden <- raingarden %>% select(SMP_ID)
+      
+      swale <- swale %>% select(SMP_ID)
+      
+      treetrench <- treetrench %>% select(SMP_ID)
+      
+      trench<- trench %>% select(SMP_ID)
+      
+      wetland <- wetland %>% select(SMP_ID)
+      
+      SMP <- bind_rows(basin, blueroof, bumpout, cistern, drainagewell, greenroof, permeablepavement, planter, raingarden, swale, treetrench, trench, wetland)
+        
+        
+        
 #set 25 ft buffer around the SMPs
       
       
+      SMP_buffer <- st_buffer(SMP, 25)
       
-      basin_buffer <- st_buffer(basin, 25)
-      
-      blueroof_buffer <- st_buffer(blueroof, 25)
-      
-      bumpout_buffer <- st_buffer(bumpout, 25)
-      
-      cistern_buffer <- st_buffer(cistern, 25)
-      
-      drainagewell_buffer <- st_buffer(drainagewell, 25)
-      
-      greenroof_buffer <- st_buffer(greenroof, 25)
-      
-      permeablepavement_buffer <- st_buffer(permeablepavement, 25)
-      
-      planter_buffer <- st_buffer(planter, 25)
-      
-      raingarden_buffer <- st_buffer(raingarden, 25)
-      
-      swale_buffer <- st_buffer(swale, 25)
-      
-      treetrench_buffer <- st_buffer(treetrench, 25)
-      
-      trench_buffer <- st_buffer(trench, 25)
-      
-      wetland_buffer <- st_buffer(wetland, 25)
+    
 #INTERSECT the WIC with buffered GSIs
       
-      Basin_inters <- st_intersects(basin_buffer, Parcels_WIC_Filterd) 
-      
-      blueroof_inters <- st_intersects(blueroof_buffer,Parcels_WIC_Filterd) 
-      
-      bumpout_inters<- st_intersects(bumpout_buffer,Parcels_WIC_Filterd)
-      
-      cistern_inters <- st_intersects(cistern_buffer,Parcels_WIC_Filterd) 
-      
-      drainagewell_inters <-st_intersects(drainagewell_buffer, Parcels_WIC_Filterd)
-      
-      greenroof_inters <- st_intersects (greenroof_buffer, Parcels_WIC_Filterd) 
-      
-      permeablepavement_inters <- st_intersects(permeablepavement_buffer,Parcels_WIC_Filterd) 
-      
-      planter_inters  <-  st_intersects(planter_buffer , Parcels_WIC_Filterd) 
-      
-      raingarden_inters <- st_intersects(raingarden_buffer, Parcels_WIC_Filterd) 
-      
-      swale_inters <-  st_intersects(swale_buffer , Parcels_WIC_Filterd)
-      
-      treetrench_inters <- st_intersects(treetrench_buffer , Parcels_WIC_Filterd) 
-      
-      trench_inters <- st_intersects(trench_buffer , Parcels_WIC_Filterd)
-      
-      wetland_inters <- st_intersects(wetland_buffer,Parcels_WIC_Filterd)
+      SMP_inters <- st_intersects(SMP_buffer, Parcels_WIC_Filterd)
       
       
 # create a conditional loop, that loops through each element of the list column of intersect (sparse matrix) , gets the indeces of the 
 # WIC_parcels, and populates a data frame, consisting the SMP_ID, FACILITYID of the wic -parcel, and the size of buffer
       
     
-      Inters_Obj <- Basin_inters
-      GSI <- as.data.frame(basin)
+      Inters_Obj <- SMP_inters
+      GSI <- as.data.frame(SMP)
       Buffer <- 25
       output <- NULL
       

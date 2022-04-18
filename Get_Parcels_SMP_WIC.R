@@ -123,19 +123,24 @@
 #set 25 ft buffer around the SMPs
       
       
-      SMP_buffer <- st_buffer(SMP, 25)
+      SMP_buffer_25 <- st_buffer(SMP, 25)
+      SMP_buffer_50 <- st_buffer(SMP, 50)
+      SMP_buffer_100 <- st_buffer(SMP, 100)
       
     
 #INTERSECT the WIC with buffered GSIs
       
-      SMP_inters <- st_intersects(SMP_buffer, Parcels_WIC_Filterd)
+      SMP_inters_25 <- st_intersects(SMP_buffer_25, Parcels_WIC_Filterd)
+      SMP_inters_50 <- st_intersects(SMP_buffer_50, Parcels_WIC_Filterd)
+      SMP_inters_100 <- st_intersects(SMP_buffer_100, Parcels_WIC_Filterd)
       
       
 # create a conditional loop, that loops through each element of the list column of intersect (sparse matrix) , gets the indeces of the 
 # WIC_parcels, and populates a data frame, consisting the SMP_ID, FACILITYID of the wic -parcel, and the size of buffer
       
     
-      Inters_Obj <- SMP_inters
+# buffer 25 ft
+      Inters_Obj <- SMP_inters_25
       GSI <- as.data.frame(SMP)
       Buffer <- 25
       output <- NULL
@@ -154,9 +159,67 @@
                  df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec)
                  output <- rbind(output, df ) }
                  names(output) <- c("SMP_ID", "FACILITYID","Buffer")
+                 output_25 <-output
        
        
                                            }
       
-      output
+      output_25
       
+      
+# buffer 50 ft 
+      
+      Inters_Obj <- SMP_inters_50
+      GSI <- as.data.frame(SMP)
+      Buffer <- 50
+      output <- NULL
+      
+      df <- NULL
+      for(i in 1:length(Inters_Obj)){
+        
+        temp <- Inters_Obj[[i]]
+        
+        if (is.null(temp) != TRUE) {
+          FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
+          SMPID <- GSI [i,"SMP_ID"]
+          SMPID_Vec <- rep(SMPID, length(temp))
+          Buffer_Vec <-  rep(Buffer, length(temp))
+          
+          df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec)
+          output <- rbind(output, df ) }
+        names(output) <- c("SMP_ID", "FACILITYID","Buffer")
+        output_50 <-output
+        
+        
+      }
+      
+      output_50
+      
+      
+# buffer 100 ft 
+      
+      Inters_Obj <- SMP_inters_100
+      GSI <- as.data.frame(SMP)
+      Buffer <- 100
+      output <- NULL
+      
+      df <- NULL
+      for(i in 1:length(Inters_Obj)){
+        
+        temp <- Inters_Obj[[i]]
+        
+        if (is.null(temp) != TRUE) {
+          FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
+          SMPID <- GSI [i,"SMP_ID"]
+          SMPID_Vec <- rep(SMPID, length(temp))
+          Buffer_Vec <-  rep(Buffer, length(temp))
+          
+          df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec)
+          output <- rbind(output, df ) }
+        names(output) <- c("SMP_ID", "FACILITYID","Buffer")
+        output_100 <-output
+        
+        
+      }
+      
+      output_100

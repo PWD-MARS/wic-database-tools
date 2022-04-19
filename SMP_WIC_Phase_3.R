@@ -158,14 +158,12 @@
                  Buffer_Vec <-  rep(Buffer, length(temp))
                  
                  df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec)
-                 output <- rbind(output, df ) }
-                 names(output) <- c("SMP_ID", "FACILITYID","Buffer")
-                 output_25 <-output
+                 output <- rbind(output, df ) 
+                  }
+             output_25 <-output
        
        
                                            }
-      
-      output_25
       
       
 # buffer 50 ft 
@@ -187,14 +185,14 @@
           Buffer_Vec <-  rep(Buffer, length(temp))
           
           df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec)
-          output <- rbind(output, df ) }
-        names(output) <- c("SMP_ID", "FACILITYID","Buffer")
-        output_50 <-output
+          output <- rbind(output, df ) 
+        }
         
+        output_50 <-output
         
       }
       
-      output_50
+      
       
       
 # buffer 100 ft 
@@ -216,13 +214,14 @@
           Buffer_Vec <-  rep(Buffer, length(temp))
           
           df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec)
-          output <- rbind(output, df ) }
-        names(output) <- c("SMP_ID", "FACILITYID","Buffer")
+          output <- rbind(output, df ) 
+        }
         output_100 <-output
         
         
       }
       
-      output_100
+      Result <- bind_rows(output_25, output_50, output_100)
+      if (length(Result) > 0) {
+      names(results) <- c("SMP_ID", "FACILITYID","Buffer") }
       
-    

@@ -151,7 +151,7 @@
         
              temp <- Inters_Obj[[i]]
        
-                if (is.null(temp) != TRUE) {
+                if (length(temp) > 0) {
                  FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
                  SMPID <- GSI [i,"SMP_ID"]
                  SMPID_Vec <- rep(SMPID, length(temp))
@@ -180,7 +180,7 @@
         
         temp <- Inters_Obj[[i]]
         
-        if (is.null(temp) != TRUE) {
+        if (length(temp) > 0) {
           FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
           SMPID <- GSI [i,"SMP_ID"]
           SMPID_Vec <- rep(SMPID, length(temp))
@@ -209,7 +209,7 @@
         
         temp <- Inters_Obj[[i]]
         
-        if (is.null(temp) != TRUE) {
+        if (length(temp) > 0) {
           FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
           SMPID <- GSI [i,"SMP_ID"]
           SMPID_Vec <- rep(SMPID, length(temp))
@@ -224,3 +224,5 @@
       }
       
       output_100
+      
+    

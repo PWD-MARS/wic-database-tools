@@ -22,6 +22,8 @@
       
       cistern <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWICISTERN", quiet = TRUE)) 
       
+# something wrong with drainagewell data (looks empty in the GIS DB when I looked at ArcCatalog)
+      
       #drainagewell <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIDRAINAGEWELL", quiet = TRUE))
       
       greenroof <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIGREENROOF", quiet = TRUE))
@@ -48,7 +50,7 @@
       
         st_crs(cistern) <- 2272
         
-        # something wrong with drainagewell data (looks empty in the GIS DB when I looked at ArcCatalog)
+# something wrong with drainagewell data (looks empty in the GIS DB when I looked at ArcCatalog)
       
         #st_crs (drainagewell) <- 2272
       
@@ -118,6 +120,8 @@
       trench<- trench %>% select(SMP_ID)
       
       wetland <- wetland %>% select(SMP_ID)
+      
+# something wrong with drainagewell data (looks empty in the GIS DB when I looked at ArcCatalog)
       
      # SMP <- bind_rows(basin, blueroof, bumpout, cistern, drainagewell, greenroof, permeablepavement, planter, raingarden, swale, treetrench, trench, wetland)
         

@@ -1,5 +1,5 @@
 #Written by: Farshad Ebrahimi_4/18/2022
-# Connect to MARS DB and get the SMP IDs and Facility IDs from external.assets
+# Connect to MARS DB and get the SMP IDs and Facility IDs from external.assets.
 
       con <- dbConnect(odbc(), dsn = "mars_data")
       SMP_FAC_ID <- dbGetQuery(con, "SELECT facility_id, smp_id FROM external.assets WHERE component_id is NULL ")
@@ -14,31 +14,31 @@
                               "PWD=gisread;")
       
       
-      basin <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBASIN_WGS84", quiet = TRUE)) 
+      basin <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBASIN", quiet = TRUE)) 
        
-      blueroof <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBLUEROOF_WGS84", quiet = TRUE)) 
+      blueroof <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBLUEROOF", quiet = TRUE)) 
       
-      bumpout <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBUMPOUT_WGS84", quiet = TRUE)) 
+      bumpout <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBUMPOUT", quiet = TRUE)) 
       
-      cistern <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWICISTERN_WGS84", quiet = TRUE)) 
+      cistern <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWICISTERN", quiet = TRUE)) 
       
-      drainagewell <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIDRAINAGEWELL_WGS84", quiet = TRUE))
+      #drainagewell <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIDRAINAGEWELL", quiet = TRUE))
       
-      greenroof <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIGREENROOF_WGS84", quiet = TRUE))
+      greenroof <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIGREENROOF", quiet = TRUE))
       
-      permeablepavement <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIPERMEABLEPAVEMENT_WGS84", quiet = TRUE))
+      permeablepavement <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIPERMEABLEPAVEMENT", quiet = TRUE))
       
-      planter <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIPLANTER_WGS84", quiet = TRUE))
+      planter <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIPLANTER", quiet = TRUE))
       
-      raingarden <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIRAINGARDEN_WGS84", quiet = TRUE))
+      raingarden <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIRAINGARDEN", quiet = TRUE))
       
-      swale <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWISWALE_WGS84", quiet = TRUE))
+      swale <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWISWALE", quiet = TRUE))
       
-      treetrench <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWITREETRENCH_WGS84", quiet = TRUE))
+      treetrench <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWITREETRENCH", quiet = TRUE))
       
-      trench <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWITRENCH_WGS84", quiet = TRUE)) 
+      trench <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWITRENCH", quiet = TRUE)) 
       
-      wetland <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIWETLAND_WGS84", quiet = TRUE))
+      wetland <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIWETLAND", quiet = TRUE))
       
         st_crs ( basin) <- 2272 
       
@@ -48,7 +48,7 @@
       
         st_crs(cistern) <- 2272
       
-        st_crs (drainagewell) <- 2272
+        #st_crs (drainagewell) <- 2272
       
         st_crs (greenroof) <- 2272
       
@@ -117,9 +117,10 @@
       
       wetland <- wetland %>% select(SMP_ID)
       
-      SMP <- bind_rows(basin, blueroof, bumpout, cistern, drainagewell, greenroof, permeablepavement, planter, raingarden, swale, treetrench, trench, wetland)
+     # SMP <- bind_rows(basin, blueroof, bumpout, cistern, drainagewell, greenroof, permeablepavement, planter, raingarden, swale, treetrench, trench, wetland)
         
-        
+      SMP <- bind_rows(basin, blueroof, bumpout, cistern, greenroof, permeablepavement, planter, raingarden, swale, treetrench, trench, wetland)
+      
         
 #set 25 ft buffer around the SMPs
       
@@ -220,8 +221,9 @@
         
         
       }
+    
       
       Result <- bind_rows(output_25, output_50, output_100)
       if (length(Result) > 0) {
-      names(result) <- c("SMP_ID", "FACILITYID","Buffer") }
+      names(Result) <- c("SMP_ID", "FACILITYID","Buffer") }
       

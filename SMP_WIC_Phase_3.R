@@ -47,6 +47,8 @@
         st_crs(bumpout) <- 2272
       
         st_crs(cistern) <- 2272
+        
+        # something wrong with drainagewell data (looks empty in the GIS DB when I looked at ArcCatalog)
       
         #st_crs (drainagewell) <- 2272
       
@@ -223,7 +225,19 @@
       }
     
       
+# Final processing of the result data frame - stick them together, name them, add the system id
+      
       Result <- bind_rows(output_25, output_50, output_100)
       if (length(Result) > 0) {
       names(Result) <- c("SMP_ID", "WIC_PARCEL_FACILITYID","Buffer") }
+      Result['SYSTEM_ID'] <- gsub('-\\d+$','',Result$SMP_ID )
+
+      
+      
+      
+      
+      
+      
+      
+      
       

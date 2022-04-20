@@ -225,5 +225,5 @@
       
       Result <- bind_rows(output_25, output_50, output_100)
       if (length(Result) > 0) {
-      names(Result) <- c("SMP_ID", "FACILITYID","Buffer") }
+      names(Result) <- c("SMP_ID", "WIC_PARCEL_FACILITYID","Buffer") }
       

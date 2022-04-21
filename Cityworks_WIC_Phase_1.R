@@ -37,7 +37,7 @@
     
     ###Taylor says: This is a suboptimal solution because you are running the whole query again; way more code than necessary
     ### One has to make sure you actually *are* running the same query, so that you're working with the same data in both cases
-    ### It is much easier to just use R to modify your existing data and extract the IDs you want. Uniqueness is very easy with 
+    ### It is much easier to just use R to modify your existing data and extract the IDs you want. Uniqueness is very easy with distinct()
     # DIST_WO_ID <- dbGetQuery(cw, "  select distinct Sub.WORKORDERID    from   (SELECT wo.WORKORDERID, wo.INITIATEDATE AS WO_INITIATEDATE, wo.LOCATION, wo.WOXCOORDINATE, 
     # wo.WOYCOORDINATE, woe.ENTITYUID AS FACILITYID FROM Azteca.WORKORDER wo INNER JOIN 
     # Azteca.REQUESTWORKORDER rwo ON wo.WORKORDERID = rwo.WORKORDERID LEFT JOIN 
@@ -46,8 +46,7 @@
     # ((wo.DESCRIPTION = 'A - PROPERTY INVESTIGATION' AND r.DESCRIPTION = 'WATER IN CELLAR') OR 
     # (wo.DESCRIPTION = 'A - LEAK INVESTIGATION' AND r.DESCRIPTION = 'WATER IN CELLAR'))) as Sub")
     
-  unique_wo_id <- unique(CWTABLE$WORKORDERID)
-  DIST_WO_ID <- data.frame(WORKORDERID = unique_wo_id, stringsAsFactors=FALSE) #Make this a data frame, like the previous solution did
+    DIST_WO_ID <- select(CWTABLE, WORKORDERID) %>% distinct
 
 # Get the workorder comments and ID from cityworks, remove column SEQID, group by 
 # workorderid. Multiple comments per id, so need to concatenate the comments and separate by comma
@@ -68,5 +67,5 @@
     dbWriteTable (con, SQL("fieldwork.cityworks_wic"),CWTABLE)
     dbWriteTable (con, SQL("fieldwork.cityworks_wic_comments"), comments_wic)
   
-  ###Taylor says: Always disconnect from the DB  
+  ###Taylor says: Always disconnect from the  
   dbDisconnect(cw)

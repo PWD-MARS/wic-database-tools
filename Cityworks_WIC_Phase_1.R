@@ -8,11 +8,6 @@
     install.packages("odbc")
     install.packages("dplyr")
     
-    library(DBI)
-    library(RPostgreSQL)
-    library(RPostgres)
-    library(odbc)
-    library(dplyr)
 
 # Connect to the cityworks database
 
@@ -40,31 +35,32 @@
     
 # Get unique Workorderid from CWTABLE
     
+    ###Taylor says: This is a suboptimal solution because you are running the whole query again; way more code than necessary
+    ### One has to make sure you actually *are* running the same query, so that you're working with the same data in both cases
+    ### It is much easier to just use R to modify your existing data and extract the IDs you want. Uniqueness is very easy with 
+    # DIST_WO_ID <- dbGetQuery(cw, "  select distinct Sub.WORKORDERID    from   (SELECT wo.WORKORDERID, wo.INITIATEDATE AS WO_INITIATEDATE, wo.LOCATION, wo.WOXCOORDINATE, 
+    # wo.WOYCOORDINATE, woe.ENTITYUID AS FACILITYID FROM Azteca.WORKORDER wo INNER JOIN 
+    # Azteca.REQUESTWORKORDER rwo ON wo.WORKORDERID = rwo.WORKORDERID LEFT JOIN 
+    # Azteca.REQUEST r ON rwo.REQUESTID = r.REQUESTID LEFT JOIN Azteca.WORKORDERENTITY woe ON 
+    # wo.WORKORDERID = woe.WORKORDERID WHERE 
+    # ((wo.DESCRIPTION = 'A - PROPERTY INVESTIGATION' AND r.DESCRIPTION = 'WATER IN CELLAR') OR 
+    # (wo.DESCRIPTION = 'A - LEAK INVESTIGATION' AND r.DESCRIPTION = 'WATER IN CELLAR'))) as Sub")
     
-    DIST_WO_ID <- dbGetQuery(cw, "  select distinct Sub.WORKORDERID    from   (SELECT wo.WORKORDERID, wo.INITIATEDATE AS WO_INITIATEDATE, wo.LOCATION, wo.WOXCOORDINATE, 
-    wo.WOYCOORDINATE, woe.ENTITYUID AS FACILITYID FROM Azteca.WORKORDER wo INNER JOIN 
-    Azteca.REQUESTWORKORDER rwo ON wo.WORKORDERID = rwo.WORKORDERID LEFT JOIN 
-    Azteca.REQUEST r ON rwo.REQUESTID = r.REQUESTID LEFT JOIN Azteca.WORKORDERENTITY woe ON 
-    wo.WORKORDERID = woe.WORKORDERID WHERE 
-    ((wo.DESCRIPTION = 'A - PROPERTY INVESTIGATION' AND r.DESCRIPTION = 'WATER IN CELLAR') OR 
-    (wo.DESCRIPTION = 'A - LEAK INVESTIGATION' AND r.DESCRIPTION = 'WATER IN CELLAR'))) as Sub
-           ")
-    
-
+  unique_wo_id <- unique(CWTABLE$WORKORDERID)
+  DIST_WO_ID <- data.frame(WORKORDERID = unique_wo_id, stringsAsFactors=FALSE) #Make this a data frame, like the previous solution did
 
 # Get the workorder comments and ID from cityworks, remove column SEQID, group by 
 # workorderid. Multiple comments per id, so need to concatenate the comments and separate by comma
     
-    
-    CM_TABLE_FRAME <- dbGetQuery(cw, "SELECT * from Azteca.WOCOMMENT" )
-    CM_TABLE_WOID_CM <- CM_TABLE_FRAME [ , 1:2]
-    UNIQUE_WO_CM<- CM_TABLE_WOID_CM %>%
+    ###Taylor says: You can just grab the fields directly
+    CM_TABLE_FRAME <- dbGetQuery(cw, "SELECT WORKORDERID, COMMENTS from Azteca.WOCOMMENT" )
+    UNIQUE_WO_CM<- CM_TABLE_FRAME %>%
       group_by(WORKORDERID) %>%
       summarise(COMMENTS = toString(sort(unique(COMMENTS))))
     
 # inner join the unique workorderid from wic with concatenated comments
   
-    comments_wic <- inner_join (DIST_WO_ID, UNIQUE_WO_CM, by = "WORKORDERID")
+    comments_wic <- inner_join(DIST_WO_ID, UNIQUE_WO_CM, by = "WORKORDERID")
     
 # Connect to Pg12 and write 2 tables to DB (Primary key is workorderid in fieldwork.cityworks_wic_comments )
     

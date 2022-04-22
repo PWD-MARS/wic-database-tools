@@ -1,5 +1,8 @@
 #Written by: Farshad Ebrahimi_4/18/2022
 # Connect to MARS DB and get the SMP IDs and Facility IDs from external.assets.
+###Taylor says: You gotta load your libraries on every script
+
+###Please break this script up into section headers using the same indentation rules as script number 2
 
       con <- dbConnect(odbc(), dsn = "mars_data")
       SMP_FAC_ID <- dbGetQuery(con, "SELECT facility_id, smp_id FROM external.assets WHERE component_id is NULL ")
@@ -73,15 +76,19 @@
       
 #Get the parcel layer 
       
-      PARCELS_SPATIAL <- st_read(dsn = "P:\\Watershed Sciences\\GSI Monitoring\\09 GIS Data\\PWD_PARCELS ", layer = "PWD_PARCELS")
-      st_crs(PARCELS_SPATIAL) = 2272
+      ###Taylor says: universal pathnames
+      PARCELS_SPATIAL <- st_read(dsn = "\\\\pwdoows\\oows\\Watershed Sciences\\GSI Monitoring\\09 GIS Data\\PWD_PARCELS ", layer = "PWD_PARCELS")
+       st_crs(PARCELS_SPATIAL) = 2272
       
       
 # filter to get WIC associated polygons and delete the layer
       
       
       WIC_ID_TABLE <- dbGetQuery(con, "SELECT * from fieldwork.gis_parcels")
+      ###Taylor says: Use dplyr select instead of base R selection syntax when possible
       WIC_ID <- WIC_ID_TABLE[,"FACILITYID"]
+      
+      ###Taylor says: Use a single regex, or str_replace to do it in one go
       PARCELS_SPATIAL$FACILITYID<-gsub("{","",as.character(PARCELS_SPATIAL$FACILITYID), fixed=TRUE)
       PARCELS_SPATIAL$FACILITYID<-gsub("}","",as.character(PARCELS_SPATIAL$FACILITYID), fixed=TRUE)
       Parcels_WIC_Filterd <- PARCELS_SPATIAL [PARCELS_SPATIAL$FACILITYID %in% WIC_ID, ]
@@ -103,7 +110,7 @@
       
       cistern <- cistern %>% select(SMP_ID)
       
-      drainagewell <- drainagewell %>% select(SMP_ID)
+      #drainagewell <- drainagewell %>% select(SMP_ID)
       
       greenroof<- greenroof %>% select(SMP_ID)
       
@@ -146,6 +153,22 @@
 # create a conditional loop, that loops through each element of the list column of intersect (sparse matrix) , gets the indeces of the 
 # WIC_parcels, and populates a data frame, consisting the SMP_ID, FACILITYID of the wic -parcel, and the size of buffer
       
+###Taylor says: This formatting could be much clearer.
+  ### Please clean up the indentation so all the curly braces clearly demarcate the scope of each for() and if()
+  ###Example
+#---
+  variable <- mtcars #Variable assignment outside the loop
+  for(i in 1:nrow(mtcars)){
+    if(i > 5){
+      variable2 <- iris #Variable assignment inside the if
+      #print("if statement scope")
+    }
+    variable3 <- swiss #variable assignment inside the for loop
+    #print("for loop scope")
+  }
+  
+  nextthing <- warpbreaks #next loop at the same indent level as the first one
+#---
     
 # buffer 25 ft
       Inters_Obj <- SMP_inters_25
@@ -170,7 +193,7 @@
              output_25 <-output
        
        
-                                           }
+                                           }### It took me 15 minutes to find this curly brace
       
       
 # buffer 50 ft 
@@ -230,11 +253,11 @@
     
       
 # Final processing of the result data frame - stick them together, name them, add the system id
-      
+###Taylor says: Filter to complete cases (ie, no NAs or gaps in data) and write to DB
       Result <- bind_rows(output_25, output_50, output_100)
       if (length(Result) > 0) {
-      names(Result) <- c("SMP_ID", "WIC_PARCEL_FACILITYID","Buffer") }
-      Result['SYSTEM_ID'] <- gsub('-\\d+$','',Result$SMP_ID )
+      names(Result) <- c("SMP_ID", "WIC_PARCEL_FACILITYID","Buffer") }### Curly brace on new line
+      Result['SYSTEM_ID'] <- gsub('-\\d+$','',Result$SMP_ID ) ###Use dplyr mutate
 
       
       

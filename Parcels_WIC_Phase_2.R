@@ -21,11 +21,11 @@
 
 ## Section 1: Gathering nonspatial data
 
-  library(dplyr)
-  
-  library(odbc)
-  
-  library(sf)
+    library(DBI)
+    library(RPostgreSQL)
+    library(RPostgres)
+    library(odbc)
+    library(dplyr)
 
   # connect to the GIS DB to get parcel polygon
   

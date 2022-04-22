@@ -22,7 +22,9 @@
 ## Section 1: Gathering nonspatial data
 
   library(dplyr)
+  
   library(odbc)
+  
   library(sf)
 
   # connect to the GIS DB to get parcel polygon
@@ -35,22 +37,28 @@
                   pwd= "gisread")
   
     Parcels_Frame <- dbGetQuery(GISDB, "SELECT * from GISDATA.GISAD.PWD_PARCELS")
+    
     Parcels_facility_id <- select(Parcels_Frame, FACILITYID)
+    
     Parcels_Address_id <- select(Parcels_Frame, ADDRESS, FACILITYID)
   
     PARCELS_SPATIAL <- st_read(dsn = "\\\\pwdoows\\oows\\Watershed Sciences\\GSI Monitoring\\09 GIS Data\\PWD_PARCELS ", layer = "PWD_PARCELS")
+    
     st_crs(PARCELS_SPATIAL) = 2272
   
   # Connect to MARS DB and get the workorderid, comments and associated info
     
     con <- dbConnect(odbc(), dsn = "mars_data")
+    
     WORKORDER_ID <- dbGetQuery(con, "SELECT * from fieldwork.cityworks_wic")
+    
     WORKORDER_CM <- dbGetQuery(con, "SELECT * from fieldwork.cityworks_wic_comments")
     
   # Remove {} from facilityid in cityworks 
     ###Taylor says: You can do this in one go with a capture group
     ###Regex = in: a literal {, followed by a capture group containing 0 or more characters, followed by a literal }
     ###Regex = out: The first capture group
+    
     WORKORDER_ID$FACILITYID<-gsub("\\{(.*)\\}","\\1",as.character(WORKORDER_ID$FACILITYID))
 
 
@@ -175,16 +183,16 @@
      
   # union the matching tables-Final output is in FACID_ADD_XY
    
-    FACID_ADD <- union_all (WOID_FAC_UNIQ_REL,WOID_FAC_UNIQ_Add_REL)
+     FACID_ADD <- union_all (WOID_FAC_UNIQ_REL,WOID_FAC_UNIQ_Add_REL)
     
-    FACID_ADD_XY <- union_all (FACID_ADD, WOID_Based_XY)
+     FACID_ADD_XY <- union_all (FACID_ADD, WOID_Based_XY)
     
-    FACID_ADD_XY <- unique(FACID_ADD_XY)
+     FACID_ADD_XY <- unique(FACID_ADD_XY)
     
 ## Section 6: Writing results to DB
     
-    con <- dbConnect(odbc(), dsn = "mars_data")
+     con <- dbConnect(odbc(), dsn = "mars_data")
     
-    dbWriteTable (con, SQL("fieldwork.gis_parcels"),FACID_ADD_XY)
+     dbWriteTable (con, SQL("fieldwork.gis_parcels"),FACID_ADD_XY)
    
-    dbDisconnect(GISDB)
+     dbDisconnect(GISDB)

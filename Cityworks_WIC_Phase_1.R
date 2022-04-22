@@ -26,9 +26,6 @@
                 Database = "PWD_Cityworks",
                 uid = Sys.getenv("cw_uid"),
                 pwd= Sys.getenv("cw_pwd"))
-    odbcListObjects(cw)
-
-    odbcListObjects(cw, catalog="PWD_Cityworks", schema="azteca")
     
     
 # Get the data from previous work and store in-memory-Data frame CWTABLE
@@ -49,7 +46,7 @@
 # Get the workorder comments and ID from cityworks 
 # Multiple comments per workorderid, so need to concatenate the comments and separate by comma
     
-    ###Taylor says: You can just grab the fields directly
+    
     CM_TABLE_FRAME <- dbGetQuery(cw, "SELECT WORKORDERID, COMMENTS from Azteca.WOCOMMENT" )
     UNIQUE_WO_CM<- CM_TABLE_FRAME %>%
       group_by(WORKORDERID) %>%

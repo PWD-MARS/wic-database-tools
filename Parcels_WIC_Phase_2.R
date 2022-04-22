@@ -1,5 +1,5 @@
   #Associate the work order IDs with parcel facility IDs
-  #Written by: Farshad Ebrahimi- 4/22/2022
+  #Written by: Farshad Ebrahimi- 4/22/2022.
 
 
 
@@ -170,16 +170,7 @@
      
   # Get workorderid, address, and facilityid (Third output is stored in WOID_Based_XY )
      
-     ###Taylor says: dplyr could accomplish all of this in a single pipe operation
-     ### WOID_BASED_XY <- WORKORDER_ID %>% select(varnames) %>% inner_join(x, by = ...) %>% select(varnames with renaming)
-     
-     WORKORDER_ID  <- WORKORDER_ID[c(1:5)]
-     
-     WOID_Based_XY <- inner_join (WORKORDER_ID, COORD_MATCHED_TABLE  , by = c("WOXCOORDINATE" = "WOXCOORDINATE", "WOYCOORDINATE" = "WOYCOORDINATE"))
-     
-     WOID_Based_XY <- WOID_Based_XY[c("WORKORDERID", "ADDRESS", "FACILITYID")]
-     
-     names (WOID_Based_XY) <- c("WORKORDERID", "LOCATION", "FACILITYID")
+     WOID_Based_XY<- WORKORDER_ID %>% select(WORKORDERID, WO_INITIATEDATE, LOCATION, WOXCOORDINATE, WOYCOORDINATE) %>% inner_join(COORD_MATCHED_TABLE, by = c("WOXCOORDINATE" = "WOXCOORDINATE", "WOYCOORDINATE" = "WOYCOORDINATE")) %>% select(WORKORDERID, LOCATION = ADDRESS, FACILITYID) 
      
   # union the matching tables-Final output is in FACID_ADD_XY
    

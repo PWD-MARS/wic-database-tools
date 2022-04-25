@@ -65,40 +65,40 @@
       
       wetland <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIWETLAND", quiet = TRUE))
       
-        st_crs ( basin) <- 2272 
+      st_crs ( basin) <- 2272 
       
-        st_crs (blueroof) <- 2272
+      st_crs (blueroof) <- 2272
       
-        st_crs(bumpout) <- 2272
+      st_crs(bumpout) <- 2272
       
-        st_crs(cistern) <- 2272
+      st_crs(cistern) <- 2272
         
   # something wrong with drainagewell 
       
-        #st_crs (drainagewell) <- 2272
+      #st_crs (drainagewell) <- 2272
       
-        st_crs (greenroof) <- 2272
+      st_crs (greenroof) <- 2272
       
-        st_crs (permeablepavement) <- 2272
+      st_crs (permeablepavement) <- 2272
       
-        st_crs (planter) <- 2272
+      st_crs (planter) <- 2272
       
-        st_crs(raingarden) <- 2272
+      st_crs(raingarden) <- 2272
       
-        st_crs (swale) <- 2272
+      st_crs (swale) <- 2272
       
-        st_crs(treetrench) <- 2272
+      st_crs(treetrench) <- 2272
       
-        st_crs(trench) <- 2272
+      st_crs(trench) <- 2272
       
-        st_crs (wetland) <- 2272
+      st_crs (wetland) <- 2272
       
       
   # Get the parcel layer-Shapefile stored in network 
       
       ###Taylor says: universal pathnames
       PARCELS_SPATIAL <- st_read(dsn = "\\\\pwdoows\\oows\\Watershed Sciences\\GSI Monitoring\\09 GIS Data\\PWD_PARCELS ", layer = "PWD_PARCELS")
-       st_crs(PARCELS_SPATIAL) = 2272
+      st_crs(PARCELS_SPATIAL) = 2272
       
       
   # filter to get WIC associated polygons and delete the layer
@@ -108,11 +108,12 @@
       ###Taylor says: Use dplyr select instead of base R selection syntax when possible
       WIC_ID <- WIC_ID_TABLE[,"FACILITYID"]
       
-      ###Taylor says: Use a single regex, or str_replace to do it in one go
-      PARCELS_SPATIAL$FACILITYID<-gsub("{","",as.character(PARCELS_SPATIAL$FACILITYID), fixed=TRUE)
-      PARCELS_SPATIAL$FACILITYID<-gsub("}","",as.character(PARCELS_SPATIAL$FACILITYID), fixed=TRUE)
+      PARCELS_SPATIAL$FACILITYID<-gsub("\\{(.*)\\}","\\1",as.character(PARCELS_SPATIAL$FACILITYID))
+      
       Parcels_WIC_Filterd <- PARCELS_SPATIAL [PARCELS_SPATIAL$FACILITYID %in% WIC_ID, ]
+      
       rm(PARCELS_SPATIAL)
+      
       Parcels_filtered_df <-as.data.frame(Parcels_WIC_Filterd)
       
       

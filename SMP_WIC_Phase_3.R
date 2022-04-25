@@ -2,8 +2,6 @@
 #Written by: Farshad Ebrahimi- 4/22/2022.
 
 
-
-
 # Connect to MARS DB and get the SMP IDs and Facility IDs from external.assets.
 ###Taylor says: You gotta load your libraries on every script
 

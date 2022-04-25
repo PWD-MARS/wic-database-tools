@@ -182,10 +182,18 @@
     
      FACID_ADD_XY <- unique(FACID_ADD_XY)
     
+   # Getting unique WIC Parcels
+     
+     FACILITYID_UNIQ <- FACID_ADD_XY %>% select(WORKORDERID, FACILITYID) %>%
+     group_by(FACILITYID) %>%
+     summarise(WORKORDERID = toString(sort(unique(WORKORDERID))))
+     
 ## Section 6: Writing results to DB
     
      con <- dbConnect(odbc(), dsn = "mars_data")
     
      dbWriteTable (con, SQL("fieldwork.gis_parcels"),FACID_ADD_XY)
+     
+     dbWriteTable (con, SQL("fieldwork.wic_parcel_facilityid"),FACILITYID_UNIQ)
    
      dbDisconnect(GISDB)

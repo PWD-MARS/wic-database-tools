@@ -182,6 +182,12 @@
     
      FACID_ADD_XY <- unique(FACID_ADD_XY)
     
+   # Getting unique WIC Parcels
+     
+     FACILITYID_UNIQ <- FACID_ADD_XY %>% select(WORKORDERID, FACILITYID) %>%
+     group_by(FACILITYID) %>%
+     summarise(WORKORDERID = toString(sort(unique(WORKORDERID))))
+     
 ## Section 6: Writing results to DB
     
      con <- dbConnect(odbc(), dsn = "mars_data")

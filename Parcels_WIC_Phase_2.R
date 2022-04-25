@@ -26,6 +26,8 @@
     library(RPostgres)
     library(odbc)
     library(dplyr)
+    library(sf)
+    
 
   # connect to the GIS DB to get parcel polygon
   

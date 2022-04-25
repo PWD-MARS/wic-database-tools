@@ -9,12 +9,16 @@
     install.packages("RPostgres")
     install.packages("odbc")
     install.packages("dplyr")
+    install.packages("sf")
+    
     
     library(DBI)
     library(RPostgreSQL)
     library(RPostgres)
     library(odbc)
     library(dplyr)
+    library(sf)
+    
     
     
 

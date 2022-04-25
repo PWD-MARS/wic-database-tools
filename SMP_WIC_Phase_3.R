@@ -103,7 +103,7 @@
       
       
       WIC_ID_TABLE <- dbGetQuery(con, "SELECT * from fieldwork.gis_parcels")
-      ###Taylor says: Use dplyr select instead of base R selection syntax when possible
+      
       WIC_ID <- WIC_ID_TABLE[,"FACILITYID"]
       
       PARCELS_SPATIAL$FACILITYID<-gsub("\\{(.*)\\}","\\1",as.character(PARCELS_SPATIAL$FACILITYID))

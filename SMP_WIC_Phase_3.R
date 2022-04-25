@@ -3,9 +3,6 @@
 
 
 # Connect to MARS DB and get the SMP IDs and Facility IDs from external.assets.
-###Taylor says: You gotta load your libraries on every script
-
-###Please break this script up into section headers using the same indentation rules as script number 2
 
 
 ## Section 1: Gather the SMP layers and Parcels shapefile
@@ -26,7 +23,7 @@
       SMP_FAC_ID <- dbGetQuery(con, "SELECT facility_id, smp_id FROM external.assets WHERE component_id is NULL ")
       
       
-# COnnect to GSI DB and get asin, blue roof, bumpout, cistern, drainage well, green roof, permeable pavement, 
+# Connect to GSI DB and get asin, blue roof, bumpout, cistern, drainage well, green roof, permeable pavement, 
 # planter, rain garden, swale, tree trench, trench, and wetland
       
       dsn_infra_pub <- paste0("MSSQL:server=PWDGISSQL;",
@@ -94,8 +91,8 @@
       
   # Get the parcel layer-Shapefile stored in network 
       
-      ###Taylor says: universal pathnames
       PARCELS_SPATIAL <- st_read(dsn = "\\\\pwdoows\\oows\\Watershed Sciences\\GSI Monitoring\\09 GIS Data\\PWD_PARCELS ", layer = "PWD_PARCELS")
+      
       st_crs(PARCELS_SPATIAL) = 2272
       
       
@@ -158,14 +155,18 @@
       
       
       SMP_buffer_25 <- st_buffer(SMP, 25)
+      
       SMP_buffer_50 <- st_buffer(SMP, 50)
+      
       SMP_buffer_100 <- st_buffer(SMP, 100)
       
     
   #INTERSECT the WIC with buffered SMPs
       
       SMP_inters_25 <- st_intersects(SMP_buffer_25, Parcels_WIC_Filterd)
+      
       SMP_inters_50 <- st_intersects(SMP_buffer_50, Parcels_WIC_Filterd)
+      
       SMP_inters_100 <- st_intersects(SMP_buffer_100, Parcels_WIC_Filterd)
       
       
@@ -211,7 +212,7 @@
       
       output_25 <-output
        
-      } ### It took me 15 minutes to find this curly brace
+      } 
       
       
   # buffer 50 ft 
@@ -288,15 +289,26 @@
 ## Section 4: Final processing of the result data frame nad writing to DB 
   #stick them together, name them, add the system id
 ###Taylor says: Filter to complete cases (ie, no NAs or gaps in data) and write to DB
-      Result <- bind_rows(output_25, output_50, output_100)
+      
+      Result <- bind_rows(output_25, output_50, output_100) %>% na.omit
       
       if (length(Result) > 0) {
         
       names(Result) <- c("SMP_ID", "WIC_PARCEL_FACILITYID","Buffer")
       
-      }### Curly brace on new line
+      }
       
-      Result['SYSTEM_ID'] <- gsub('-\\d+$','',Result$SMP_ID ) ###Use dplyr mutate
+      Result['SYSTEM_ID'] <- gsub('-\\d+$','',Result$SMP_ID ) 
+      
+      
+## Section 5: Writing results to DB
+      
+      con <- dbConnect(odbc(), dsn = "mars_data")
+      
+      dbWriteTable (con, SQL("fieldwork.wic_smp"),Result)
+      
+      dbDisconnect(con)
+        
 
       
       

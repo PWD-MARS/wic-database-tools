@@ -19,10 +19,8 @@
       library(RPostgres)
       library(odbc)
       library(dplyr)
-<<<<<<< HEAD
       library(sf)
-=======
->>>>>>> 0b113bcd55f0ede34c40b46ecb2c9fd351263430
+
 
 
 
@@ -197,10 +195,7 @@
 #---
     
   # buffer 25 ft
-<<<<<<< HEAD
-  
-=======
->>>>>>> 0b113bcd55f0ede34c40b46ecb2c9fd351263430
+
       Inters_Obj <- SMP_inters_25
       
       GSI <- as.data.frame(SMP)
@@ -270,12 +265,6 @@
         
       }
       
-<<<<<<< HEAD
-=======
-      
-      
-      
->>>>>>> 0b113bcd55f0ede34c40b46ecb2c9fd351263430
   # buffer 100 ft 
       
       Inters_Obj <- SMP_inters_100

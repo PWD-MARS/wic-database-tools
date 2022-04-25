@@ -19,10 +19,8 @@
       library(RPostgres)
       library(odbc)
       library(dplyr)
-<<<<<<< HEAD
       library(sf)
-=======
->>>>>>> 0b113bcd55f0ede34c40b46ecb2c9fd351263430
+
 
 
 
@@ -179,28 +177,9 @@
   # create a conditional loop, that loops through each element of the list column of intersect (sparse matrix) , gets the indexes of the 
   # WIC_parcels, and populates a data frame, consisting the SMP_ID, FACILITYID of the wic -parcel, and the size of buffer
       
-###Taylor says: This formatting could be much clearer.
-  ### Please clean up the indentation so all the curly braces clearly demarcate the scope of each for() and if()
-  ###Example
-#---
-  variable <- mtcars #Variable assignment outside the loop
-  for(i in 1:nrow(mtcars)){
-    if(i > 5){
-      variable2 <- iris #Variable assignment inside the if
-      #print("if statement scope")
-    }
-    variable3 <- swiss #variable assignment inside the for loop
-    #print("for loop scope")
-  }
-  
-  nextthing <- warpbreaks #next loop at the same indent level as the first one
-#---
     
   # buffer 25 ft
-<<<<<<< HEAD
-  
-=======
->>>>>>> 0b113bcd55f0ede34c40b46ecb2c9fd351263430
+
       Inters_Obj <- SMP_inters_25
       
       GSI <- as.data.frame(SMP)
@@ -270,12 +249,6 @@
         
       }
       
-<<<<<<< HEAD
-=======
-      
-      
-      
->>>>>>> 0b113bcd55f0ede34c40b46ecb2c9fd351263430
   # buffer 100 ft 
       
       Inters_Obj <- SMP_inters_100

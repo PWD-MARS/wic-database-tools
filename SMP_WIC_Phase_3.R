@@ -150,13 +150,11 @@
       
   # filter SMPs to non-private ones
       
-      SMPID_MOD <- SMP [[1]]
-        
-      Boolean <- grepl ("\\d+-\\d+-\\d+", SMPID_MOD)
+      Boolean <- grepl ("\\d+-\\d+-\\d+", SMP[["SMP_ID"]])
       
-      SMPID_MOD_IND <- which(as.numeric(Boolean)!=0, T)
+      SMPID_IND <- which(as.numeric(Boolean)!=0, T)
       
-      SMP <- SMP[SMPID_MOD_IND, ]
+      SMP <- SMP[SMPID_IND, ]
       
       
 ## Section 2: Create buffers (25, 50, and 100 ft) around SMPs and intersect them with the WIC Parcels

@@ -325,7 +325,7 @@
       
       external.smpbdv <- dbGetQuery(con, "SELECT * FROM  external.smpbdv")
       
-      worknumber <- inner_join(Result,external.smpbdv, by = "smp_id" )  %>% select( worknumber)
+      worknumber <- inner_join(Result,external.smpbdv, by = "smp_id" )  %>% select( worknumber, smp_id)
       
       smp_milestones <- inner_join(external.cipit_project, worknumber, by = c("work_number" = "worknumber"  ))
       

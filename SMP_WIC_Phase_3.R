@@ -308,11 +308,24 @@
       }
       
       Result['SYSTEM_ID'] <- gsub('-\\d+$','',Result$SMP_ID ) 
+
       
       
-## Section 5: Writing results to DB
       
-      con <- dbConnect(odbc(), dsn = "mars_data")
+      
+## section 5: categorizing the SMPs to pre, during, or post construction
+  
+      
+      wic_conphase <- data.frame(wic_uid = 1:4, phase = c("pre-construction", "during construction", "post-construction", "unknown"))
+      
+      external.cipit_project <- dbGetQuery(con, "SELECT * FROM external.cipit_project")
+      
+      external.smpbdv <- dbGetQuery(con, "SELECT * FROM  external.smpbdv")
+      
+      
+      
+      
+## Section 6: Writing results to DB
       
       dbWriteTable (con, SQL("fieldwork.wic_smp"),Result)
       

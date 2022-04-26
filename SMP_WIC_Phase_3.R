@@ -159,9 +159,6 @@
       SMP <- SMP[SMPID_MOD_IND, ]
       
       
-      
-      
-      
 ## Section 2: Create buffers (25, 50, and 100 ft) around SMPs and intersect them with the WIC Parcels
       
         

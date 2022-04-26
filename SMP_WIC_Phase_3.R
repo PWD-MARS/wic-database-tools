@@ -329,6 +329,26 @@
       
       smp_milestones <- inner_join(external.cipit_project, worknumber, by = c("work_number" = "worknumber"  ))  %>% select (smp_id, construction_start_date, pc_ntp_date, construction_complete_date, contract_closed_date) %>% unique()
       
+  #setting the lookup_id's default in Result to unknown (4) and in smpmilestone to NA
+      
+      Result['phase_lookup_uid'] <- 4
+      
+      smp_milestones['phase_lookup_uid'] <- NA
+      
+      for(i in 1:nrow(smp_milestones)) {
+        
+        if (!is.null(smp_milestones[i, construction_complete_date]) || !is.null(smp_milestones[i, contract_closed_date]) ) {
+          
+        smp_milestones[i, phase_lookup_uid] <- 3
+          
+        } else if (!is.null(smp_milestones[i, construction_start_date]) || !is.null(smp_milestones[i, pc_ntp_date])) {
+          
+          
+          
+        }
+        
+
+      }
       
        
       

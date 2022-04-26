@@ -308,6 +308,9 @@
       }
       
       Result['SYSTEM_ID'] <- gsub('-\\d+$','',Result$SMP_ID ) 
+      
+      
+      Result['phase_lookup_uid'] <- NA
 
       
       

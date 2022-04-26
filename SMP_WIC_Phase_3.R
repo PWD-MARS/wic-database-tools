@@ -303,7 +303,7 @@
       
       if (length(Result) > 0) {
         
-      names(Result) <- c("SMP_ID", "WIC_PARCEL_FACILITYID","Buffer")
+      names(Result) <- c("smp_id", "WIC_PARCEL_FACILITYID","buffer")
       
       }
       
@@ -324,6 +324,11 @@
       external.cipit_project <- dbGetQuery(con, "SELECT * FROM external.cipit_project")
       
       external.smpbdv <- dbGetQuery(con, "SELECT * FROM  external.smpbdv")
+      
+      worknumber <- inner_join(Result,external.smpbdv, by = "smp_id" )  %>% select( worknumber)
+      
+      smp_milestones <- inner_join(external.cipit_project, worknumber, by = c("work_number" = "worknumber"  ))
+      
       
       
       

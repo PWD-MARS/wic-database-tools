@@ -327,7 +327,7 @@
       
       worknumber <- inner_join(Result,external.smpbdv, by = "smp_id" )  %>% select( worknumber, smp_id)
       
-      smp_milestones <- inner_join(external.cipit_project, worknumber, by = c("work_number" = "worknumber"  )) 
+      smp_milestones <- inner_join(external.cipit_project, worknumber, by = c("work_number" = "worknumber"  ))  %>% select (smp_id, construction_start_date, pc_ntp_date, construction_complete_date, contract_closed_date) %>% unique()
       
       
        

@@ -341,7 +341,16 @@
           
         smp_milestones[i, phase_lookup_uid] <- 3
           
-        } else if (!is.null(smp_milestones[i, construction_start_date]) || !is.null(smp_milestones[i, pc_ntp_date])) {
+        } else if (!is.null(smp_milestones[i, construction_start_date]) && smp_milestones[i, construction_start_date] >  date     ) {
+          
+          
+          
+        } else if (!is.null(smp_milestones[i, pc_ntp_date])            ) {
+          
+          
+          
+        } else {
+          
           
           
           

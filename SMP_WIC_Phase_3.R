@@ -112,6 +112,7 @@
       
       Parcels_filtered_df <-as.data.frame(Parcels_WIC_Filterd)
       
+      Parcels_filtered_df$WO_INITIATEDATE <- as.Date(Parcels_filtered_df$WO_INITIATEDATE)
       
       
   # Drop columns except the SMP_ID and Merge all SMPs

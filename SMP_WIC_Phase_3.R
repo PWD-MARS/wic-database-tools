@@ -101,11 +101,11 @@
       
       WIC_ID_TABLE <- dbGetQuery(con, "SELECT * from fieldwork.gis_parcels")
       
-      WIC_ID <- WIC_ID_TABLE[,"FACILITYID"]
+      WIC_ID_DATE <- dbGetQuery(con, "SELECT * from fieldwork.wic_parcel_faci_date")
       
       PARCELS_SPATIAL$FACILITYID<-gsub("\\{(.*)\\}","\\1",as.character(PARCELS_SPATIAL$FACILITYID))
       
-      Parcels_WIC_Filterd <- PARCELS_SPATIAL [PARCELS_SPATIAL$FACILITYID %in% WIC_ID, ]
+      Parcels_WIC_Filterd <- inner_join(PARCELS_SPATIAL, WIC_ID_DATE, by = "FACILITYID") 
       
       rm(PARCELS_SPATIAL)
       
@@ -204,8 +204,15 @@
       temp <- Inters_Obj[[i]]
        
         if (length(temp) > 0) {
+          
             
         FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
+        
+        WO_ID <- Parcels_filtered_df[temp, "WORKORDERID"]
+        
+        WO_Date <- Parcels_filtered_df[temp, "WO_INITIATEDATE"]
+        
+        
                  
         SMPID <- GSI [i,"SMP_ID"]
                  
@@ -213,7 +220,7 @@
                  
         Buffer_Vec <-  rep(Buffer, length(temp))
                  
-        df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec)
+        df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec, WO_ID, WO_Date)
                  
         output <- rbind(output, df ) 
         
@@ -243,13 +250,17 @@
         if (length(temp) > 0) {
           FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
           
+          WO_ID <- Parcels_filtered_df[temp, "WORKORDERID"]
+          
+          WO_Date <- Parcels_filtered_df[temp, "WO_INITIATEDATE"]
+          
           SMPID <- GSI [i,"SMP_ID"]
           
           SMPID_Vec <- rep(SMPID, length(temp))
           
           Buffer_Vec <-  rep(Buffer, length(temp))
           
-          df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec)
+          df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec, WO_ID, WO_Date)
           
           output <- rbind(output, df ) 
         }
@@ -278,13 +289,18 @@
           
           FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
           
+          WO_ID <- Parcels_filtered_df[temp, "WORKORDERID"]
+          
+          WO_Date <- Parcels_filtered_df[temp, "WO_INITIATEDATE"]
+          
+          
           SMPID <- GSI [i,"SMP_ID"]
           
           SMPID_Vec <- rep(SMPID, length(temp))
           
           Buffer_Vec <-  rep(Buffer, length(temp))
           
-          df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec)
+          df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec, WO_ID, WO_Date)
           
           output <- rbind(output, df ) 
           
@@ -303,11 +319,11 @@
       
       if (length(Result) > 0) {
         
-      names(Result) <- c("smp_id", "WIC_PARCEL_FACILITYID","buffer")
+      names(Result) <- c("smp_id", "WIC_PARCEL_FACILITYID","buffer", "WORKORDERID","WO_INITIATEDATE")
       
       }
       
-      Result['SYSTEM_ID'] <- gsub('-\\d+$','',Result$SMP_ID ) 
+      Result['SYSTEM_ID'] <- gsub('-\\d+$','',Result$smp_id ) 
       
       
       Result['phase_lookup_uid'] <- NA

@@ -328,12 +328,7 @@
       
       Result['SYSTEM_ID'] <- gsub('-\\d+$','',Result$smp_id ) 
       
-      Result['phase_lookup_uid'] <- NA
-      
 
-      
-      
-      
       
 ## section 5: categorizing the SMPs to pre, during, or post construction
   
@@ -344,15 +339,14 @@
       
       external.smpbdv <- dbGetQuery(con, "SELECT * FROM  external.smpbdv")
       
-      worknumber <- inner_join(Result,external.smpbdv, by = "smp_id" )  %>% select( worknumber, smp_id)
+      worknumber <- inner_join(Result,external.smpbdv, by = "smp_id" )  %>% select( smp_id, wic_parcel_facilityid,buffer, workorderid,wo_initiatedate, worknumber)
       
-      smp_milestones <- inner_join(external.cipit_project, worknumber, by = c("work_number" = "worknumber"  ))  %>% select (smp_id, construction_start_date, pc_ntp_date, construction_complete_date, contract_closed_date) %>% unique()
+      smp_milestones <- inner_join(external.cipit_project, worknumber, by = c("work_number" = "worknumber"  ))  %>% select (smp_id, wic_parcel_facilityid,buffer, workorderid, wo_initiatedate, construction_start_date, pc_ntp_date, construction_complete_date, contract_closed_date) %>% unique()
       
-  #setting the lookup_id's default in Result to unknown (4) and in smpmilestone to NA
+  #setting the lookup_id's default in smpmilestone to 4
       
-      Result['phase_lookup_uid'] <- 4
-      
-      smp_milestones['phase_lookup_uid'] <- NA
+
+      smp_milestones['phase_lookup_uid'] <- 4
       
       for(i in 1:nrow(smp_milestones)) {
         

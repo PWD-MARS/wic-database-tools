@@ -352,50 +352,50 @@
         
         if (!is.null(smp_milestones[i, "construction_start_date"]) && !is.null(smp_milestones[i, "construction_complete_date"]) ) {
           
-          if (smp_milestones[i, "wo_initiatedate"] >= smp_milestones[i, "construction_start_date"] && smp_milestones[i, "wo_initiatedate"] <= smp_milestones[i, "construction_complete_date"]  ) {
-            
-            smp_milestones[i, "phase_lookup_uid"] <- 2
-            
-          } else if (smp_milestones[i, "wo_initiatedate"] < smp_milestones[i, "construction_start_date"]) {
-            
-            smp_milestones[i, "phase_lookup_uid"] <- 1
-            
-          } else {
-            
-            smp_milestones[i, "phase_lookup_uid"] <- 3
+            if (smp_milestones[i, "wo_initiatedate"] >= smp_milestones[i, "construction_start_date"] && smp_milestones[i, "wo_initiatedate"] <= smp_milestones[i, "construction_complete_date"]  ) {
+              
+              smp_milestones[i, "phase_lookup_uid"] <- 2
+              
+            } else if (smp_milestones[i, "wo_initiatedate"] < smp_milestones[i, "construction_start_date"]) {
+              
+              smp_milestones[i, "phase_lookup_uid"] <- 1
+              
+            } else {
+              
+              smp_milestones[i, "phase_lookup_uid"] <- 3
             
           }
           
         
         } else if (!is.null(smp_milestones[i, "pc_ntp_date"]) && !is.null(smp_milestones[i, "construction_complete_date"] )) {
           
-          if (smp_milestones[i, "wo_initiatedate"] >= smp_milestones[i, "pc_ntp_date"] && smp_milestones[i, "wo_initiatedate"] <= smp_milestones[i, "construction_complete_date"]  ) {
-            
-            smp_milestones[i, "phase_lookup_uid"] <- 2
-            
-          } else if (smp_milestones[i, "wo_initiatedate"] < smp_milestones[i, "pc_ntp_date"]) {
-            
-            smp_milestones[i, "phase_lookup_uid"] <- 1
-            
-          } else {
-            
-            smp_milestones[i, "phase_lookup_uid"] <- 3
+            if (smp_milestones[i, "wo_initiatedate"] >= smp_milestones[i, "pc_ntp_date"] && smp_milestones[i, "wo_initiatedate"] <= smp_milestones[i, "construction_complete_date"]  ) {
+              
+              smp_milestones[i, "phase_lookup_uid"] <- 2
+              
+            } else if (smp_milestones[i, "wo_initiatedate"] < smp_milestones[i, "pc_ntp_date"]) {
+              
+              smp_milestones[i, "phase_lookup_uid"] <- 1
+              
+            } else {
+              
+              smp_milestones[i, "phase_lookup_uid"] <- 3
             
           }
           
         } else if (!is.null(smp_milestones[i, "construction_start_date"]) && !is.null(smp_milestones[i, "contract_closed_date"])) {
         
-          if (smp_milestones[i, "wo_initiatedate"] >= smp_milestones[i, "construction_start_date"] && smp_milestones[i, "wo_initiatedate"] <= smp_milestones[i, "contract_closed_date"]  ) {
-            
-            smp_milestones[i, "phase_lookup_uid"] <- 2
-            
-          } else if (smp_milestones[i, "wo_initiatedate"] < smp_milestones[i, "construction_start_date"]) {
-            
-            smp_milestones[i, "phase_lookup_uid"] <- 1
-            
-          } else {
-            
-            smp_milestones[i, "phase_lookup_uid"] <- 3
+            if (smp_milestones[i, "wo_initiatedate"] >= smp_milestones[i, "construction_start_date"] && smp_milestones[i, "wo_initiatedate"] <= smp_milestones[i, "contract_closed_date"]  ) {
+              
+              smp_milestones[i, "phase_lookup_uid"] <- 2
+              
+            } else if (smp_milestones[i, "wo_initiatedate"] < smp_milestones[i, "construction_start_date"]) {
+              
+              smp_milestones[i, "phase_lookup_uid"] <- 1
+              
+            } else {
+              
+              smp_milestones[i, "phase_lookup_uid"] <- 3
             
           }
         
@@ -403,22 +403,27 @@
           
         } else if (!is.null(smp_milestones[i, "pc_ntp_date"]) && !is.null(smp_milestones[i, "contract_closed_date"])) {
           
-          if (smp_milestones[i, "wo_initiatedate"] >= smp_milestones[i, "pc_ntp_date"] && smp_milestones[i, "wo_initiatedate"] <= smp_milestones[i, "contract_closed_date"]  ) {
-            
-            smp_milestones[i, "phase_lookup_uid"] <- 2
-            
-          } else if (smp_milestones[i, "wo_initiatedate"] < smp_milestones[i, "pc_ntp_date"]) {
-            
-            smp_milestones[i, "phase_lookup_uid"] <- 1
-            
-          } else {
-            
-            smp_milestones[i, "phase_lookup_uid"] <- 3
+            if (smp_milestones[i, "wo_initiatedate"] >= smp_milestones[i, "pc_ntp_date"] && smp_milestones[i, "wo_initiatedate"] <= smp_milestones[i, "contract_closed_date"]  ) {
+              
+              smp_milestones[i, "phase_lookup_uid"] <- 2
+              
+            } else if (smp_milestones[i, "wo_initiatedate"] < smp_milestones[i, "pc_ntp_date"]) {
+              
+              smp_milestones[i, "phase_lookup_uid"] <- 1
+              
+            } else {
+              
+              smp_milestones[i, "phase_lookup_uid"] <- 3
+              
+            }
+          
+          
+        } else { 
+          
+              smp_milestones[i, "phase_lookup_uid"] <- 4
+          
             
           }
-          
-          
-        } 
         
 
       }

@@ -181,6 +181,15 @@
      FACID_ADD_XY <- union_all (FACID_ADD, WOID_Based_XY)
     
      FACID_ADD_XY <- unique(FACID_ADD_XY)
+     
+     
+  # Add the workorder date 
+     
+     WORKORDER_ID <- dbGetQuery(con, "SELECT * from fieldwork.cityworks_wic")
+     
+     WORK_DATE <- WORKORDER_ID %>% select(WORKORDERID, WO_INITIATEDATE)
+     
+     WOID_DATE <- inner_join(FACID_ADD_XY, WORK_DATE, by = "WORKORDERID") %>% select(WORKORDERID, LOCATION, FACILITYID, WO_INITIATEDATE)
     
    # Getting unique WIC Parcels
      
@@ -195,5 +204,8 @@
      dbWriteTable (con, SQL("fieldwork.gis_parcels"),FACID_ADD_XY)
      
      dbWriteTable (con, SQL("fieldwork.wic_parcel_facilityid"),FACILITYID_UNIQ)
+     
+     dbWriteTable (con, SQL("fieldwork.wic_parcel_faci_date"),WOID_DATE )
+     
    
      dbDisconnect(GISDB)

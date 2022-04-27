@@ -325,7 +325,7 @@
         
       }
       
-      Result <- Result %>% drop_na (smp_id,wic_parcel_facilityid, buffer,workorderid )
+      Result <- Result %>% na.omit
       
       Result['SYSTEM_ID'] <- gsub('-\\d+$','',Result$smp_id ) 
       

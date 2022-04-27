@@ -320,8 +320,8 @@
       
       if (length(Result) > 0) {
         
-      names(Result) <- c("smp_id", "wic_parcel_facilityid","buffer", "workorderid","wo_initiatedate")
-      
+        names(Result) <- c("smp_id", "wic_parcel_facilityid","buffer", "workorderid","wo_initiatedate")
+        
       }
       
       Result <- Result %>% drop_na (smp_id,wic_parcel_facilityid, buffer,workorderid )
@@ -329,6 +329,7 @@
       Result['SYSTEM_ID'] <- gsub('-\\d+$','',Result$smp_id ) 
       
       Result['phase_lookup_uid'] <- NA
+      
 
       
       

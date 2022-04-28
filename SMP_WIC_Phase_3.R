@@ -435,7 +435,6 @@
       fieldwork.wic_smps['SYSTEM_ID'] <- gsub('-\\d+$','',fieldwork.wic_smps$smp_id ) 
       
       
-      
 ## Section 6: Writing results to DB
       
       dbWriteTable (con, SQL("fieldwork.wic_smps"),fieldwork.wic_smps)

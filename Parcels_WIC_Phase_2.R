@@ -52,9 +52,9 @@
     
     con <- dbConnect(odbc(), dsn = "mars_data")
     
-    WORKORDER_ID <- dbGetQuery(con, "SELECT * from fieldwork.cityworks_wic")
+    WORKORDER_ID <- dbGetQuery(con, "SELECT * from fieldwork.wic_workorders")
     
-    WORKORDER_CM <- dbGetQuery(con, "SELECT * from fieldwork.cityworks_wic_comments")
+    WORKORDER_CM <- dbGetQuery(con, "SELECT * from fieldwork.wic_comments")
     
   # Remove {} from facilityid in cityworks 
     ###Taylor says: You can do this in one go with a capture group
@@ -180,20 +180,20 @@
     
      FACID_ADD_XY <- union_all (FACID_ADD, WOID_Based_XY)
     
-     FACID_ADD_XY <- unique(FACID_ADD_XY)
+     wic_parcels <- unique(FACID_ADD_XY)
      
      
   # Add the workorder date 
      
-     WORKORDER_ID <- dbGetQuery(con, "SELECT * from fieldwork.cityworks_wic")
+     WORKORDER_ID <- dbGetQuery(con, "SELECT * from fieldwork.wic_workorders")
      
      WORK_DATE <- WORKORDER_ID %>% select(WORKORDERID, WO_INITIATEDATE)
      
-     WOID_DATE <- inner_join(FACID_ADD_XY, WORK_DATE, by = "WORKORDERID") %>% select(WORKORDERID, LOCATION, FACILITYID, WO_INITIATEDATE)
+     wic_date <- inner_join(wic_parcels, WORK_DATE, by = "WORKORDERID") %>% select(WORKORDERID, LOCATION, FACILITYID, WO_INITIATEDATE)
     
    # Getting unique WIC Parcels
      
-     FACILITYID_UNIQ <- FACID_ADD_XY %>% select(WORKORDERID, FACILITYID) %>%
+     wic_facility_id <- wic_parcels %>% select(WORKORDERID, FACILITYID) %>%
      group_by(FACILITYID) %>%
      summarise(WORKORDERID = toString(sort(unique(WORKORDERID))))
      
@@ -201,11 +201,11 @@
     
      con <- dbConnect(odbc(), dsn = "mars_data")
     
-     dbWriteTable (con, SQL("fieldwork.gis_parcels"),FACID_ADD_XY)
+     dbWriteTable (con, SQL("fieldwork.wic_parcels"),wic_parcels)
      
-     dbWriteTable (con, SQL("fieldwork.wic_parcel_facilityid"),FACILITYID_UNIQ)
+     dbWriteTable (con, SQL("fieldwork.wic_facility_id"),wic_facility_id)
      
-     dbWriteTable (con, SQL("fieldwork.wic_parcel_faci_date"),WOID_DATE )
+     dbWriteTable (con, SQL("fieldwork.wic_date"),wic_date )
      
    
      dbDisconnect(GISDB)

@@ -431,12 +431,9 @@
       }
       
       fieldwork.wic_smps <- smp_milestones %>% select(workorderid,smp_id, wic_parcel_facilityid, buffer_ft = buffer, phase_lookup_uid)
-<<<<<<< HEAD
-      
+
       fieldwork.wic_smps['SYSTEM_ID'] <- gsub('-\\d+$','',fieldwork.wic_smps$smp_id ) 
-=======
->>>>>>> ac57ec0a6f41c176c2c228652785925d4419086f
-      
+
       
 ## Section 6: Writing results to DB
       

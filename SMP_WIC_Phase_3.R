@@ -429,12 +429,14 @@
 
       }
       
-       
+       final_data_table <- smp_milestones %>% select(workorderid,smp_id, wic_parcel_facilityid, buffer_ft = buffer, phase_lookup_uid)
       
       
 ## Section 6: Writing results to DB
       
-      dbWriteTable (con, SQL("fieldwork.wic_smp"),Result)
+      dbWriteTable (con, SQL("fieldwork.wic_smp_coupled"),final_data_table)
+      
+      dbWriteTable (con, SQL("fieldwork.wic_conphase"),wic_conphase)
       
       dbDisconnect(con)
         

@@ -205,7 +205,7 @@
      
      dbWriteTable (con, SQL("fieldwork.wic_facility_id"),wic_facility_id)
      
-     dbWriteTable (con, SQL("fieldwork.wic_date"),wic_date )
+     dbWriteTable (con, SQL("fieldwork.wic_parcels_date"),wic_date )
      
    
      dbDisconnect(GISDB)

@@ -4,12 +4,6 @@
 
 #install and load the required packages. 
 
-    install.packages("DBI")
-    install.packages("RPostgreSQL")
-    install.packages("RPostgres")
-    install.packages("odbc")
-    install.packages("dplyr")
-    install.packages("sf")
     
     
     library(DBI)
@@ -32,9 +26,9 @@
                 pwd= Sys.getenv("cw_pwd"))
     
     
-# Get the data from previous work and store in-memory-Data frame CWTABLE
+# Get the data from previous work and store in-memory-Data frame wic_workorders
 
-    CWTABLE <- dbGetQuery(cw, "SELECT wo.WORKORDERID, wo.INITIATEDATE AS WO_INITIATEDATE, wo.LOCATION, wo.WOXCOORDINATE, 
+    wic_workorders <- dbGetQuery(cw, "SELECT wo.WORKORDERID, wo.INITIATEDATE AS WO_INITIATEDATE, wo.LOCATION, wo.WOXCOORDINATE, 
     wo.WOYCOORDINATE, woe.ENTITYUID AS FACILITYID FROM Azteca.WORKORDER wo INNER JOIN 
     Azteca.REQUESTWORKORDER rwo ON wo.WORKORDERID = rwo.WORKORDERID LEFT JOIN 
     Azteca.REQUEST r ON rwo.REQUESTID = r.REQUESTID LEFT JOIN Azteca.WORKORDERENTITY woe ON 
@@ -43,9 +37,9 @@
     (wo.DESCRIPTION = 'A - LEAK INVESTIGATION' AND r.DESCRIPTION = 'WATER IN CELLAR'))
     ")
     
-# Get unique Workorderid from CWTABLE
+# Get unique Workorderid from wic_workorders
     
-    DIST_WO_ID <- select(CWTABLE, WORKORDERID) %>% distinct
+    DIST_WO_ID <- select(wic_workorders, WORKORDERID) %>% distinct
 
 # Get the workorder comments and ID from cityworks 
 # Multiple comments per workorderid, so need to concatenate the comments and separate by comma
@@ -58,12 +52,12 @@
     
 # inner join the unique workorderid from wic with concatenated comments
   
-    comments_wic <- inner_join(DIST_WO_ID, UNIQUE_WO_CM, by = "WORKORDERID")
+    wic_comments <- inner_join(DIST_WO_ID, UNIQUE_WO_CM, by = "WORKORDERID")
     
-# Connect to Pg12 and write 2 tables to DB (Primary key is workorderid in fieldwork.cityworks_wic_comments )
+# Connect to Pg12 and write 2 tables to DB 
 # Disconnect from the DB
     
     con <- dbConnect(odbc(), dsn = "mars_data")
-    dbWriteTable (con, SQL("fieldwork.cityworks_wic"),CWTABLE)
-    dbWriteTable (con, SQL("fieldwork.cityworks_wic_comments"), comments_wic)
+    dbWriteTable (con, SQL("fieldwork.wic_workorders"),wic_workorders)
+    dbWriteTable (con, SQL("fieldwork.wic_comments"), wic_comments)
     dbDisconnect(cw)

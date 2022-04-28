@@ -100,9 +100,9 @@
   # filter to get WIC associated polygons and delete the layer
       
       
-      WIC_ID_TABLE <- dbGetQuery(con, "SELECT * from fieldwork.gis_parcels")
+      WIC_ID_TABLE <- dbGetQuery(con, "SELECT * from fieldwork.wic_parcels")
       
-      WIC_ID_DATE <- dbGetQuery(con, "SELECT * from fieldwork.wic_parcel_faci_date")
+      WIC_ID_DATE <- dbGetQuery(con, "SELECT * from fieldwork.wic_parcels_date")
       
       PARCELS_SPATIAL$FACILITYID<-gsub("\\{(.*)\\}","\\1",as.character(PARCELS_SPATIAL$FACILITYID))
       
@@ -344,6 +344,7 @@
       
       smp_milestones <- inner_join(external.cipit_project, worknumber, by = c("work_number" = "worknumber"  ))  %>% select (smp_id, wic_parcel_facilityid,buffer, workorderid, wo_initiatedate, construction_start_date, pc_ntp_date, construction_complete_date, contract_closed_date) %>% unique()
       
+      
   #setting the lookup_id's default in smpmilestone to 4
       
 
@@ -429,12 +430,15 @@
 
       }
       
-       final_data_table <- smp_milestones %>% select(workorderid,smp_id, wic_parcel_facilityid, buffer_ft = buffer, phase_lookup_uid)
+      fieldwork.wic_smps <- smp_milestones %>% select(workorderid,smp_id, wic_parcel_facilityid, buffer_ft = buffer, phase_lookup_uid)
+      
+      fieldwork.wic_smps['SYSTEM_ID'] <- gsub('-\\d+$','',fieldwork.wic_smps$smp_id ) 
+      
       
       
 ## Section 6: Writing results to DB
       
-      dbWriteTable (con, SQL("fieldwork.wic_smp_coupled"),final_data_table)
+      dbWriteTable (con, SQL("fieldwork.wic_smps"),fieldwork.wic_smps)
       
       dbWriteTable (con, SQL("fieldwork.wic_conphase"),wic_conphase)
       

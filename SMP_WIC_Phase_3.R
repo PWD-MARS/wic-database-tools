@@ -338,9 +338,9 @@
       
       external.smpbdv <- dbGetQuery(con, "SELECT * FROM  external.smpbdv")
       
-      worknumber <- inner_join(Result,external.smpbdv, by = "smp_id" )  %>% select( smp_id, wic_parcel_facilityid,buffer, workorderid,wo_initiatedate, worknumber)
+      worknumber <- inner_join(Result,external.smpbdv, by = "smp_id" )  %>% select( smp_id, wic_facility_id,buffer_ft, workorder_id,wo_initiatedate, worknumber)
       
-      smp_milestones <- inner_join(external.cipit_project, worknumber, by = c("work_number" = "worknumber"  ))  %>% select (smp_id, wic_parcel_facilityid,buffer, workorderid, wo_initiatedate, construction_start_date, pc_ntp_date, construction_complete_date, contract_closed_date) %>% unique()
+      smp_milestones <- inner_join(external.cipit_project, worknumber, by = c("work_number" = "worknumber"  ))  %>% select (smp_id, wic_facility_id,buffer_ft, workorder_id,wo_initiatedate, construction_start_date, pc_ntp_date, construction_complete_date, contract_closed_date) %>% unique()
       
       
   #setting the lookup_id's default in smpmilestone to 4
@@ -428,16 +428,16 @@
 
       }
       
-      fieldwork.wic_smps <- smp_milestones %>% select(workorderid,smp_id, wic_parcel_facilityid, buffer_ft = buffer, phase_lookup_uid)
+      fieldwork.wic_smps <- smp_milestones %>% select(workorder_id,smp_id, wic_facility_id, buffer_ft, phase_lookup_uid)
 
-      fieldwork.wic_smps['SYSTEM_ID'] <- gsub('-\\d+$','',fieldwork.wic_smps$smp_id ) 
+      fieldwork.wic_smps['system_id'] <- gsub('-\\d+$','',fieldwork.wic_smps$smp_id ) 
 
       
 ## Section 6: Writing results to DB
       
-      dbWriteTable (con, SQL("fieldwork.wic_smps"),fieldwork.wic_smps)
+      dbWriteTable (con, SQL("fieldwork.wic_smps"),fieldwork.wic_smps,append= TRUE, row.names = FALSE)
       
-      dbWriteTable (con, SQL("fieldwork.wic_conphase"),wic_conphase)
+      dbWriteTable (con, SQL("fieldwork.wic_conphase"),wic_conphase,append= TRUE, row.names = FALSE)
       
       dbDisconnect(con)
         

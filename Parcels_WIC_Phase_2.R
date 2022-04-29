@@ -189,7 +189,7 @@
      
      WORK_DATE <- WORKORDER_ID %>% select(WORKORDERID, WO_INITIATEDATE)
      
-     wic_date <- inner_join(wic_parcels, WORK_DATE, by = "WORKORDERID") %>% select(WORKORDERID, LOCATION, FACILITYID, WO_INITIATEDATE)
+     wic_parcels <- inner_join(wic_parcels, WORK_DATE, by = "WORKORDERID") %>% select(WORKORDERID, LOCATION, FACILITYID, WO_INITIATEDATE)
     
    # Getting unique WIC Parcels
      
@@ -205,7 +205,4 @@
      
      dbWriteTable (con, SQL("fieldwork.wic_facility_id"),wic_facility_id)
      
-     dbWriteTable (con, SQL("fieldwork.wic_parcels_date"),wic_date )
-     
-   
      dbDisconnect(GISDB)

@@ -102,11 +102,9 @@
       
       WIC_ID_TABLE <- dbGetQuery(con, "SELECT * from fieldwork.wic_parcels")
       
-      WIC_ID_DATE <- dbGetQuery(con, "SELECT * from fieldwork.wic_parcels_date")
-      
       PARCELS_SPATIAL$FACILITYID<-gsub("\\{(.*)\\}","\\1",as.character(PARCELS_SPATIAL$FACILITYID))
       
-      Parcels_WIC_Filterd <- inner_join(PARCELS_SPATIAL, WIC_ID_DATE, by = "FACILITYID") 
+      Parcels_WIC_Filterd <- inner_join(PARCELS_SPATIAL, WIC_ID_TABLE, by = "FACILITYID") 
       
       rm(PARCELS_SPATIAL)
       

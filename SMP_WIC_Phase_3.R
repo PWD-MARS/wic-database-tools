@@ -104,13 +104,13 @@
       
       PARCELS_SPATIAL$FACILITYID<-gsub("\\{(.*)\\}","\\1",as.character(PARCELS_SPATIAL$FACILITYID))
       
-      Parcels_WIC_Filterd <- inner_join(PARCELS_SPATIAL, WIC_ID_TABLE, by = "FACILITYID") 
+      Parcels_WIC_Filterd <- inner_join(PARCELS_SPATIAL, WIC_ID_TABLE, by = c("FACILITYID"="facility_id") )
       
       rm(PARCELS_SPATIAL)
       
       Parcels_filtered_df <-as.data.frame(Parcels_WIC_Filterd)
       
-      Parcels_filtered_df$WO_INITIATEDATE <- as.Date(Parcels_filtered_df$WO_INITIATEDATE)
+      Parcels_filtered_df$wo_initiatedate <- as.Date(Parcels_filtered_df$wo_initiatedate)
       
       
   # Drop columns except the SMP_ID and Merge all SMPs
@@ -208,9 +208,9 @@
             
         FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
         
-        WO_ID <- Parcels_filtered_df[temp, "WORKORDERID"]
+        WO_ID <- Parcels_filtered_df[temp, "workorder_id"]
         
-        WO_Date <- Parcels_filtered_df[temp, "WO_INITIATEDATE"]
+        WO_Date <- Parcels_filtered_df[temp, "wo_initiatedate"]
         
         
                  
@@ -250,9 +250,9 @@
         if (length(temp) > 0) {
           FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
           
-          WO_ID <- Parcels_filtered_df[temp, "WORKORDERID"]
+          WO_ID <- Parcels_filtered_df[temp, "workorder_id"]
           
-          WO_Date <- Parcels_filtered_df[temp, "WO_INITIATEDATE"]
+          WO_Date <- Parcels_filtered_df[temp, "wo_initiatedate"]
           
           SMPID <- GSI [i,"SMP_ID"]
           
@@ -289,9 +289,9 @@
           
           FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
           
-          WO_ID <- Parcels_filtered_df[temp, "WORKORDERID"]
+          WO_ID <- Parcels_filtered_df[temp, "workorder_id"]
           
-          WO_Date <- Parcels_filtered_df[temp, "WO_INITIATEDATE"]
+          WO_Date <- Parcels_filtered_df[temp, "wo_initiatedate"]
           
           
           SMPID <- GSI [i,"SMP_ID"]
@@ -319,13 +319,13 @@
       
       if (length(Result) > 0) {
         
-        names(Result) <- c("smp_id", "wic_parcel_facilityid","buffer", "workorderid","wo_initiatedate")
+        names(Result) <- c("smp_id", "wic_facility_id","buffer_ft", "workorder_id","wo_initiatedate")
         
       }
       
       Result <- Result %>% na.omit
       
-      Result['SYSTEM_ID'] <- gsub('-\\d+$','',Result$smp_id ) 
+      Result['system_id'] <- gsub('-\\d+$','',Result$smp_id ) 
       
 
       

@@ -54,10 +54,13 @@
   
     wic_comments <- inner_join(DIST_WO_ID, UNIQUE_WO_CM, by = "WORKORDERID")
     
+    names(wic_comments) <- c("workorder_id", "comments")
+    
+    
 # Connect to Pg12 and write 2 tables to DB 
 # Disconnect from the DB
     
     con <- dbConnect(odbc(), dsn = "mars_data")
-    dbWriteTable (con, SQL("fieldwork.wic_workorders"),wic_workorders)
-    dbWriteTable (con, SQL("fieldwork.wic_comments"), wic_comments)
+    dbWriteTable (con, SQL("fieldwork.wic_workorders"),wic_workorders,append= TRUE, row.names = FALSE)
+    dbWriteTable (con, SQL("fieldwork.wic_comments"), wic_comments, append= TRUE, row.names = FALSE)
     dbDisconnect(cw)

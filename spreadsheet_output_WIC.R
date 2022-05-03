@@ -52,6 +52,7 @@
     construction stage of the intersecting SMP
     
     The information contains:"
+
     intro[2, ] <-"system_id: system id of SMP"
     intro[3, ] <-"location: collected from GIS DB and referes to the addresses associated with the complaining parcels (houses etc)"
     intro[4, ] <-"wo_initiatedate: WIC complaint date" 
@@ -64,8 +65,6 @@
     file_name <- paste("wic_",Sys.Date(),".xlsx")
 
     
-    
-    
 ### Section 3: write  the data into  three sheets within an xlsx file 
     
     write.xlsx(intro, file = file_name , sheetName = "Introduction", append = TRUE, col.names = FALSE, row.names = FALSE)
@@ -76,7 +75,7 @@
     
     write.xlsx(output_100ft, file = file_name , sheetName = "100_ft_radius", append = TRUE )
 
-    
+
     
     
     

@@ -75,7 +75,22 @@
     write.xlsx(output_100ft, file = file_name , sheetName = "100_ft_radius", append = TRUE )
 
     
+### shiny UI
+    
+    ui <- navbarPage(
+      "WIC",   
+  
+      navbarMenu("WIC tools", 
+                 tabPanel("25 ft", "25 ft radius"),
+                 tabPanel("50 ft", "50 ft radius"),
+                 tabPanel("100 ft", "100 ft radius")
+      ),
+      tabPanel("Help", "Please use this tool"),
+      
+      
+    )
 
-
-
+    server <- function(input, output, session) {
+    }
+    shinyApp(ui, server)
 

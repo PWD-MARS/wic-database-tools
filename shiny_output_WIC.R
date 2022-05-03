@@ -66,13 +66,7 @@
     
 ### Section 3: write  the data into  three sheets within an xlsx file 
     
-    write.xlsx(intro, file = file_name , sheetName = "Introduction", append = TRUE, col.names = FALSE, row.names = FALSE)
-    
-    write.xlsx(output_25ft, file = file_name , sheetName = "25_ft_radius", append = TRUE )
-    
-    write.xlsx(output_50ft, file = file_name , sheetName = "50_ft_radius", append = TRUE )
-    
-    write.xlsx(output_100ft, file = file_name , sheetName = "100_ft_radius", append = TRUE )
+ 
 
     
 ### shiny UI
@@ -86,7 +80,9 @@
                  tabPanel("100 ft", "100 ft radius")
       ), 
       tabPanel("Help", "Please use this tool"),
-
+      
+      
+      
       )
 
     server <- function(input, output, session) {

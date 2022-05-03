@@ -44,22 +44,20 @@
     output_50ft$wo_initiatedate <- as.Date(output_50ft$wo_initiatedate)
     output_100ft$wo_initiatedate <- as.Date(output_100ft$wo_initiatedate)
     
-    intro <- data.frame(matrix(NA,8,1))
-    intro[1, ] <- "This spreadsheet contains information about the water-in-cellar complaints recorded in the cityworks database during various stages of SMPs constructions. 
-    WICs were identified by collecting the work requests that had 'WATER IN CELLAR' in their descriptions. These orders were later matched with their facility ids, addresses and XY coordinates in the GIS DB 
-    to associate them with parcel facility IDs. These parcels will be the structures (homes, businesses, etc) at which water was detected in the cellar. 
-    Then these WIC parcels were intersected with SMPs within 25, 50, and 100 ft of distance from them. WIC complains were then categorized based on the 
-    construction stage of the intersecting SMP
-    
-    The information contains:"
-
-    intro[2, ] <-"system_id: system id of SMP"
-    intro[3, ] <-"location: collected from GIS DB and referes to the addresses associated with the complaining parcels (houses etc)"
-    intro[4, ] <-"wo_initiatedate: WIC complaint date" 
-    intro[5, ] <-"phase: Construction status of SMP (pre/mid/post/NA) when the WIC complaint has been filed"
-    intro[6, ] <-"buffer_ft: Buffer distance (ft) from an SMP centroid"
-    intro[7, ] <-"workorder_id: Work order IDs of WIC complaints"
-    intro[8, ] <-"comments: Work order comments"                              
+    intro <- data.frame(matrix(NA,13,1))
+    intro[1, ] <- "This spreadsheet contains information about the water-in-cellar complaints recorded in the cityworks database during various stages of SMPs constructions." 
+    intro[2, ] <- "WICs were identified by collecting the work requests that had 'WATER IN CELLAR' in their descriptions. These orders were later matched with their facility ids, addresses and XY coordinates in the GIS DB" 
+    intro[3, ] <- "to associate them with parcel facility IDs. These parcels will be the structures (homes, businesses, etc) at which water was detected in the cellar. "
+    intro[4, ] <- "Then these WIC parcels were intersected with SMPs within 25, 50, and 100 ft of distance from them. WIC complains were then categorized based on the "
+    intro[5, ] <- "construction stage of the intersecting SMP"
+    intro[6, ] <- "The information contains:"
+    intro[7, ] <-"system_id: system id of SMP"
+    intro[8, ] <-"location: collected from GIS DB and referes to the addresses associated with the complaining parcels (houses etc)"
+    intro[9, ] <-"wo_initiatedate: WIC complaint date" 
+    intro[10, ] <-"phase: Construction status of SMP (pre/mid/post/NA) when the WIC complaint has been filed"
+    intro[11, ] <-"buffer_ft: Buffer distance (ft) from an SMP centroid"
+    intro[12, ] <-"workorder_id: Work order IDs of WIC complaints"
+    intro[13, ] <-"comments: Work order comments"                              
     
 
     file_name <- paste("wic_",Sys.Date(),".xlsx")

@@ -80,7 +80,9 @@
                  tabPanel("100 ft", "100 ft radius")
       ), 
       tabPanel("Help", "Please use this tool"),
-
+      
+      
+      
       )
 
     server <- function(input, output, session) {

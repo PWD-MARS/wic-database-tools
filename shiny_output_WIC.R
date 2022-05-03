@@ -19,6 +19,9 @@
     library(tidyr)
     library(xlsx)
     library(shiny)
+    library(DT)
+    
+    
     con <- dbConnect(odbc(), dsn = "mars_data")
 
     wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_workorders ")
@@ -70,22 +73,23 @@
 
     
 ### shiny UI
-    
-    ui <- navbarPage(
-      "WIC",   
+    library(shiny)
+    library(DT)
+    shinyApp(
+      ui = fluidPage(
+        fluidRow(
+          column(12,
+                 DTOutput('table')
+          )
+        )
+      ),
+      server = function(input, output) {
+        output$table <- renderDT(output_25ft,
+                                 filter = "top",
+                                 options = list(
+                                   pageLength = 10
+                                 )
+        )
+      }
+    )
   
-      navbarMenu("WIC tools", 
-                 tabPanel("25 ft", "25 ft radius"),
-                 tabPanel("50 ft", "50 ft radius"),
-                 tabPanel("100 ft", "100 ft radius")
-      ), 
-      tabPanel("Help", "Please use this tool"),
-      
-      
-      
-      )
-
-    server <- function(input, output, session) {
-    }
-    shinyApp(ui, server)
-

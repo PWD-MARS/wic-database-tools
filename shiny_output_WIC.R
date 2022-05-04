@@ -78,9 +78,27 @@
     library(shiny)
     library(DT)
     
-    ui <- fluidPage(
-      reactableOutput("table")
+  
+    
+    
+    ui <- navbarPage(
+      "WIC",   
+      tabPanel("Help", "Hey yo"),
+      navbarMenu("WIC components", 
+                 tabPanel("25 ft", reactableOutput("table")),
+                 tabPanel("50 ft", "four-b"),
+                 tabPanel("100 ft", "four-c")
+      )
     )
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     server <- function(input, output) {
       output$table <- renderReactable({

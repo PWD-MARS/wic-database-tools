@@ -51,21 +51,21 @@
     output_all <- bind_rows(output_25ft,output_50ft,output_100ft)
     
     intro <- data.frame(matrix(NA,8,1))
-    intro[1, ] <- "This spreadsheet contains information about the water-in-cellar complaints recorded in the cityworks database during various stages of SMPs constructions. 
+    intro <- "This spreadsheet contains information about the water-in-cellar complaints recorded in the cityworks database during various stages of SMPs constructions. 
         WICs were identified by collecting the work requests that had 'WATER IN CELLAR' in their descriptions. These orders were later matched with their facility ids, addresses and XY coordinates in the GIS DB 
         to associate them with parcel facility IDs. These parcels will be the structures (homes, businesses, etc) at which water was detected in the cellar. 
         Then these WIC parcels were intersected with SMPs within 25, 50, and 100 ft of distance from them. WIC complains were then categorized based on the 
         construction stage of the intersecting SMP
         
-        The information contains:"
+        The information contains:
     
-    intro[2, ] <-"system_id: system id of SMP"
-    intro[3, ] <-"location: collected from GIS DB and referes to the addresses associated with the complaining parcels (houses etc)"
-    intro[4, ] <-"wo_initiatedate: WIC complaint date" 
-    intro[5, ] <-"phase: Construction status of SMP (pre/mid/post/NA) when the WIC complaint has been filed"
-    intro[6, ] <-"buffer_ft: Buffer distance (ft) from an SMP centroid"
-    intro[7, ] <-"workorder_id: Work order IDs of WIC complaints"
-    intro[8, ] <-"comments: Work order comments"   
+    system_id: system id of SMP
+    location: collected from GIS DB and referes to the addresses associated with the complaining parcels (houses etc)
+    wo_initiatedate: WIC complaint date
+    hase: Construction status of SMP (pre/mid/post/NA) when the WIC complaint has been filed
+    buffer_ft: Buffer distance (ft) from an SMP centroid
+    workorder_id: Work order IDs of WIC complaints
+    comments: Work order comments"  
     
     file_name <- paste("wic_",Sys.Date(),".xlsx")
  
@@ -84,7 +84,7 @@
                  tabPanel("50 ft", reactableOutput("table_2")),
                  tabPanel("100 ft", reactableOutput("table_3"))
       ),
-      tabPanel("Help", "Hey yo")
+      tabPanel("Help", intro)
     )
     server <- function(input, output) {
       output$table_1 <- renderReactable({

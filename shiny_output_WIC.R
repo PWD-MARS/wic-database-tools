@@ -20,6 +20,7 @@
     library(xlsx)
     library(shiny)
     library(DT)
+    library(reactable)
     
     
     con <- dbConnect(odbc(), dsn = "mars_data")

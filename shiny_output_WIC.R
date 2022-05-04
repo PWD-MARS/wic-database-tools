@@ -68,14 +68,10 @@
     intro[8, ] <-"comments: Work order comments"   
     
     file_name <- paste("wic_",Sys.Date(),".xlsx")
-    
-    
-### Section 3: write  the data into  three sheets within an xlsx file 
-    
  
 
     
-### shiny UI
+### Section 3: shiny UI
     
     
     
@@ -88,7 +84,9 @@
     
     server <- function(input, output) {
       output$table <- renderReactable({
-        reactable(output_all, filterable = TRUE)
+        reactable(output_25ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 4,filterable = TRUE,  columns = list(
+          buffer_ft = colDef(filterable = FALSE)
+        ))
       })
     }
     

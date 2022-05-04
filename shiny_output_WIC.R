@@ -67,11 +67,8 @@
     workorder_id: Work order IDs of WIC complaints
     comments: Work order comments"  
     
-    file_name <- paste("wic_",Sys.Date(),".xlsx")
- 
 
-    
-### Section 3: shiny UI
+### Section 3: shiny 
     
     
     

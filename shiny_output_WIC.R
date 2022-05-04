@@ -77,29 +77,15 @@
     
     library(shiny)
     library(DT)
-    
-  
-    
-    
     ui <- navbarPage(
       "WIC",   
-      tabPanel("Help", "Hey yo"),
       navbarMenu("WIC components", 
                  tabPanel("25 ft", reactableOutput("table_1")),
                  tabPanel("50 ft", reactableOutput("table_2")),
                  tabPanel("100 ft", reactableOutput("table_3"))
-      )
+      ),
+      tabPanel("Help", "Hey yo")
     )
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     server <- function(input, output) {
       output$table_1 <- renderReactable({
         reactable(output_25ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 5,filterable = TRUE,  columns = list(
@@ -118,9 +104,6 @@
           buffer_ft = colDef(filterable = FALSE)
         ))
       })
-      
-      
-      
     }
     
     shinyApp(ui, server)

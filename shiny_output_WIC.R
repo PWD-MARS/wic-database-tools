@@ -69,10 +69,6 @@
 
 ### Section 3: shiny 
     
-    
-    
-    library(shiny)
-    library(DT)
     ui <- fluidPage(navbarPage(
       "WIC",   
       navbarMenu("WIC components", 

@@ -85,9 +85,9 @@
       "WIC",   
       tabPanel("Help", "Hey yo"),
       navbarMenu("WIC components", 
-                 tabPanel("25 ft", reactableOutput("table")),
-                 tabPanel("50 ft", "four-b"),
-                 tabPanel("100 ft", "four-c")
+                 tabPanel("25 ft", reactableOutput("table_1")),
+                 tabPanel("50 ft", reactableOutput("table_2")),
+                 tabPanel("100 ft", reactableOutput("table_3"))
       )
     )
     
@@ -101,11 +101,26 @@
     
     
     server <- function(input, output) {
-      output$table <- renderReactable({
-        reactable(output_25ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 4,filterable = TRUE,  columns = list(
+      output$table_1 <- renderReactable({
+        reactable(output_25ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 5,filterable = TRUE,  columns = list(
           buffer_ft = colDef(filterable = FALSE)
         ))
       })
+      
+      output$table_2 <- renderReactable({
+        reactable(output_50ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 5,filterable = TRUE,  columns = list(
+          buffer_ft = colDef(filterable = FALSE)
+        ))
+      })
+      
+      output$table_3 <- renderReactable({
+        reactable(output_100ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 5,filterable = TRUE,  columns = list(
+          buffer_ft = colDef(filterable = FALSE)
+        ))
+      })
+      
+      
+      
     }
     
     shinyApp(ui, server)

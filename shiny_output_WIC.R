@@ -20,6 +20,7 @@
     library(xlsx)
     library(shiny)
     library(DT)
+    library(reactable)
     
     
     con <- dbConnect(odbc(), dsn = "mars_data")
@@ -47,6 +48,8 @@
     output_50ft$wo_initiatedate <- as.Date(output_50ft$wo_initiatedate)
     output_100ft$wo_initiatedate <- as.Date(output_100ft$wo_initiatedate)
     
+    output_all <- bind_rows(output_25ft,output_50ft,output_100ft)
+    
     intro <- data.frame(matrix(NA,8,1))
     intro[1, ] <- "This spreadsheet contains information about the water-in-cellar complaints recorded in the cityworks database during various stages of SMPs constructions. 
         WICs were identified by collecting the work requests that had 'WATER IN CELLAR' in their descriptions. These orders were later matched with their facility ids, addresses and XY coordinates in the GIS DB 
@@ -73,23 +76,21 @@
 
     
 ### shiny UI
+    
+    
+    
     library(shiny)
     library(DT)
-    shinyApp(
-      ui = fluidPage(
-        fluidRow(
-          column(12,
-                 DTOutput('table')
-          )
-        )
-      ),
-      server = function(input, output) {
-        output$table <- renderDT(output_25ft,
-                                 filter = "top",
-                                 options = list(
-                                   pageLength = 10
-                                 )
-        )
-      }
+    
+    ui <- fluidPage(
+      reactableOutput("table")
     )
+    
+    server <- function(input, output) {
+      output$table <- renderReactable({
+        reactable(output_all, filterable = TRUE)
+      })
+    }
+    
+    shinyApp(ui, server)
   

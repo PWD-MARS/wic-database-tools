@@ -31,14 +31,30 @@
     
 ### Section 2: processing the data into 3 tables (buffers: 25, 50, and 100 ft) and change the data format
     
-    output_25ft <- inner_join(wic_smps, wic_conphase, by = c("phase_lookup_uid"="wic_uid") ) %>% select(-phase_lookup_uid,-wic_smps_uid) %>% inner_join(wic_comments, by="workorder_id") %>% select(-wic_comments_uid)%>% 
-    inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>% select(-wic_parcels_uid,-wic_facility_id) %>% filter(buffer_ft == 25)                                    
+    ### Taylor says: Do pipelines like this
+    output_25ft <- inner_join(wic_smps, wic_conphase, by = c("phase_lookup_uid"="wic_uid") ) %>% 
+      select(-phase_lookup_uid,-wic_smps_uid) %>% 
+      inner_join(wic_comments, by="workorder_id") %>% 
+      select(-wic_comments_uid) %>%
+      inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>% 
+      select(-wic_parcels_uid,-wic_facility_id) %>% 
+      filter(buffer_ft == 25)                                    
  
-    output_50ft <- inner_join(wic_smps, wic_conphase, by = c("phase_lookup_uid"="wic_uid") ) %>% select(-phase_lookup_uid,-wic_smps_uid) %>% inner_join(wic_comments, by="workorder_id") %>% select(-wic_comments_uid)%>% 
-    inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>% select(-wic_parcels_uid,-wic_facility_id) %>% filter(buffer_ft == 50)    
+    output_50ft <- inner_join(wic_smps, wic_conphase, by = c("phase_lookup_uid"="wic_uid") ) %>% 
+      select(-phase_lookup_uid,-wic_smps_uid) %>% 
+      inner_join(wic_comments, by="workorder_id") %>% 
+      select(-wic_comments_uid) %>% 
+      inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>% 
+      select(-wic_parcels_uid,-wic_facility_id) %>% 
+      filter(buffer_ft == 50)    
     
-    output_100ft <- inner_join(wic_smps, wic_conphase, by = c("phase_lookup_uid"="wic_uid") ) %>% select(-phase_lookup_uid,-wic_smps_uid) %>% inner_join(wic_comments, by="workorder_id") %>% select(-wic_comments_uid)%>% 
-    inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>% select(-wic_parcels_uid,-wic_facility_id) %>% filter(buffer_ft == 100)
+    output_100ft <- inner_join(wic_smps, wic_conphase, by = c("phase_lookup_uid"="wic_uid") ) %>% 
+      select(-phase_lookup_uid,-wic_smps_uid) %>% 
+      inner_join(wic_comments, by="workorder_id") %>% 
+      select(-wic_comments_uid) %>% 
+      inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>% 
+      select(-wic_parcels_uid,-wic_facility_id) %>% 
+      filter(buffer_ft == 100)
     
     output_25ft$wo_initiatedate <- as.Date(output_25ft$wo_initiatedate)
     output_50ft$wo_initiatedate <- as.Date(output_50ft$wo_initiatedate)
@@ -64,19 +80,14 @@
 
     
 ### Section 3: write  the data into  three sheets within an xlsx file 
-    
-    write.xlsx(intro, file = file_name , sheetName = "Introduction", append = TRUE, col.names = FALSE, row.names = FALSE)
+
+    write.xlsx(intro, file = file_name , sheetName = "Introduction", colNames = FALSE, rowNames = FALSE)
     
     write.xlsx(output_25ft, file = file_name , sheetName = "25_ft_radius", append = TRUE )
     
     write.xlsx(output_50ft, file = file_name , sheetName = "50_ft_radius", append = TRUE )
     
     write.xlsx(output_100ft, file = file_name , sheetName = "100_ft_radius", append = TRUE )
-
-
-    
-    
-    
     
     
     

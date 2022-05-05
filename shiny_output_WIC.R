@@ -71,12 +71,23 @@
     
     ui <- fluidPage(navbarPage(
       "WIC",   
-      navbarMenu("WIC components", 
-                 tabPanel("25 ft", reactableOutput("table_1")),
-                 tabPanel("50 ft", reactableOutput("table_2")),
-                 tabPanel("100 ft", reactableOutput("table_3"))
-      ),
-      tabPanel("Help", intro)
+      tabPanel("Help",intro),
+      tabPanel("WIC", titlePanel("WIC components"),
+               
+               sidebarLayout(
+                 
+                 sidebarPanel(
+                   # Inputs excluded for brevity
+                 ),
+                 
+                 mainPanel(
+                   tabsetPanel(
+                     tabPanel("25 ft", reactableOutput("table_1")), 
+                     tabPanel("50 ft", reactableOutput("table_2")), 
+                     tabPanel("100 ft", reactableOutput("table_3"))
+                   )
+                 )
+               ))
     ))
     server <- function(input, output) {
       output$table_1 <- renderReactable({

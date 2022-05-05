@@ -67,7 +67,7 @@
     comments: Work order comments"  
     
 
-### Section 3: shiny 
+### Section 3: shiny work
     
     ui <- fluidPage(navbarPage(
       "WIC",   

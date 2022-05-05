@@ -77,7 +77,7 @@
                sidebarLayout(
                  
                  sidebarPanel(
-                   downloadButton("download1")
+                   downloadButton("download1"), width = 3
                  ),
                  
                  mainPanel(

@@ -81,7 +81,7 @@
     
 ### Section 3: write  the data into  three sheets within an xlsx file 
 
-    write.xlsx(intro, file = file_name , sheetName = "Introduction", colNames = FALSE, rowNames = FALSE)
+    write.xlsx(intro, file = file_name , sheetName = "Introduction", colNames = FALSE, rowNames = FALSE) 
     
     write.xlsx(output_25ft, file = file_name , sheetName = "25_ft_radius", append = TRUE )
     

@@ -17,7 +17,6 @@
     library(odbc)
     library(dplyr)
     library(tidyr)
-    #library(xlsx)
     library(shiny)
     library(DT)
     library(reactable)
@@ -65,24 +64,7 @@
     buffer_ft: Buffer distance (ft) from an SMP centroid
     workorder_id: Work order IDs of WIC complaints
     comments: Work order comments"  
-    
-    intro_xlsx <- data.frame(matrix(NA,13,1))
-    ###Taylor says: Format this with newlines (\n) and possibly tabs and bullets for clarity.
-    intro_xlsx[1, ] <- "This spreadsheet contains information about the water-in-cellar complaints recorded in the cityworks database during various stages of SMPs constructions." 
-    intro_xlsx[2, ] <- "WICs were identified by collecting the work requests that had 'WATER IN CELLAR' in their descriptions. These orders were later matched with their facility ids, addresses and XY coordinates in the GIS DB" 
-    intro_xlsx[3, ] <- "to associate them with parcel facility IDs. These parcels will be the structures (homes, businesses, etc) at which water was detected in the cellar. "
-    intro_xlsx[4, ] <- "Then these WIC parcels were intersected with SMPs within 25, 50, and 100 ft of distance from them. WIC complains were then categorized based on the "
-    intro_xlsx[5, ] <- "construction stage of the intersecting SMP"
-    intro_xlsx[6, ] <- "The information contains:"
-    intro_xlsx[7, ] <-"system_id: system id of SMP"
-    intro_xlsx[8, ] <-"location: collected from GIS DB and referes to the addresses associated with the complaining parcels (houses etc)"
-    intro_xlsx[9, ] <-"wo_initiatedate: WIC complaint date" 
-    intro_xlsx[10, ] <-"phase: Construction status of SMP (pre/mid/post/NA) when the WIC complaint has been filed"
-    intro_xlsx[11, ] <-"buffer_ft: Buffer distance (ft) from an SMP centroid"
-    intro_xlsx[12, ] <-"workorder_id: Work order IDs of WIC complaints"
-    intro_xlsx[13, ] <-"comments: Work order comments"    
-    
-    file_name <- paste("wic_",Sys.Date(),".xlsx")
+  
     
   
 

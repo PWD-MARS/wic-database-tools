@@ -75,7 +75,7 @@
                sidebarLayout(
                  
                  sidebarPanel(
-                   downloadButton("WIC_SMP","Download in .CSV"), width = 3 ###Always capitalize labels
+                   downloadButton("WIC","Download in .CSV"), width = 3 ###Always capitalize labels
                  ),
                  
                  mainPanel(
@@ -131,9 +131,9 @@
       #   content = function(file) {write.xlsx(mtcars, path = file)}
       # )
       
-      output$WIC_SMP <- downloadHandler(
-         filename = function() { "WIC_SMP_TEST. csv"},
-         content = function(file) {write.csv(output_all, path = file)}
+      output$WIC <- downloadHandler(
+         filename = function() { "WIC_SMP .CSV"},
+         content = function(file) {write.csv(output_all, file)}
          )
         
       

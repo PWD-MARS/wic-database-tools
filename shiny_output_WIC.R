@@ -59,16 +59,18 @@
     names(output_50ft) <- c("work order ID", "SMP ID", "buffer_ft", "system ID", "phase of construction", " comments","address", "date of complaint")
     names(output_100ft) <- c("work order ID", "SMP ID", "buffer_ft", "system ID", "phase of construction", " comments","address", "date of complaint")
     
+    
+    output_25ft <- output_25ft[,c("SMP ID","system ID","work order ID", "phase of construction", "date of complaint","address"," comments","buffer_ft")]
+    output_50ft <- output_50ft[,c("SMP ID","system ID","work order ID", "phase of construction", "date of complaint","address"," comments","buffer_ft")]
+    output_100ft <- output_100ft[,c("SMP ID","system ID","work order ID", "phase of construction", "date of complaint","address"," comments","buffer_ft")]
+    
 
 ### Section 3: shiny work
     
     ui <- fluidPage(navbarPage(
-      "Water in Cellar (WIC) Complaints around SMPs",   ###Taylor says: more informative name. If we have multiple wic shiny apps we must differentiate
-      ###Taylor says: Switch the order of these tabs. App first, help second
-      tabPanel("Help page",verbatimTextOutput("text")), ###Rename to something like Help Page/Introduction or something more informative
-      tabPanel("WIC-SMP association ", titlePanel("WIC complaints within 25, 50, and 100 feet of SMPs"), ###Rename both: What are we doing with the WICs?
-              ### We're finding their distance from public SMPs. Comvey this in the name
-               
+      "Water in Cellar (WIC) Complaints Around Public SMPs",   
+      tabPanel("WIC-SMP Association ", titlePanel("WIC complaints within 25, 50, and 100 feet of SMPs"), 
+
                sidebarLayout(
                  
                  sidebarPanel(
@@ -77,12 +79,13 @@
                  
                  mainPanel(
                    tabsetPanel(
-                     tabPanel("25 ft", reactableOutput("table_1")), ###Taylor says: More explicit output object names
-                     tabPanel("50 ft", reactableOutput("table_2")), ###Taylor says: More explicit tab mames: "25 ft from SMP" or something
-                     tabPanel("100 ft", reactableOutput("table_3"))
+                     tabPanel("Within 25 ft of SMP", reactableOutput("table_1")), ###Taylor says: More explicit output object names
+                     tabPanel("Within 50 ft of SMP", reactableOutput("table_2")), ###Taylor says: More explicit tab mames: "25 ft from SMP" or something
+                     tabPanel("Within 100 ft of SMP", reactableOutput("table_3"))
                    )
                  )
-               ))
+               )),
+      tabPanel("Help Page",verbatimTextOutput("text")),
     ))
     server <- function(input, output) {
       ###Taylor says: Format header names to be in plain english, not variable names. Work Order ID instead of workorder_id, Buffer (ft) instead of buffer_ft, etc

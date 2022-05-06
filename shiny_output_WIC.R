@@ -133,7 +133,7 @@
       
       output$WIC <- downloadHandler(
          filename = function() { "WIC_SMP_all_buffers .CSV"},
-         content = function(file) {write.csv(output_all, file)}
+         content = function(file) {write.csv(output_all, file,row.names=FALSE)}
          )
         
       

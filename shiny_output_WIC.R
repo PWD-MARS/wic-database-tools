@@ -3,15 +3,6 @@
 
 ### Section 1: data gathering
 
-  # Connect to MARS DB and gather all the data:
-  # System ID
-  # Parcel address (per Julie's request)
-  # WIC complaint date
-  # Construction status (pre/mid/post/NA)
-  # Buffer distance
-  # Work order ID
-  # Work order comments)
-
 
     library(DBI)
     library(odbc)

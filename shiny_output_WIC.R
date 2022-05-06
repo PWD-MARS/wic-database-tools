@@ -53,7 +53,6 @@
     output_50ft$wo_initiatedate <- as.Date(output_50ft$wo_initiatedate)
     output_100ft$wo_initiatedate <- as.Date(output_100ft$wo_initiatedate)
     
-    output_all <- bind_rows(output_25ft,output_50ft,output_100ft)
     
     names(output_25ft) <- c("work order ID", "SMP ID", "buffer_ft", "system ID", "phase of construction", " comments","address", "date of complaint")
     names(output_50ft) <- c("work order ID", "SMP ID", "buffer_ft", "system ID", "phase of construction", " comments","address", "date of complaint")
@@ -63,6 +62,8 @@
     output_25ft <- output_25ft[,c("SMP ID","system ID","work order ID", "phase of construction", "date of complaint","address"," comments","buffer_ft")]
     output_50ft <- output_50ft[,c("SMP ID","system ID","work order ID", "phase of construction", "date of complaint","address"," comments","buffer_ft")]
     output_100ft <- output_100ft[,c("SMP ID","system ID","work order ID", "phase of construction", "date of complaint","address"," comments","buffer_ft")]
+    
+    output_all <- bind_rows(output_25ft,output_50ft,output_100ft)
     
 
 ### Section 3: shiny work
@@ -74,7 +75,7 @@
                sidebarLayout(
                  
                  sidebarPanel(
-                   downloadButton("wici","download"), width = 3 ###Always capitalize labels
+                   downloadButton("WIC_SMP","Download in .CSV"), width = 3 ###Always capitalize labels
                  ),
                  
                  mainPanel(
@@ -88,7 +89,6 @@
       tabPanel("Help Page",verbatimTextOutput("text")),
     ))
     server <- function(input, output) {
-      ###Taylor says: Format header names to be in plain english, not variable names. Work Order ID instead of workorder_id, Buffer (ft) instead of buffer_ft, etc
       output$table_1 <- renderReactable({
         reactable(output_25ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 5,filterable = TRUE,  columns = list(
           buffer_ft = colDef(filterable = FALSE)
@@ -110,18 +110,18 @@
       
       output$text <- renderText({
         paste("This shiny app provides information about the water-in-cellar complaints recorded in the cityworks database during various stages of SMPs constructions.", 
-              "WICs were identified by collecting the work requests that had 'WATER IN CELLAR' in their descriptions. These orders were later matched with their facility ids, addresses and XY coordinates in the GIS DB to associate them with parcel facility IDs.",
-              "These parcels will be the structures (homes, businesses, etc) at which water was detected in the cellar. ",
-              "Then these WIC parcels were intersected with SMPs within 25, 50, and 100 ft of distance from them. WIC complains were then categorized based on the construction stage of the intersecting SMP",
+              "WICs were identified by collecting the work requests that had 'WATER IN CELLAR' in their descriptions. These orders were later matched with their facility ids, addresses and XY coordinates in the GIS database to associate them with parcel polygons (houses, bussinesses, etc.) near them at which water was detected in the cellar.",
+              "These WIC-associated parcels were then intersected with public SMPs within 25, 50, and 100 ft of distance from them. WIC complaints were also categorized based on the construction stage of the intersecting SMP at the time when the complaint was filed.",
               "The information contains:",
               "SMP ID: ID of SMP",
               "system ID: system id of SMP",
-              "address: collected from GIS DB and referes to the addresses associated with the complaining parcels (houses etc)",
-              "date of complaint: WIC complaint date",
-              "phase of construction: Construction status of SMP (pre/mid/post/NA) when the WIC complaint has been filed",
-              "buffer_ft: Buffer distance (ft) from an SMP centroid",
               "work order ID: Work order IDs of WIC complaints",
-              "comments: Work order comments", sep="\n")
+              "phase of construction: Construction status of SMP (pre/mid/post/NA) when the WIC complaint has been filed",
+              "date of complaint: WIC complaint date",
+              "address: collected from GIS DB and referes to the addresses associated with the complaining parcels (houses etc)",
+              "comments: Work order comments",
+              "buffer_ft: Buffer distance (ft) from an SMP centroid",
+               sep="\n")
       })
       
       
@@ -130,6 +130,14 @@
       #   filename = function() { "ae.xlsx"},
       #   content = function(file) {write.xlsx(mtcars, path = file)}
       # )
+      
+      output$WIC_SMP <- downloadHandler(
+         filename = function() { "WIC_SMP. CSV"},
+         content = function(file) {write.csv(output_all, path = file)}
+         )
+        
+      
+      
       
     }
     

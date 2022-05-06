@@ -64,32 +64,18 @@
     
     output_all <- bind_rows(output_25ft,output_50ft,output_100ft)
     
-    intro <- "This spreadsheet contains information about the water-in-cellar complaints recorded in the cityworks database during various stages of SMPs constructions. 
-        WICs were identified by collecting the work requests that had 'WATER IN CELLAR' in their descriptions. These orders were later matched with their facility ids, addresses and XY coordinates in the GIS DB 
-        to associate them with parcel facility IDs. These parcels will be the structures (homes, businesses, etc) at which water was detected in the cellar. 
-        Then these WIC parcels were intersected with SMPs within 25, 50, and 100 ft of distance from them. WIC complains were then categorized based on the 
-        construction stage of the intersecting SMP
-        
-        The information contains:
+    names(output_25ft) <- c("work order ID", "SMP ID", "buffer_ft", "system ID", "phase of construction", " comments","address", "date of complaint")
+    names(output_50ft) <- c("work order ID", "SMP ID", "buffer_ft", "system ID", "phase of construction", " comments","address", "date of complaint")
+    names(output_100ft) <- c("work order ID", "SMP ID", "buffer_ft", "system ID", "phase of construction", " comments","address", "date of complaint")
     
-    system_id: system id of SMP
-    location: collected from GIS DB and referes to the addresses associated with the complaining parcels (houses etc)
-    wo_initiatedate: WIC complaint date
-    hase: Construction status of SMP (pre/mid/post/NA) when the WIC complaint has been filed
-    buffer_ft: Buffer distance (ft) from an SMP centroid
-    workorder_id: Work order IDs of WIC complaints
-    comments: Work order comments"  
-  
-    
-  
 
 ### Section 3: shiny work
     
     ui <- fluidPage(navbarPage(
-      "WIC",   ###Taylor says: more informative name. If we have multiple wic shiny apps we must differentiate
+      "Water in Cellar (WIC) Complaints around SMPs",   ###Taylor says: more informative name. If we have multiple wic shiny apps we must differentiate
       ###Taylor says: Switch the order of these tabs. App first, help second
-      tabPanel("Help",intro), ###Rename to something like Help Page/Introduction or something more informative
-      tabPanel("WIC", titlePanel("WIC components"), ###Rename both: What are we doing with the WICs?
+      tabPanel("Help page",verbatimTextOutput("text")), ###Rename to something like Help Page/Introduction or something more informative
+      tabPanel("WIC-SMP association ", titlePanel("WIC complaints within 25, 50, and 100 feet of SMPs"), ###Rename both: What are we doing with the WICs?
               ### We're finding their distance from public SMPs. Comvey this in the name
                
                sidebarLayout(
@@ -127,6 +113,22 @@
         ))
       })
       
+      
+      output$text <- renderText({
+        paste("This shiny app provides information about the water-in-cellar complaints recorded in the cityworks database during various stages of SMPs constructions.", 
+              "WICs were identified by collecting the work requests that had 'WATER IN CELLAR' in their descriptions. These orders were later matched with their facility ids, addresses and XY coordinates in the GIS DB to associate them with parcel facility IDs.",
+              "These parcels will be the structures (homes, businesses, etc) at which water was detected in the cellar. ",
+              "Then these WIC parcels were intersected with SMPs within 25, 50, and 100 ft of distance from them. WIC complains were then categorized based on the construction stage of the intersecting SMP",
+              "The information contains:",
+              "SMP ID: ID of SMP",
+              "system ID: system id of SMP",
+              "address: collected from GIS DB and referes to the addresses associated with the complaining parcels (houses etc)",
+              "date of complaint: WIC complaint date",
+              "phase of construction: Construction status of SMP (pre/mid/post/NA) when the WIC complaint has been filed",
+              "buffer_ft: Buffer distance (ft) from an SMP centroid",
+              "work order ID: Work order IDs of WIC complaints",
+              "comments: Work order comments", sep="\n")
+      })
       
       
       ###Taylor says: Replace with CSV output

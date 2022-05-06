@@ -80,9 +80,9 @@
                  
                  mainPanel(
                    tabsetPanel(
-                     tabPanel("Within 25 ft of SMP", reactableOutput("table_1")), ###Taylor says: More explicit output object names
-                     tabPanel("Within 50 ft of SMP", reactableOutput("table_2")), ###Taylor says: More explicit tab mames: "25 ft from SMP" or something
-                     tabPanel("Within 100 ft of SMP", reactableOutput("table_3"))
+                     tabPanel("25 ft from SMP", reactableOutput("table_1")), ###Taylor says: More explicit output object names
+                     tabPanel("50 ft from SMP", reactableOutput("table_2")), ###Taylor says: More explicit tab mames: "25 ft from SMP" or something
+                     tabPanel("100 ft from SMP", reactableOutput("table_3"))
                    )
                  )
                )),
@@ -132,7 +132,7 @@
       # )
       
       output$WIC_SMP <- downloadHandler(
-         filename = function() { "WIC_SMP. CSV"},
+         filename = function() { "WIC_SMP_TEST. csv"},
          content = function(file) {write.csv(output_all, path = file)}
          )
         

@@ -1,4 +1,4 @@
-#Create the first deliverable of the WIC project
+#Create the first deliverable of the WIC project-csv file
 #Written by: Farshad Ebrahimi- 5/3/2022.
 
 ### Section 1: data gathering
@@ -17,8 +17,7 @@
     library(odbc)
     library(dplyr)
     library(tidyr)
-    library(xlsx)
-      
+    
     con <- dbConnect(odbc(), dsn = "mars_data")
     
     wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_workorders ")
@@ -59,6 +58,8 @@
     output_25ft$wo_initiatedate <- as.Date(output_25ft$wo_initiatedate)
     output_50ft$wo_initiatedate <- as.Date(output_50ft$wo_initiatedate)
     output_100ft$wo_initiatedate <- as.Date(output_100ft$wo_initiatedate)
+    output_all <- bind_rows(output_25ft,output_50ft,output_100ft)
+    
     
     intro <- data.frame(matrix(NA,13,1))
     intro[1, ] <- "This spreadsheet contains information about the water-in-cellar complaints recorded in the cityworks database during various stages of SMPs constructions." 
@@ -76,23 +77,15 @@
     intro[13, ] <-"comments: Work order comments"                              
     
 
-    file_name <- paste("wic_",Sys.Date(),".xlsx")
+    file_name_data <- paste("wic_",Sys.Date(),".csv")
+    
+    file_name_intro <- paste("readme","wic",".csv")
+    
+    
+### Section 3: write  the data into  three sheets within an csv file 
 
-    
-### Section 3: write  the data into  three sheets within an xlsx file 
-
-    write.xlsx(intro, file = file_name , sheetName = "Introduction", colNames = FALSE, rowNames = FALSE) 
-    
-    write.xlsx(output_25ft, file = file_name , sheetName = "25_ft_radius", append = TRUE )
-    
-    write.xlsx(output_50ft, file = file_name , sheetName = "50_ft_radius", append = TRUE )
-    
-    write.xlsx(output_100ft, file = file_name , sheetName = "100_ft_radius", append = TRUE )
-    
-    
-    
-    
-    
+    write.csv(intro, file_name_intro,row.names=FALSE) 
+    write.csv(output_all, file_name_data)
     
     
     

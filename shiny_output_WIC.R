@@ -115,7 +115,7 @@
               "SMP ID: ID of SMP",
               "System ID: system id of SMP",
               "Work Order ID: Work order IDs of WIC complaints",
-              "Construction Phase: Construction status of SMP (pre/mid/post/NA) when the WIC complaint has been filed",
+              "Construction Phase: Construction status of SMP (pre/during/post/unknown) when the WIC complaint has been filed",
               "Complaint Date: WIC complaint date",
               "Address: collected from GIS DB and referes to the addresses associated with the complaining parcels (houses etc)",
               "Buffer (ft): Buffer distance (ft) from an SMP centroid",

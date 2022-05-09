@@ -78,19 +78,19 @@
             )
           ), 
           tabPanel("100 ft from SMP", 
-             sidebarLayout(
+            sidebarLayout(
               sidebarPanel(
               downloadButton("WIC_dl_100ft","Download in .CSV"), width = 3
               ), 
                mainPanel(reactableOutput("table_100ft"))
              )
-          )
-        )
-       ),
+          ) 
+         )
+        ),
       tabPanel("Help Page",verbatimTextOutput("text")
       ),
+     )
     )
-  )
     server <- function(input, output) {
       output$table_25ft <- renderReactable({
         reactable(output_25ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 10,filterable = TRUE

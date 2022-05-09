@@ -123,16 +123,16 @@
       })
       
       output$WIC_dl_25ft <- downloadHandler(
-         filename = function() { "WIC_SMP_25ft_buffer.CSV"},
+         filename = function() {paste("WIC_SMP_25ft_buffer-", Sys.Date(), ".csv", sep="")},
          content = function(file) {write.csv(output_25ft, file,row.names=FALSE)}
          )
       output$WIC_dl_50ft <- downloadHandler(
-        filename = function() { "WIC_SMP_50ft_buffer.CSV"},
+        filename = function() { paste("WIC_SMP_50ft_buffer-", Sys.Date(), ".csv", sep="")},
         content = function(file) {write.csv(output_50ft, file,row.names=FALSE)}
         )
       
       output$WIC_dl_100ft <- downloadHandler(
-        filename = function() { "WIC_SMP_100ft_buffer.CSV"},
+        filename = function() { paste("WIC_SMP_100ft_buffer-", Sys.Date(), ".csv", sep="")},
         content = function(file) {write.csv(output_100ft, file,row.names=FALSE)}
         )
     }

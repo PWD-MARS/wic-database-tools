@@ -1,5 +1,5 @@
-#Create the shiny deliverable of the WIC project
-#Written by: Farshad Ebrahimi- 5/3/2022.
+#### Create the shiny deliverable of the WIC project
+#### Written by: Farshad Ebrahimi- 5/3/2022.
 
 ### Section 1: data gathering
 
@@ -7,16 +7,13 @@
     library(DBI)
     library(odbc)
     library(dplyr)
-    library(tidyr)
     library(shiny)
-    library(DT)
     library(reactable)
     
     
     con <- dbConnect(odbc(), dsn = "mars_data")
 
     wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_workorders ")
-    wic_comments <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_comments ") ### Let's skip comments for now. Too clunky in the UI. We can add later
     wic_parcels <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels ")
     wic_smps <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_smps ")
     wic_conphase <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_conphase ")
@@ -24,44 +21,38 @@
 
 
 ### Section 2: processing the data into 3 tables (buffers: 25, 50, and 100 ft) and change the data format
-    ###Taylor says: format pipes like i showed you in the spreadsheet script
-    
-    output_25ft <- inner_join(wic_smps, wic_conphase, by = c("phase_lookup_uid"="wic_uid") ) %>%
-    select(-phase_lookup_uid,-wic_smps_uid) %>%
-    inner_join(wic_comments, by="workorder_id") %>% 
-    select(-wic_comments_uid)%>% 
-    inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>%
-    select(-wic_parcels_uid,-wic_facility_id) %>% 
-    filter(buffer_ft == 25)                                    
+
+    output_25ft <- inner_join(wic_smps, wic_conphase, by=c("phase_lookup_uid"="wic_uid"))%>%
+      select(-phase_lookup_uid,-wic_smps_uid) %>%
+      inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>%
+      select(-wic_parcels_uid,-wic_facility_id) %>% 
+      filter(buffer_ft == 25)                                    
     
     output_50ft <- inner_join(wic_smps, wic_conphase, by = c("phase_lookup_uid"="wic_uid") ) %>%
-    select(-phase_lookup_uid,-wic_smps_uid) %>% 
-    inner_join(wic_comments, by="workorder_id") %>% 
-    select(-wic_comments_uid)%>% 
-    inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>%
-    select(-wic_parcels_uid,-wic_facility_id) %>% filter(buffer_ft == 50)    
+      select(-phase_lookup_uid,-wic_smps_uid) %>% 
+      inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>%
+      select(-wic_parcels_uid,-wic_facility_id) %>% 
+      filter(buffer_ft == 50)    
     
     output_100ft <- inner_join(wic_smps, wic_conphase, by = c("phase_lookup_uid"="wic_uid") ) %>%
-    select(-phase_lookup_uid,-wic_smps_uid) %>% 
-    inner_join(wic_comments, by="workorder_id") %>% 
-    select(-wic_comments_uid)%>% 
-    inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>%
-    select(-wic_parcels_uid,-wic_facility_id) %>% 
-    filter(buffer_ft == 100)
+      select(-phase_lookup_uid,-wic_smps_uid) %>% 
+      inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>%
+      select(-wic_parcels_uid,-wic_facility_id) %>% 
+      filter(buffer_ft == 100)
     
     output_25ft$wo_initiatedate <- as.Date(output_25ft$wo_initiatedate)
     output_50ft$wo_initiatedate <- as.Date(output_50ft$wo_initiatedate)
     output_100ft$wo_initiatedate <- as.Date(output_100ft$wo_initiatedate)
     
     
-    names(output_25ft) <- c("work order ID", "SMP ID", "buffer_ft", "system ID", "phase of construction", " comments","address", "date of complaint")
-    names(output_50ft) <- c("work order ID", "SMP ID", "buffer_ft", "system ID", "phase of construction", " comments","address", "date of complaint")
-    names(output_100ft) <- c("work order ID", "SMP ID", "buffer_ft", "system ID", "phase of construction", " comments","address", "date of complaint")
+    names(output_25ft) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")
+    names(output_50ft) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")
+    names(output_100ft) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")
     
     
-    output_25ft <- output_25ft[,c("SMP ID","system ID","work order ID", "phase of construction", "date of complaint","address"," comments","buffer_ft")]
-    output_50ft <- output_50ft[,c("SMP ID","system ID","work order ID", "phase of construction", "date of complaint","address"," comments","buffer_ft")]
-    output_100ft <- output_100ft[,c("SMP ID","system ID","work order ID", "phase of construction", "date of complaint","address"," comments","buffer_ft")]
+    output_25ft <- output_25ft[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)")]
+    output_50ft <- output_50ft[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)")]
+    output_100ft <- output_100ft[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)")]
     
     output_all <- bind_rows(output_25ft,output_50ft,output_100ft)
     
@@ -70,41 +61,42 @@
     
     ui <- fluidPage(navbarPage(
       "Water in Cellar (WIC) Complaints Around Public SMPs",   
-      tabPanel("WIC-SMP Association ", titlePanel("WIC complaints within 25, 50, and 100 feet of SMPs"), 
+      tabPanel("WIC-SMP Association ", titlePanel("WIC Complaints within 25, 50, and 100 feet of SMPs"),
+               tabsetPanel(
+                 tabPanel("25 ft from SMP",  sidebarLayout(
+                   sidebarPanel(
+                     downloadButton("WIC_dl_25ft","Download in .CSV"), width = 3), 
+                   mainPanel(reactableOutput("table_25ft"))
+                   )), 
+                 tabPanel("50 ft from SMP",  sidebarLayout(
+                   sidebarPanel(
+                     downloadButton("WIC_dl_50ft","Download in .CSV"), width = 3), 
+                   mainPanel(reactableOutput("table_50ft"))
+                 )), 
+                 tabPanel("100 ft from SMP", sidebarLayout(
+                   sidebarPanel(
+                     downloadButton("WIC_dl_100ft","Download in .CSV"), width = 3), 
+                   mainPanel(reactableOutput("table_100ft"))
+                 ))
+               )
 
-               sidebarLayout(
-                 
-                 sidebarPanel(
-                   downloadButton("WIC","Download in .CSV"), width = 3 ###Always capitalize labels
-                 ),
-                 
-                 mainPanel(
-                   tabsetPanel(
-                     tabPanel("25 ft from SMP", reactableOutput("table_1")), ###Taylor says: More explicit output object names
-                     tabPanel("50 ft from SMP", reactableOutput("table_2")), ###Taylor says: More explicit tab mames: "25 ft from SMP" or something
-                     tabPanel("100 ft from SMP", reactableOutput("table_3"))
-                   )
-                 )
-               )),
+              ),
       tabPanel("Help Page",verbatimTextOutput("text")),
     ))
     server <- function(input, output) {
-      output$table_1 <- renderReactable({
-        reactable(output_25ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 5,filterable = TRUE,  columns = list(
-          buffer_ft = colDef(filterable = FALSE)
-        ))
+      output$table_25ft <- renderReactable({
+        reactable(output_25ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 10,filterable = TRUE
+        )
       })
       
-      output$table_2 <- renderReactable({
-        reactable(output_50ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 5,filterable = TRUE,  columns = list(
-          buffer_ft = colDef(filterable = FALSE)
-        ))
+      output$table_50ft <- renderReactable({
+        reactable(output_50ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 10,filterable = TRUE
+        )
       })
       
-      output$table_3 <- renderReactable({
-        reactable(output_100ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 5,filterable = TRUE,  columns = list(
-          buffer_ft = colDef(filterable = FALSE)
-        ))
+      output$table_100ft <- renderReactable({
+        reactable(output_100ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 10,filterable = TRUE  
+        )
       })
       
       
@@ -131,11 +123,19 @@
       #   content = function(file) {write.xlsx(mtcars, path = file)}
       # )
       
-      output$WIC <- downloadHandler(
-         filename = function() { "WIC_SMP_all_buffers .CSV"},
-         content = function(file) {write.csv(output_all, file,row.names=FALSE)}
+      output$WIC_dl_25ft <- downloadHandler(
+         filename = function() { "WIC_SMP_25ft_buffer.CSV"},
+         content = function(file) {write.csv(output_25ft, file,row.names=FALSE)}
          )
-        
+      output$WIC_dl_50ft <- downloadHandler(
+        filename = function() { "WIC_SMP_50ft_buffer.CSV"},
+        content = function(file) {write.csv(output_50ft, file,row.names=FALSE)}
+        )
+      
+      output$WIC_dl_100ft <- downloadHandler(
+        filename = function() { "WIC_SMP_100ft_buffer.CSV"},
+        content = function(file) {write.csv(output_100ft, file,row.names=FALSE)}
+        )
       
       
       

@@ -10,7 +10,6 @@
     library(shiny)
     library(reactable)
     
-    
     con <- dbConnect(odbc(), dsn = "mars_data")
 
     wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_workorders ")
@@ -20,7 +19,7 @@
 
 
 
-### Section 2: processing the data into 3 tables (buffers: 25, 50, and 100 ft) and change the data format
+### Section 2: processing the data into 3 tables (buffers: 25, 50, and 100 ft) and change the data format, column names and their order
 
     output_25ft <- inner_join(wic_smps, wic_conphase, by=c("phase_lookup_uid"="wic_uid"))%>%
       select(-phase_lookup_uid,-wic_smps_uid) %>%
@@ -44,45 +43,54 @@
     output_50ft$wo_initiatedate <- as.Date(output_50ft$wo_initiatedate)
     output_100ft$wo_initiatedate <- as.Date(output_100ft$wo_initiatedate)
     
-    
     names(output_25ft) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")
     names(output_50ft) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")
     names(output_100ft) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")
     
-    
     output_25ft <- output_25ft[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)")]
     output_50ft <- output_50ft[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)")]
     output_100ft <- output_100ft[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)")]
-    
     output_all <- bind_rows(output_25ft,output_50ft,output_100ft)
     
-
-### Section 3: shiny work
+### Section 3: shiny work-A navbarpage with two tabs, within tab 1 there will be 3 tabsets with 3 tables of data and corresponding download button on the sidebar
     
-    ui <- fluidPage(navbarPage(
+    ui <- fluidPage(
+      navbarPage(
       "Water in Cellar (WIC) Complaints Around Public SMPs",   
-      tabPanel("WIC-SMP Association ", titlePanel("WIC Complaints within 25, 50, and 100 feet of SMPs"),
-               tabsetPanel(
-                 tabPanel("25 ft from SMP",  sidebarLayout(
-                   sidebarPanel(
-                     downloadButton("WIC_dl_25ft","Download in .CSV"), width = 3), 
-                   mainPanel(reactableOutput("table_25ft"))
-                   )), 
-                 tabPanel("50 ft from SMP",  sidebarLayout(
-                   sidebarPanel(
-                     downloadButton("WIC_dl_50ft","Download in .CSV"), width = 3), 
-                   mainPanel(reactableOutput("table_50ft"))
-                 )), 
-                 tabPanel("100 ft from SMP", sidebarLayout(
-                   sidebarPanel(
-                     downloadButton("WIC_dl_100ft","Download in .CSV"), width = 3), 
-                   mainPanel(reactableOutput("table_100ft"))
-                 ))
+        tabPanel("WIC-SMP Association ", titlePanel("WIC Complaints within 25, 50, and 100 feet of SMPs"),
+          tabsetPanel(
+            tabPanel("25 ft from SMP",  
+              sidebarLayout(
+               sidebarPanel(
+               downloadButton("WIC_dl_25ft","Download in .CSV"), width = 3
+               ), 
+               mainPanel(reactableOutput("table_25ft")
                )
-
-              ),
-      tabPanel("Help Page",verbatimTextOutput("text")),
-    ))
+              )
+            ), 
+          tabPanel("50 ft from SMP",  
+            sidebarLayout(
+             sidebarPanel(
+             downloadButton("WIC_dl_50ft","Download in .CSV"), width = 3
+             ), 
+             mainPanel(reactableOutput("table_50ft")
+             )
+            )
+          ), 
+          tabPanel("100 ft from SMP", 
+             sidebarLayout(
+              sidebarPanel(
+              downloadButton("WIC_dl_100ft","Download in .CSV"), width = 3
+              ), 
+               mainPanel(reactableOutput("table_100ft"))
+             )
+          )
+        )
+       ),
+      tabPanel("Help Page",verbatimTextOutput("text")
+      ),
+    )
+  )
     server <- function(input, output) {
       output$table_25ft <- renderReactable({
         reactable(output_25ft, showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 10,filterable = TRUE
@@ -99,7 +107,6 @@
         )
       })
       
-      
       output$text <- renderText({
         paste("This shiny app provides information about the water-in-cellar complaints recorded in the cityworks database during various stages of SMPs constructions.", 
               "WICs were identified by collecting the work requests that had 'WATER IN CELLAR' in their descriptions. These orders were later matched with their facility ids, addresses and XY coordinates in the GIS database to associate them with parcel polygons (houses, bussinesses, etc.) near them at which water was detected in the cellar.",
@@ -115,13 +122,6 @@
                sep="\n")
       })
       
-      
-      ###Taylor says: Replace with CSV output
-      # output$wici <- downloadHandler(
-      #   filename = function() { "ae.xlsx"},
-      #   content = function(file) {write.xlsx(mtcars, path = file)}
-      # )
-      
       output$WIC_dl_25ft <- downloadHandler(
          filename = function() { "WIC_SMP_25ft_buffer.CSV"},
          content = function(file) {write.csv(output_25ft, file,row.names=FALSE)}
@@ -135,9 +135,6 @@
         filename = function() { "WIC_SMP_100ft_buffer.CSV"},
         content = function(file) {write.csv(output_100ft, file,row.names=FALSE)}
         )
-      
-      
-      
     }
     
     shinyApp(ui, server)

@@ -55,8 +55,7 @@
     wic_comments <- inner_join(DIST_WO_ID, UNIQUE_WO_CM, by = "WORKORDERID")
     
     names(wic_comments) <- c("workorder_id", "comments")
-    
-    
+    names (wic_workorders) <- c("workorder_id","wo_initiatedate","location","wo_xcoordinate","wo_ycoordinate", "facility_id")
 # Connect to Pg12 and write 2 tables to DB 
 # Disconnect from the DB
     

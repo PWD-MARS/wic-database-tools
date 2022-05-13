@@ -10,8 +10,8 @@
     library(shiny)
     library(reactable)
     
-    con <- dbConnect(odbc(), dsn = "mars_data")
-
+    con <- dbConnect(odbc::odbc(), dsn = "mars_data", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"))
+    
     wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_workorders ")
     wic_parcels <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels ")
     wic_smps <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_smps ")

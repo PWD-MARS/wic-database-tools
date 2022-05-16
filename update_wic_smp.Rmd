@@ -1,0 +1,116 @@
+---
+title: "Update Water in Cellar Complaints App"
+author: "Farshad Ebrahimi"
+date: "`r lubridate::now()`"
+output: html_document
+params:
+    database: "mars_data" 
+    write: FALSE #Write changes to database?
+---
+
+```{r setup, include=FALSE}
+
+  knitr::opts_chunk$set(echo = TRUE)
+
+  library(DBI)
+  library(RPostgreSQL)
+  library(RPostgres)
+  library(odbc)
+  library(RODBC)
+  library(dplyr)
+  library(tidyr)
+  library(sf)
+  library(shiny)
+  library(lubridate)
+
+  MARSDB_con <- dbConnect(odbc(), dsn = params$database)
+  cityworksDB_con <- dbConnect(odbc(),
+                  Driver = "ODBC Driver 17 for SQL Server",
+                  Server = "PWDCWSQLT",
+                  Database = "PWD_Cityworks",
+                  uid = Sys.getenv("cw_uid"),
+                  pwd= Sys.getenv("cw_pwd"))
+  GISDB_con <- dbConnect(odbc(),
+                  Driver = "ODBC Driver 17 for SQL Server",
+                  Server = "PWDGISSQL",
+                  Database = "GISDATA",
+                  uid = Sys.getenv("gis_uid"),
+                  pwd= Sys.getenv("gis_pwd"))
+```
+
+
+```{r Section 1 - Checking for new WIC complaints, new WIC comments, and any other changes, include=FALSE}
+    
+# gather wic orders and comments from citywork 
+
+   cityworks_workorders <- dbGetQuery(cityworksDB_con, "SELECT wo.WORKORDERID, wo.INITIATEDATE AS WO_INITIATEDATE, wo.LOCATION, wo.WOXCOORDINATE, 
+    wo.WOYCOORDINATE, woe.ENTITYUID AS FACILITYID FROM Azteca.WORKORDER wo INNER JOIN 
+    Azteca.REQUESTWORKORDER rwo ON wo.WORKORDERID = rwo.WORKORDERID LEFT JOIN 
+    Azteca.REQUEST r ON rwo.REQUESTID = r.REQUESTID LEFT JOIN Azteca.WORKORDERENTITY woe ON 
+    wo.WORKORDERID = woe.WORKORDERID WHERE 
+    ((wo.DESCRIPTION = 'A - PROPERTY INVESTIGATION' AND r.DESCRIPTION = 'WATER IN CELLAR') OR 
+    (wo.DESCRIPTION = 'A - LEAK INVESTIGATION' AND r.DESCRIPTION = 'WATER IN CELLAR'))
+    ")
+   cityworks_cm <- dbGetQuery(cityworksDB_con, "SELECT WORKORDERID, COMMENTS from Azteca.WOCOMMENT" )
+   
+# gather current wic orders and comments from MARS_Data
+   
+   wic_workorders <- dbGetQuery(MARSDB_con, "SELECT * FROM fieldwork.wic_workorders ")
+   wic_comments <- dbGetQuery(MARSDB_con, "SELECT * FROM fieldwork.wic_comments ")
+   
+# change the data column format; for some reason anti_join cannot match the dates in POSIXct
+   
+   wic_workorders$wo_initiatedate <- as.Date(wic_workorders$wo_initiatedate)
+   cityworks_workorders$WO_INITIATEDATE <- as.Date(cityworks_workorders$WO_INITIATEDATE)
+   
+   cityworks_workorders$WORKORDERID <- as.numeric(cityworks_workorders$WORKORDERID)
+   cityworks_cm$WORKORDERID <- as.numeric(cityworks_cm$WORKORDERID)
+   
+# make names consistent    
+
+   names(cityworks_workorders) <- c("workorder_id","wo_initiatedate","location","wo_xcoordinate","wo_ycoordinate","facility_id")
+   names (cityworks_cm) <- c("workorder_id","comments")
+   
+# find the new wic complaint and changed ones in cityworks DB
+   
+   new_wic <- cityworks_workorders %>% filter(!(workorder_id %in% wic_workorders$workorder_id))
+   cityworks_workorders_old <- anti_join(cityworks_workorders, new_wic, by = "workorder_id")
+   changed_wic_cityworks <- cityworks_workorders_old  %>%
+     anti_join(wic_workorders, by = c("workorder_id","wo_initiatedate","location","wo_xcoordinate","wo_ycoordinate","facility_id")) 
+   
+# Append the new WIC to wic_workorders
+   
+   if( nrow(new_wic) > 0 & params$write == TRUE ){
+  
+  dbWriteTable (MARSDB_con, SQL("fieldwork.wic_workorders"),new_wic,append= TRUE, row.names = FALSE)
+  }
+   
+# Update the workorders in wic_workorders that have been changed in cityworks DB 
+   
+   if(nrow(changed_wic_cityworks) > 0 & params$write == TRUE){
+     
+     sql_string <- "UPDATE fieldwork.wic_workorders SET wo_initiatedate = '%s', location = '%s',  wo_xcoordinate = %s,wo_ycoordinate= %s,facility_id = '%s' WHERE workorder_id = %s;"
+     
+     dbSendStatement(MARSDB_con, paste(sprintf(sql_string, changed_wic_cityworks$wo_initiatedate, changed_wic_cityworks$location,changed_wic_cityworks$wo_xcoordinate,changed_wic_cityworks$wo_ycoordinate,changed_wic_cityworks$facility_id,changed_wic_cityworks$workorder_id), collapse=""))
+     
+   }
+   
+# update comments and add new comments to the new workorders
+   
+   workorders_unique <- select(cityworks_workorders,workorder_id) %>% unique()
+   cw_wic_comments <- inner_join(workorders_unique, cityworks_cm, by = "workorder_id")
+   cw_wic_comments<- cw_wic_comments %>%
+       group_by(workorder_id) %>%
+       summarise(comments = toString(sort(unique(comments)))) 
+   new_wo_comments <- inner_join(new_wic, cw_wic_comments, by = "workorder_id") %>% select(workorder_id, comments)
+   old_wo_comments <-anti_join(cw_wic_comments, new_wo_comments, by = "workorder_id")
+   old_wo_comments <-as.data.frame(old_wo_comments)
+   
+   old_wo_comments$comments <- gsub("[\r\n]", "", old_wo_comments$comments)
+   wic_comments$comments <- gsub("[\r\n]", "", wic_comments$comments)
+
+   changed_comments <- anti_join(old_wo_comments, wic_comments, by = c("comments"))
+  
+   
+```
+

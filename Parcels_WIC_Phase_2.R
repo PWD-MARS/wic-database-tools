@@ -30,11 +30,11 @@
   # connect to the GIS DB to get parcel polygon
   
     GISDB <- dbConnect(odbc(),
-                  Driver = "ODBC Driver 17 for SQL Server",
-                  Server = "PWDGISSQL",
-                  Database = "GISDATA",
-                  uid = "gisread",
-                  pwd= "gisread")
+                           Driver = "ODBC Driver 17 for SQL Server",
+                           Server = "PWDGISSQL",
+                           Database = "GISDATA",
+                           uid = Sys.getenv("gis_uid"),
+                           pwd= Sys.getenv("gis_pwd"))
   
     Parcels_Frame <- dbGetQuery(GISDB, "SELECT * from GISDATA.GISAD.PWD_PARCELS")
     

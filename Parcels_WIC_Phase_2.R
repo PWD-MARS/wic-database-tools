@@ -2,8 +2,6 @@
   #Written by: Farshad Ebrahimi- 4/22/2022.
 
 
-
-
 ###Taylor says: Style comments - You should be using section headers, and hierarchical indentation to demarcate your sections
 ###Section headers on the left at indent level 0
   ###Comments and code at indent level 1
@@ -126,8 +124,6 @@
   # Intersect the Parcel polygons and the points
      
      WO_PARC_INTERSECT <- st_intersects(WO_SPATIAL, PARCELS_SPATIAL )
-
- 
      
 ## Section 5: Matching WICs to parcels by geoprocessing
      
@@ -191,11 +187,6 @@
      
      wic_parcels <- inner_join(wic_parcels, WORK_DATE, by = "workorder_id") %>% select(workorder_id, location, facility_id, wo_initiatedate)
     
-   # Getting unique WIC Parcels
-     
-     wic_facility_id <- wic_parcels %>% select(workorder_id, facility_id) %>%
-     group_by(facility_id) %>%
-     summarise(workorder_id = toString(sort(unique(workorder_id))))
      
 ## Section 6: Writing results to DB
     
@@ -203,6 +194,7 @@
     
      dbWriteTable (con, SQL("fieldwork.wic_parcels"),wic_parcels,append= TRUE, row.names = FALSE)
      
-     dbWriteTable (con, SQL("fieldwork.wic_facility_id"),wic_facility_id, append= TRUE, row.names = FALSE)
-     
      dbDisconnect(GISDB)
+     dbDisconnect(con)
+     
+     

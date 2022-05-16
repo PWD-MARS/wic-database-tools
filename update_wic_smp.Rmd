@@ -110,7 +110,24 @@ params:
    wic_comments$comments <- gsub("[\r\n]", "", wic_comments$comments)
 
    changed_comments <- anti_join(old_wo_comments, wic_comments, by = c("comments"))
-   changed_comments <- changed_comments %>% select(workorder_id) %>% inner_join(cw_wic_comments, by = "workorder_id")
+   changed_comments_cityworks <- changed_comments %>% select(workorder_id) %>% inner_join(cw_wic_comments, by = "workorder_id")
+   
+    if( nrow(new_wo_comments) > 0 & params$write == TRUE ){
+  
+  dbWriteTable (MARSDB_con, SQL("fieldwork.wic_comments"),new_wo_comments,append= TRUE, row.names = FALSE)
+      
+    }
+   
+   
+   if(nrow(changed_comments_cityworks) > 0 & params$write == TRUE){
+     
+     sql_string <- "UPDATE fieldwork.wic_comments SET comments = '%s' WHERE workorder_id = %s;"
+     
+     dbSendStatement(MARSDB_con, paste(sprintf(sql_string, changed_comments_cityworks$comments, changed_comments_cityworks$workorder_id), collapse=""))
+     
+   }
+   
+   
   
    
 ```

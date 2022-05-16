@@ -1,5 +1,5 @@
 # Store all relevant Cityworks info related to WIC complaints in the fieldwork schema
-# Written by: Farshad Ebrahimi- 04/22/2022
+# Written by: Farshad Ebrahimi- 05/16/2022
 
 
 #install and load the required packages. 
@@ -37,6 +37,8 @@
     (wo.DESCRIPTION = 'A - LEAK INVESTIGATION' AND r.DESCRIPTION = 'WATER IN CELLAR'))
     ")
     
+    
+    
 # Get unique Workorderid from wic_workorders
     
     DIST_WO_ID <- select(wic_workorders, WORKORDERID) %>% distinct
@@ -56,6 +58,13 @@
     
     names(wic_comments) <- c("workorder_id", "comments")
     names (wic_workorders) <- c("workorder_id","wo_initiatedate","location","wo_xcoordinate","wo_ycoordinate", "facility_id")
+    
+    wic_workorders$workorder_id <- as.numeric(wic_workorders$workorder_id)
+    wic_workorders$wo_initiatedate <- as.Date(wic_workorders$wo_initiatedate)
+    wic_comments$workorder_id <- as.numeric(wic_comments$workorder_id)
+    
+
+    
 # Connect to Pg12 and write 2 tables to DB 
 # Disconnect from the DB
     

@@ -110,6 +110,7 @@ params:
    wic_comments$comments <- gsub("[\r\n]", "", wic_comments$comments)
 
    changed_comments <- anti_join(old_wo_comments, wic_comments, by = c("comments"))
+   changed_comments <- changed_comments %>% select(workorder_id) %>% inner_join(cw_wic_comments, by = "workorder_id")
   
    
 ```

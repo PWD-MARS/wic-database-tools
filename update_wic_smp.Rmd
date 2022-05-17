@@ -134,17 +134,117 @@ params:
 
   if (nrow(new_wic) > 0) {
 
-kable(new_wic, caption = "New Work Orders in Cityworks Database")
+    kable(new_wic, caption = "New Work Orders in Cityworks Database")
     
   }
 
   if (nrow(changed_wic_cityworks) > 0) {
 
-kable(nrow(changed_wic_cityworks), caption = "Modified Work Orders in Cityworks Database")
+    kable(nrow(changed_wic_cityworks), caption = "Modified Work Orders in Cityworks Database")
     
   }
 
 ```
 
+```{r Section 3- attach parcels to any existing WOs that have no parcels attached ,include=FALSE}
 
+   wic_parcels <- dbGetQuery(MARSDB_con, "SELECT * FROM fieldwork.wic_parcels ")
+   wo_noparcels <- anti_join(cityworks_workorders, wic_parcels, by = "workorder_id")
+   Parcels_Frame <- dbGetQuery(GISDB_con, "SELECT * from GISDATA.GISAD.PWD_PARCELS")
+   Parcels_facility_id <- select(Parcels_Frame, FACILITYID)
+   Parcels_Address_id <- select(Parcels_Frame, ADDRESS, FACILITYID)
+   PARCELS_SPATIAL <- st_read(dsn = "\\\\pwdoows\\oows\\Watershed Sciences\\GSI Monitoring\\09 GIS Data\\PWD_PARCELS ", layer = "PWD_PARCELS")
+   st_crs(PARCELS_SPATIAL) = 2272
+   wo_noparcels$facility_id<-gsub("\\{(.*)\\}","\\1",as.character(wo_noparcels$facility_id))
+
+  
+  ##Matching by facility ID
+   
+  # Inner join the wo_noparcels and Parcels_Addressid ON facility ID
+    WOID_FACID_Match <- inner_join (wo_noparcels, Parcels_Address_id  , by = c("facility_id"="FACILITYID"))
+  # Get FIRST OUTPUT BASED ON FACILITYID MATCH STORED IN WOID_FAC_UNIQ_REL
+    WOID_FAC_UNIQ_REL <- select(WOID_FACID_Match, workorder_id, location, facility_id)
+  # Remove the rows that we matched based on the facilityid from the cityworks table 
+    wo_noparcels <- anti_join(wo_noparcels, WOID_FACID_Match, by = "workorder_id")
+  # Remove the rows that were matched from the Parcels_Address_id table
+    Parcels_Address_id <-anti_join(Parcels_Address_id, WOID_FACID_Match, by = c("FACILITYID"="facility_id") )
+  # drop the facility id from workorderid as these ids are not meaningful 
+    WORKORDER_ID_Location<-  select(wo_noparcels, -facility_id)
+    
+  ##Matching by address
+    
+  # Inner join the  WORKORDER_ID_Location with Parcels_Address_id to extract the facility id
+    WO_ID_ADDRESS_MATCH <- inner_join(WORKORDER_ID_Location,Parcels_Address_id,by = c("location" = "ADDRESS"))
+  # GET SECOND OUTPUT BASED ON FACILITYID MATCH STORED IN WOID_FAC_UNIQ_Add_REL )  
+    WOID_FAC_UNIQ_Add_REL <- WO_ID_ADDRESS_MATCH  %>% select(workorder_id, location, facility_id = FACILITYID)  
+  # Remove the rows that we were matched based on the address from the cityworkstable 
+    wo_noparcels <- anti_join(wo_noparcels, WO_ID_ADDRESS_MATCH, by = "workorder_id")
+  # Remove the rows that were matched from the Parcels_Address_id table
+    Parcels_Address_id <-anti_join(Parcels_Address_id, WO_ID_ADDRESS_MATCH, by = "FACILITYID" ) 
+    
+  
+ ##Matching by XY coordinates
+    
+  # Build the spatial object from the XY coordinates in Cityworks
+   
+    xy_coor <-  c(wo_noparcels[,"wo_xcoordinate"],wo_noparcels[,"wo_ycoordinate"])
+    mat_coor <- matrix(data = xy_coor, ncol = 2) %>% na.omit
+    WO_SPATIAL <- mat_coor |> 
+       as.matrix() |> 
+       st_multipoint() |> 
+       st_sfc() |> 
+       st_cast('POINT')
+    st_crs(WO_SPATIAL) <- 2272
+    
+  # Intersect the Parcel polygons and the points
+     WO_PARC_INTERSECT <- st_intersects(WO_SPATIAL, PARCELS_SPATIAL )
+ 
+  # Get the index of intersecting XY coordinates and Parcel polygons
+     
+     Index_WO <- NULL
+     Index_Parcel <- NULL
+      for(i in 1:length(WO_PARC_INTERSECT)) {
+          temp <- WO_PARC_INTERSECT[[i]]
+            if (length(temp) > 0) {
+            WO <- rep(i, length(temp))
+            Parcel <- temp
+            Index_WO <- c(Index_WO, WO )
+            Index_Parcel <- c(Index_Parcel, Parcel ) 
+            }
+       }
+    
+  # attach the XY coordinate to the Parcel frame to create COORD_MATCHED_TABLE
+     
+     mat_coor <- data.frame (mat_coor)
+     names(mat_coor) <- c("wo_xcoordinate","wo_ycoordinate")
+     WO_MATCHED_XY <- mat_coor[Index_WO, ]
+     Parcel_Matched_Polyg <- Parcels_Frame[Index_Parcel, ]
+     COORD_MATCHED_TABLE <- cbind(Parcel_Matched_Polyg,WO_MATCHED_XY)
+     
+  # Get workorderid, address, and facilityid (Third output is stored in WOID_Based_XY )
+     
+     WOID_Based_XY<- wo_noparcels %>% select(workorder_id, wo_initiatedate, location, wo_xcoordinate, wo_ycoordinate) %>% inner_join(COORD_MATCHED_TABLE, by = c("wo_xcoordinate" = "wo_xcoordinate", "wo_ycoordinate" = "wo_ycoordinate")) %>% select(workorder_id, location = ADDRESS, facility_id = FACILITYID) 
+     
+  # union the matching tables-Final output is in FACID_ADD_XY
+   
+     FACID_ADD <- union_all (WOID_FAC_UNIQ_REL,WOID_FAC_UNIQ_Add_REL)
+     FACID_ADD_XY <- union_all (FACID_ADD, WOID_Based_XY)
+     wic_parcels <- unique(FACID_ADD_XY)
+     
+  # Add the workorder date 
+     
+     WORKORDER_ID <- dbGetQuery(con, "SELECT * from fieldwork.wic_workorders")
+     WORK_DATE <- WORKORDER_ID %>% select(workorder_id, wo_initiatedate)
+     wic_parcels <- inner_join(wic_parcels, WORK_DATE, by = "workorder_id") %>% select(workorder_id, location, facility_id, wo_initiatedate)
+     
+     
+    ## write to database
+     
+     if( nrow(wic_parcels) > 0 & params$write == TRUE ){
+      
+  dbWriteTable (MARSDB_con, SQL("fieldwork.wic_parcels"),wic_parcels,append= TRUE, row.names = FALSE)
+      
+    }
+
+```
  

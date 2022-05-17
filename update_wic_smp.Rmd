@@ -696,7 +696,7 @@ The new and modified work orders (total = `r nrow(wo_noparcels)` ) were searched
 Public SMPs were intersected with parcels associated with new/changed WIC parcels within 25, 50, and 100 ft of distance from them. This resulted in `r nrow(output_25)`, `r nrow(output_50)`, and `r nrow(output_100)` SMP_WIC attachment, respectively. 
 
 
-```{r displaying summary table of SMP association, include=FALSE, eval= nrow(output_25)>0}
+```{r section 7- displaying summary table of SMP association at buffer 25ft, include=FALSE, eval= nrow(output_25)>0}
 
   output_25['construction_phase'] <- replace(output_25$phase_lookup_uid, output_25$phase_lookup_uid == 1, "Pre-construction" )
   output_25['construction_phase'] <- replace(output_25$phase_lookup_uid, output_25$phase_lookup_uid == 1, "During-construction" )
@@ -708,7 +708,7 @@ Public SMPs were intersected with parcels associated with new/changed WIC parcel
 
 ```
 
-```{r displaying summary table of SMP association, include=FALSE, eval= nrow(output_50)>0}
+```{r  section 8- displaying summary table of SMP association at buffer 50ft, include=FALSE, eval= nrow(output_50)>0}
 
   output_50['construction_phase'] <- replace(output_50$phase_lookup_uid, output_50$phase_lookup_uid == 1, "Pre-construction" )
   output_50['construction_phase'] <- replace(output_50$phase_lookup_uid, output_50$phase_lookup_uid == 1, "During-construction" )
@@ -720,7 +720,7 @@ Public SMPs were intersected with parcels associated with new/changed WIC parcel
 
 ```
 
-```{r displaying summary table of SMP association, include=FALSE, eval= nrow(output_100)>0}
+```{r section 9- displaying summary table of SMP association at buffer 100ft, include=FALSE, eval= nrow(output_100)>0}
 
   output_100['construction_phase'] <- replace(output_100$phase_lookup_uid, output_100$phase_lookup_uid == 1, "Pre-construction" )
   output_100['construction_phase'] <- replace(output_100$phase_lookup_uid, output_100$phase_lookup_uid == 1, "During-construction" )
@@ -732,7 +732,7 @@ Public SMPs were intersected with parcels associated with new/changed WIC parcel
 
 ```
 
-```{r DB disconnect, include=FALSE}
+```{r section 10- DB disconnect, include=FALSE}
 
   dbDisconnect(MARSDB_con)
   dbDisconnect(cityworksDB_con)

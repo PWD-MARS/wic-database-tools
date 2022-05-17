@@ -83,6 +83,7 @@ params:
    if( nrow(new_wic) > 0 & params$write == TRUE ){
   
   dbWriteTable (MARSDB_con, SQL("fieldwork.wic_workorders"),new_wic,append= TRUE, row.names = FALSE)
+     
   }
    
 # Update the workorders in wic_workorders that have been changed in cityworks DB 
@@ -90,7 +91,6 @@ params:
    if(nrow(changed_wic_cityworks) > 0 & params$write == TRUE){
      
      sql_string <- "UPDATE fieldwork.wic_workorders SET wo_initiatedate = '%s', location = '%s',  wo_xcoordinate = %s,wo_ycoordinate= %s,facility_id = '%s' WHERE workorder_id = %s;"
-     
      dbSendStatement(MARSDB_con, paste(sprintf(sql_string, changed_wic_cityworks$wo_initiatedate, changed_wic_cityworks$location,changed_wic_cityworks$wo_xcoordinate,changed_wic_cityworks$wo_ycoordinate,changed_wic_cityworks$facility_id,changed_wic_cityworks$workorder_id), collapse=""))
      
    }
@@ -113,7 +113,7 @@ params:
    changed_comments_cityworks <- changed_comments %>% select(workorder_id) %>% inner_join(cw_wic_comments, by = "workorder_id")
    
     if( nrow(new_wo_comments) > 0 & params$write == TRUE ){
-  
+      
   dbWriteTable (MARSDB_con, SQL("fieldwork.wic_comments"),new_wo_comments,append= TRUE, row.names = FALSE)
       
     }
@@ -122,7 +122,6 @@ params:
    if(nrow(changed_comments_cityworks) > 0 & params$write == TRUE){
      
      sql_string <- "UPDATE fieldwork.wic_comments SET comments = '%s' WHERE workorder_id = %s;"
-     
      dbSendStatement(MARSDB_con, paste(sprintf(sql_string, changed_comments_cityworks$comments, changed_comments_cityworks$workorder_id), collapse=""))
      
    }

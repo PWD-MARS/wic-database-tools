@@ -37,6 +37,7 @@ params:
                   Database = "GISDATA",
                   uid = Sys.getenv("gis_uid"),
                   pwd= Sys.getenv("gis_pwd"))
+  
 ```
 
 
@@ -148,9 +149,8 @@ params:
 
 ```{r Section 3- attach parcels to any existing WOs that have no parcels attached ,include=FALSE}
 
-   wo_noparcels <- bind_rows(changed_wic_cityworks, new_wic)
-   wic_parcels <- 0
-
+  wo_noparcels <- bind_rows(changed_wic_cityworks, new_wic)
+  wic_parcels <- data.frame(matrix(NA, 0, 2))
   if (nrow(wo_noparcels) > 0) {
     
      Parcels_Frame <- dbGetQuery(GISDB_con, "SELECT * from GISDATA.GISAD.PWD_PARCELS")
@@ -244,11 +244,27 @@ params:
      
     ## write to database
      
-     if( !is.null(wic_parcels) & params$write == TRUE ){
+     if( nrow(wic_parcels) > 0 & params$write == TRUE ){
       
   dbWriteTable (MARSDB_con, SQL("fieldwork.wic_parcels"),wic_parcels,append= TRUE, row.names = FALSE)
       
-    }
+     }
 
 ```
- 
+
+The new and modified work orders were searched in GIS database by their facility id, location, and XY coordinate. This has resulted in `r nrow(wic_parcels)` parcel attachment.  
+
+
+```{r Section 5- displaying tables of parcels attached to the new and changed work orders ,echo=FALSE, results='asis'}
+
+  if ( nrow(wic_parcels) > 0 ) {
+    
+        kable(wic_parcels, caption = "New and Modified WIC Parcels")
+    
+  }
+
+
+```
+
+
+

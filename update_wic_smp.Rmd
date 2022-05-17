@@ -22,6 +22,7 @@ params:
   library(sf)
   library(shiny)
   library(lubridate)
+  library(knitr)
 
   MARSDB_con <- dbConnect(odbc(), dsn = params$database)
   cityworksDB_con <- dbConnect(odbc(),
@@ -126,8 +127,24 @@ params:
      
    }
    
-   
-  
-   
+```
+ The cityworks database has been examined for new water-in-cellar work orders, and also any changes that have been made to the existing work orders. There are `r nrow(new_wic)` new work orders and `r nrow(changed_wic_cityworks)` work orders whose fields have changed. There are also `r nrow(changed_comments_cityworks)` work orders whose comments have been modified.  
+ 
+```{r Section 2- displaying tables of new work orders and changed work orders ,echo=FALSE, results='asis'}
+
+  if (nrow(new_wic) > 0) {
+
+kable(new_wic, caption = "New Work Orders in Cityworks Database")
+    
+  }
+
+  if (nrow(changed_wic_cityworks) > 0) {
+
+kable(nrow(changed_wic_cityworks), caption = "Modified Work Orders in Cityworks Database")
+    
+  }
+
 ```
 
+
+ 

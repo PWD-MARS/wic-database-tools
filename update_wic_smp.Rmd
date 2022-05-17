@@ -272,4 +272,10 @@ The new and modified work orders were searched in GIS database by their facility
 ```
 
 
+```{r Section 6- SMP intersect, include=FALSE}
+
+   
+
+```
+
 

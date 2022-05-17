@@ -244,11 +244,11 @@ params:
      
     ## write to database
      
-     if( nrow(wic_parcels) > 0 & params$write == TRUE ){
+      if( nrow(wic_parcels) > 0 & params$write == TRUE ){
       
-  dbWriteTable (MARSDB_con, SQL("fieldwork.wic_parcels"),wic_parcels,append= TRUE, row.names = FALSE)
+        dbWriteTable (MARSDB_con, SQL("fieldwork.wic_parcels"),wic_parcels,append= TRUE, row.names = FALSE)
       
-     }
+      }
 
 ```
 
@@ -257,18 +257,17 @@ The new and modified work orders were searched in GIS database by their facility
 
 ```{r Section 5- displaying tables of parcels attached to the new and changed work orders and write to DB ,echo=FALSE, results='asis'}
 
-  if ( nrow(wic_parcels) > 0 ) {
+     if ( nrow(wic_parcels) > 0 ) {
     
         kable(wic_parcels, caption = "New and Modified WIC Parcels")
     
-  }
+      }
 
-  if (nrow(wic_parcels) > 0 $ params$write == TRUE){
+      if (nrow(wic_parcels) > 0 $ params$write == TRUE){
     
-       dbWriteTable (con, SQL("fieldwork.wic_parcels"),wic_parcels,append= TRUE, row.names = FALSE)
+        dbWriteTable (con, SQL("fieldwork.wic_parcels"),wic_parcels,append= TRUE, row.names = FALSE)
 
-  }
-
+      }
 
 ```
 

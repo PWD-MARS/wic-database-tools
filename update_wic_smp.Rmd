@@ -43,7 +43,10 @@ params:
                               "UID=gisread;",
                               "PWD=gisread;")
    
-  wic_parcels <- data.frame(matrix(NA, 0, 2))
+  wic_parcels <- data.frame(matrix(NA, 0, 2)) #place holders (equivalent for 0-rows)
+  output_25 <- data.frame(matrix(NA, 0, 2))
+  output_50 <- data.frame(matrix(NA, 0, 2))
+  output_100 <- data.frame(matrix(NA, 0, 2))
 
       
   
@@ -88,6 +91,8 @@ params:
    cityworks_workorders_old <- anti_join(cityworks_workorders, new_wic, by = "workorder_id")
    changed_wic_cityworks <- cityworks_workorders_old  %>%
      anti_join(wic_workorders, by = c("workorder_id","wo_initiatedate","location","wo_xcoordinate","wo_ycoordinate","facility_id")) 
+   wo_noparcels <- bind_rows(changed_wic_cityworks, new_wic)
+
    
 # Append the new WIC to wic_workorders
    
@@ -123,7 +128,6 @@ params:
    changed_comments <- anti_join(old_wo_comments, wic_comments, by = c("comments"))
    changed_comments_cityworks <- changed_comments %>% select(workorder_id) %>% inner_join(cw_wic_comments, by = "workorder_id")
    
-   wo_noparcels <- bind_rows(changed_wic_cityworks, new_wic)
 
    
     if( nrow(new_wo_comments) > 0 & params$write == TRUE ){
@@ -259,7 +263,7 @@ params:
 
 ```
 
-The new and modified work orders were searched in GIS database by their facility id, location, and XY coordinate. This has resulted in `r nrow(wic_parcels)` parcel attachment.  
+The new and modified work orders (total = `r nrow(wo_noparcels)` ) were searched in GIS database by their facility id, location, and XY coordinate. This has resulted in `r nrow(wic_parcels)` parcel attachment.  
 
 
 ```{r Section 5- displaying tables of parcels attached to the new and changed work orders and write to DB ,echo=FALSE, results='asis'}
@@ -348,7 +352,7 @@ The new and modified work orders were searched in GIS database by their facility
   # filter to get WIC associated polygons and delete the layer
       
       
-      WIC_ID_TABLE <- dbGetQuery(con, "SELECT * from fieldwork.wic_parcels")
+      WIC_ID_TABLE <- wic_parcels
       
       PARCELS_SPATIAL$FACILITYID<-gsub("\\{(.*)\\}","\\1",as.character(PARCELS_SPATIAL$FACILITYID))
       
@@ -679,9 +683,20 @@ The new and modified work orders were searched in GIS database by their facility
       fieldwork.wic_smps <- smp_milestones %>% select(workorder_id,smp_id, wic_facility_id, buffer_ft, phase_lookup_uid)
 
       fieldwork.wic_smps['system_id'] <- gsub('-\\d+$','',fieldwork.wic_smps$smp_id ) 
+      
+      
+      if (nrow(fieldwork.wic_smps) > 0 & params$write == TRUE){
+    
+        dbWriteTable (con, SQL("fieldwork.wic_smps"),fieldwork.wic_smps,append= TRUE, row.names = FALSE)
 
+      }
    
 
 ```
+Public SMPs were intersected with WIC-associated parcels within 25, 50, and 100 ft of distance from them. This resulted in `r nrow(output_25)`, `r nrow(output_50)`, and `r nrow(output_100)` SMP_WIC attachment, respectively. 
 
+
+```{r displaying summary table of SMP association, include=FALSE}
+
+```
 

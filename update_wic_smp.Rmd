@@ -260,7 +260,6 @@ The new and modified work orders were searched in GIS database by their facility
   if ( nrow(wic_parcels) > 0 ) {
     
         kable(wic_parcels, caption = "New and Modified WIC Parcels")
-    
   }
 
 

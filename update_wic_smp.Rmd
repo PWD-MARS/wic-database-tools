@@ -38,10 +38,13 @@ params:
                   uid = Sys.getenv("gis_uid"),
                   pwd= Sys.getenv("gis_pwd"))
   
-   dsn_infra_pub <- paste0("MSSQL:server=PWDGISSQL;",
+  dsn_infra_pub <- paste0("MSSQL:server=PWDGISSQL;",
                               "database=INFRASTRUCTURE_PUBLIC;",
                               "UID=gisread;",
                               "PWD=gisread;")
+   
+  wic_parcels <- data.frame(matrix(NA, 0, 2))
+
       
   
 ```
@@ -120,6 +123,9 @@ params:
    changed_comments <- anti_join(old_wo_comments, wic_comments, by = c("comments"))
    changed_comments_cityworks <- changed_comments %>% select(workorder_id) %>% inner_join(cw_wic_comments, by = "workorder_id")
    
+   wo_noparcels <- bind_rows(changed_wic_cityworks, new_wic)
+
+   
     if( nrow(new_wo_comments) > 0 & params$write == TRUE ){
       
   dbWriteTable (MARSDB_con, SQL("fieldwork.wic_comments"),new_wo_comments,append= TRUE, row.names = FALSE)
@@ -153,11 +159,7 @@ params:
 
 ```
 
-```{r Section 3- attach parcels to any existing WOs that have no parcels attached ,include=FALSE}
-
-  wo_noparcels <- bind_rows(changed_wic_cityworks, new_wic)
-  wic_parcels <- data.frame(matrix(NA, 0, 2))
-  if (nrow(wo_noparcels) > 0) {
+```{r Section 3- attach parcels to new and changed workorder ,include=FALSE, eval= nrow(wo_noparcels) > 0}
     
      Parcels_Frame <- dbGetQuery(GISDB_con, "SELECT * from GISDATA.GISAD.PWD_PARCELS")
      Parcels_facility_id <- select(Parcels_Frame, FACILITYID)
@@ -246,7 +248,6 @@ params:
        WORK_DATE <- WORKORDER_ID %>% select(workorder_id, wo_initiatedate)
        wic_parcels <- inner_join(wic_parcels, WORK_DATE, by = "workorder_id") %>% select(workorder_id, location, facility_id, wo_initiatedate)
        
-  }
      
     ## write to database
      
@@ -278,8 +279,9 @@ The new and modified work orders were searched in GIS database by their facility
 ```
 
 
-```{r Section 6- SMP intersect, include=FALSE, eval= FALSE}
-  basin <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBASIN", quiet = TRUE)) 
+```{r Section 6- SMP intersect, include=FALSE, eval= nrow(wic_parcels) > 0 }
+
+      basin <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBASIN", quiet = TRUE)) 
        
       blueroof <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBLUEROOF", quiet = TRUE)) 
       

@@ -64,7 +64,7 @@
 
 ## Section 2: Matching by facility ID
     
-  # Inner join the workorderid and Parcels_facility_id ON facility ID
+  # Inner join the workorderid and Parcels_Address_id ON facility ID
     
     WOID_FACID_Match <- inner_join (WORKORDER_ID, Parcels_Address_id  , by = c("facility_id"="FACILITYID"))
    

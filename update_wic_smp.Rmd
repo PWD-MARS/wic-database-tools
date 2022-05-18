@@ -163,7 +163,7 @@ params:
 
 ```
 
-```{r Section 3- attach parcels to new and changed workorder ,include=FALSE, eval= nrow(wo_noparcels) > 0}
+```{r Section 3- attach parcels to new and changed workorder based on facility id ,include=FALSE, eval= nrow(wo_noparcels) > 0}
     
      Parcels_Frame <- dbGetQuery(GISDB_con, "SELECT * from GISDATA.GISAD.PWD_PARCELS")
      Parcels_facility_id <- select(Parcels_Frame, FACILITYID)
@@ -172,7 +172,9 @@ params:
      st_crs(PARCELS_SPATIAL) = 2272
      wo_noparcels$facility_id<-gsub("\\{(.*)\\}","\\1",as.character(wo_noparcels$facility_id))
   
-    
+
+
+
     ##Matching by facility ID
      
     # Inner join the wo_noparcels and Parcels_Addressid ON facility ID
@@ -186,6 +188,13 @@ params:
     # drop the facility id from workorderid as these ids are not meaningful 
       WORKORDER_ID_Location<-  select(wo_noparcels, -facility_id)
       
+      wic_parcel_attach <- WOID_FAC_UNIQ_REL
+      
+```
+
+
+```{r Section 4- attach parcels to new and changed workorder based on address ,include=FALSE, eval= nrow(wo_noparcels) > 0}
+   
     ##Matching by address
       
     # Inner join the  WORKORDER_ID_Location with Parcels_Address_id to extract the facility id
@@ -197,6 +206,13 @@ params:
     # Remove the rows that were matched from the Parcels_Address_id table
       Parcels_Address_id <-anti_join(Parcels_Address_id, WO_ID_ADDRESS_MATCH, by = "FACILITYID" ) 
       
+    # stick previous results together
+      wic_parcel_attach <- union_all (wic_parcel_attach, WOID_FAC_UNIQ_Add_REL)
+
+```
+
+```{r Section 5- attach parcels to new and changed workorder based on XY coordinate ,include=FALSE, eval= nrow(wo_noparcels) > 0}
+
     
    ##Matching by XY coordinates
       
@@ -240,11 +256,17 @@ params:
        
        WOID_Based_XY<- wo_noparcels %>% select(workorder_id, wo_initiatedate, location, wo_xcoordinate, wo_ycoordinate) %>% inner_join(COORD_MATCHED_TABLE, by = c("wo_xcoordinate" = "wo_xcoordinate", "wo_ycoordinate" = "wo_ycoordinate")) %>% select(workorder_id, location = ADDRESS, facility_id = FACILITYID) 
        
+       wic_parcel_attach <- union_all (wic_parcel_attach, WOID_Based_XY)
+
+       
+```
+
+```{r Section 5- write to DB ,include=FALSE}
+
+       
     # union the matching tables-Final output is in FACID_ADD_XY
      
-       FACID_ADD <- union_all (WOID_FAC_UNIQ_REL,WOID_FAC_UNIQ_Add_REL)
-       FACID_ADD_XY <- union_all (FACID_ADD, WOID_Based_XY)
-       wic_parcels <- unique(FACID_ADD_XY)
+       wic_parcels <- unique(wic_parcel_attach)
        
     # Add the workorder date 
        

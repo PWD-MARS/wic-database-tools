@@ -549,47 +549,26 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
       if (nrow(fieldwork.wic_smps) > 0 & params$write == TRUE){
         dbWriteTable (con, SQL("fieldwork.wic_smps"),fieldwork.wic_smps,append= TRUE, row.names = FALSE)
       }
+      
+      
    
 ```
-Public SMPs were intersected with parcels associated with new/changed WIC work orders within 25, 50, and 100 ft of distance from them. This resulted in `r nrow(output_25)`, `r nrow(output_50)`, and `r nrow(output_100)` SMP_WIC attachment, respectively. 
+Public SMPs were intersected with parcels associated with new/changed WIC work orders within 25, 50, and 100 ft of distance from them. This resulted in `r nrow( smp_miliestones %>% filter(phase_lookup_uid==1))` SMP attachment in Pre-construction phase, `r nrow( smp_miliestones %>% filter(phase_lookup_uid==2))` SMP attachment during-construction phase, `r nrow( smp_miliestones %>% filter(phase_lookup_uid==3))` SMP attachment in Post-construction phase, and `r nrow( smp_miliestones %>% filter(phase_lookup_uid==4))` SMP attachment with known construction phase.
 
 ```{r section 8- displaying summary table of SMP association at buffer 25ft, include=FALSE, eval= nrow(output_25)>0}
 
-      output_25['construction_phase'] <- replace(output_25$phase_lookup_uid, output_25$phase_lookup_uid == 1, "Pre-construction" )
-      output_25['construction_phase'] <- replace(output_25$phase_lookup_uid, output_25$phase_lookup_uid == 2, "During-construction" )
-      output_25['construction_phase'] <- replace(output_25$phase_lookup_uid, output_25$phase_lookup_uid == 3, "Post-construction" )
-      output_25['construction_phase'] <- replace(output_25$phase_lookup_uid, output_25$phase_lookup_uid == 4, "Unknown" )
-      output_25 <- output_25 %>% select(smp_id, construction_phase)
+      smp_milestones['construction_phase'] <- replace(smp_milestones$phase_lookup_uid, smp_milestones$phase_lookup_uid == 1, "Pre-construction" )
+      smp_milestones['construction_phase'] <- replace(smp_milestones$phase_lookup_uid, smp_milestones$phase_lookup_uid == 2, "During-construction" )
+      smp_milestones['construction_phase'] <- replace(smp_milestones$phase_lookup_uid, smp_milestones$phase_lookup_uid == 3, "Post-construction" )
+      smp_milestones['construction_phase'] <- replace(smp_milestones$phase_lookup_uid, smp_milestones$phase_lookup_uid == 4, "Unknown" )
+      smp_milestones <- smp_milestones %>% select(workorder_id, smp_id, construction_phase, buffer_ft)
       
-      kable(output_25, caption = "SMPs within 25 ft of new/changed WIC parcels ")
+      kable(smp_milestones, caption = "new WIC_SMP association at 25, 50, and 100 ft buffer distance")
 
 ```
 
-```{r  section 9- displaying summary table of SMP association at buffer 50ft, include=FALSE, eval= nrow(output_50)>0}
 
-      output_50['construction_phase'] <- replace(output_50$phase_lookup_uid, output_50$phase_lookup_uid == 1, "Pre-construction" )
-      output_50['construction_phase'] <- replace(output_50$phase_lookup_uid, output_50$phase_lookup_uid == 2, "During-construction" )
-      output_50['construction_phase'] <- replace(output_50$phase_lookup_uid, output_50$phase_lookup_uid == 3, "Post-construction" )
-      output_50['construction_phase'] <- replace(output_50$phase_lookup_uid, output_50$phase_lookup_uid == 4, "Unknown" )
-      output_50 <- output_50 %>% select(smp_id, construction_phase)
-      
-      kable(output_50, caption = "SMPs within 50 ft of new/changed WIC parcels ")
-
-```
-
-```{r section 10- displaying summary table of SMP association at buffer 100ft, include=FALSE, eval= nrow(output_100)>0}
-    
-      output_100['construction_phase'] <- replace(output_100$phase_lookup_uid, output_100$phase_lookup_uid == 1, "Pre-construction" )
-      output_100['construction_phase'] <- replace(output_100$phase_lookup_uid, output_100$phase_lookup_uid == 2, "During-construction" )
-      output_100['construction_phase'] <- replace(output_100$phase_lookup_uid, output_100$phase_lookup_uid == 3, "Post-construction" )
-      output_100['construction_phase'] <- replace(output_100$phase_lookup_uid, output_100$phase_lookup_uid == 4, "Unknown" )
-      output_100 <- output_100 %>% select(smp_id, construction_phase)
-      
-      kable(output_100, caption = "SMPs within 100 ft of new/changed WIC parcels ")
-
-```
-
-```{r section 11- DB disconnect, include=FALSE}
+```{r section 9- DB disconnect, include=FALSE}
 
       dbDisconnect(MARSDB_con)
       dbDisconnect(cityworksDB_con)

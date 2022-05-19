@@ -300,7 +300,7 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
 
       if ( nrow(wic_parcels) > 0 & params$write == TRUE){
     
-        dbWriteTable (con, SQL("fieldwork.wic_parcels"),wic_parcels,append= TRUE, row.names = FALSE)
+        dbWriteTable (MARSDB_con, SQL("fieldwork.wic_parcels"),wic_parcels,append= TRUE, row.names = FALSE)
 
       }
 
@@ -495,8 +495,8 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
 
 ## section 5: categorizing the SMPs to pre, during, or post construction
       wic_conphase <- data.frame(wic_uid = 1:4, phase = c("pre-construction", "during construction", "post-construction", "unknown"))
-      external.cipit_project <- dbGetQuery(con, "SELECT * FROM external.cipit_project")
-      external.smpbdv <- dbGetQuery(con, "SELECT * FROM  external.smpbdv")
+      external.cipit_project <- dbGetQuery(MARSDB_con, "SELECT * FROM external.cipit_project")
+      external.smpbdv <- dbGetQuery(MARSDB_con, "SELECT * FROM  external.smpbdv")
       worknumber <- inner_join(Result,external.smpbdv, by = "smp_id" )  %>% select( smp_id, wic_facility_id,buffer_ft, workorder_id,wo_initiatedate, worknumber)
       smp_milestones <- inner_join(external.cipit_project, worknumber, by = c("work_number" = "worknumber"  ))  %>% select (smp_id, wic_facility_id,buffer_ft, workorder_id,wo_initiatedate, construction_start_date, pc_ntp_date, construction_complete_date, contract_closed_date) %>% unique()
       

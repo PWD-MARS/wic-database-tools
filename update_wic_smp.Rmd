@@ -497,44 +497,44 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
       
   #setting the lookup_id's default in smpmilestone to 4
     
-      smp_milestones['phase_lookup_uid'] <- 4
+      smp_milestones['phase_lookup_uid'] <- "unknown"
       for(i in 1:nrow(smp_milestones)) {
         if (!is.na(smp_milestones[i, "construction_start_date"]) && !is.na(smp_milestones[i, "construction_complete_date"]) ) {
             if (smp_milestones[i, "wo_initiatedate"] >= smp_milestones[i, "construction_start_date"] && smp_milestones[i, "wo_initiatedate"] <= smp_milestones[i, "construction_complete_date"]  ) {
-              smp_milestones[i, "phase_lookup_uid"] <- 2
+              smp_milestones[i, "phase_lookup_uid"] <- "During-construction"
             } else if (smp_milestones[i, "wo_initiatedate"] < smp_milestones[i, "construction_start_date"]) {
-              smp_milestones[i, "phase_lookup_uid"] <- 1
+              smp_milestones[i, "phase_lookup_uid"] <- "Pre-construction"
             } else {
-              smp_milestones[i, "phase_lookup_uid"] <- 3
+              smp_milestones[i, "phase_lookup_uid"] <- "Post-construction"
           }
         } else if (!is.na(smp_milestones[i, "pc_ntp_date"]) && !is.na(smp_milestones[i, "construction_complete_date"] )) {
             if (smp_milestones[i, "wo_initiatedate"] >= smp_milestones[i, "pc_ntp_date"] && smp_milestones[i, "wo_initiatedate"] <= smp_milestones[i, "construction_complete_date"]  ) {
-              smp_milestones[i, "phase_lookup_uid"] <- 2
+              smp_milestones[i, "phase_lookup_uid"] <- "During-construction"
             } else if (smp_milestones[i, "wo_initiatedate"] < smp_milestones[i, "pc_ntp_date"]) {
-              smp_milestones[i, "phase_lookup_uid"] <- 1
+              smp_milestones[i, "phase_lookup_uid"] <- "Pre-construction"
             } else {
-              smp_milestones[i, "phase_lookup_uid"] <- 3
+              smp_milestones[i, "phase_lookup_uid"] <- "Post-construction"
           }
           
         } else if (!is.na(smp_milestones[i, "construction_start_date"]) && !is.na(smp_milestones[i, "contract_closed_date"])) {
             if (smp_milestones[i, "wo_initiatedate"] >= smp_milestones[i, "construction_start_date"] && smp_milestones[i, "wo_initiatedate"] <= smp_milestones[i, "contract_closed_date"]  ) {
-              smp_milestones[i, "phase_lookup_uid"] <- 2
+              smp_milestones[i, "phase_lookup_uid"] <- "During-construction"
             } else if (smp_milestones[i, "wo_initiatedate"] < smp_milestones[i, "construction_start_date"]) {
-              smp_milestones[i, "phase_lookup_uid"] <- 1
+              smp_milestones[i, "phase_lookup_uid"] <- "Pre-construction"
             } else {
-              smp_milestones[i, "phase_lookup_uid"] <- 3
+              smp_milestones[i, "phase_lookup_uid"] <- "Post-construction"
           }
         } else if (!is.na(smp_milestones[i, "pc_ntp_date"]) && !is.na(smp_milestones[i, "contract_closed_date"])) {
             if (smp_milestones[i, "wo_initiatedate"] >= smp_milestones[i, "pc_ntp_date"] && smp_milestones[i, "wo_initiatedate"] <= smp_milestones[i, "contract_closed_date"]  ) {
-              smp_milestones[i, "phase_lookup_uid"] <- 2
+              smp_milestones[i, "phase_lookup_uid"] <- "During-construction"
             } else if (smp_milestones[i, "wo_initiatedate"] < smp_milestones[i, "pc_ntp_date"]) {
-              smp_milestones[i, "phase_lookup_uid"] <- 1
+              smp_milestones[i, "phase_lookup_uid"] <- "Pre-construction"
             } else {
-              smp_milestones[i, "phase_lookup_uid"] <- 3
+              smp_milestones[i, "phase_lookup_uid"] <- "Post-construction"
             }
           
         } else { 
-              smp_milestones[i, "phase_lookup_uid"] <- 4
+              smp_milestones[i, "phase_lookup_uid"] <- "unknown"
           }
       }
       
@@ -551,11 +551,6 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
 Public SMPs were intersected with parcels associated with new/changed WIC work orders within 25, 50, and 100 ft of distance from them. This resulted in `r nrow( smp_milestones %>% filter(phase_lookup_uid==1))` SMP attachment in Pre-construction phase, `r nrow( smp_milestones %>% filter(phase_lookup_uid==2))` SMP attachment during-construction phase, `r nrow( smp_milestones %>% filter(phase_lookup_uid==3))` SMP attachment in Post-construction phase, and `r nrow( smp_milestones %>% filter(phase_lookup_uid==4))` SMP attachment with unknown construction phase.
 
 ```{r section 8- displaying summary table of SMP association, include=FALSE, eval= nrow(smp_milestones)>0}
-
-      smp_milestones$construction_phase <- replace(smp_milestones$construction_phase, smp_milestones$construction_phase == 1, "Pre-construction" )
-      smp_milestones$construction_phase <- replace(smp_milestones$construction_phase, smp_milestones$construction_phase == 2, "During-construction" )
-      smp_milestones$construction_phase <- replace(smp_milestones$construction_phase, smp_milestones$construction_phase == 3, "Post-construction" )
-      smp_milestones$construction_phase <- replace(smp_milestones$construction_phase, smp_milestones$construction_phase == 4, "Unknown" )
 
       smp_milestones <- smp_milestones %>% select(workorder_id, smp_id, construction_phase, buffer_ft)
       

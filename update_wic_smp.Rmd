@@ -47,6 +47,12 @@ params:
   output_25 <- data.frame(matrix(NA, 0, 2))
   output_50 <- data.frame(matrix(NA, 0, 2))
   output_100 <- data.frame(matrix(NA, 0, 2))
+  smp_milestones <- data.frame(matrix(NA, 0, 4))
+  names(smp_milestones) <- c("workorder_id", "smp_id",  "phase", "buffer_ft")
+  
+  wic_parcel_attach <- NULL
+  wic_parcels <- NULL
+  
 
       
   
@@ -264,7 +270,7 @@ params:
 
 The new and modified work orders (total = `r nrow(bind_rows(changed_wic_cityworks, new_wic))` ) were searched in GIS database by their facility id, location, and XY coordinate. This has resulted in `r nrow(wic_parcel_attach)` parcel attachment.  
 
-```{r Section 6- write to DB ,include=FALSE}
+```{r Section 6- write to DB ,include=FALSE, eval = !is.null(wic_parcel_attach)}
 
        
     # union the matching tables-Final output is in FACID_ADD_XY
@@ -292,13 +298,13 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
 
 ```{r Section 7- displaying tables of parcels attached to the new and changed work orders and write to DB ,echo=FALSE, results='asis'}
 
-     if ( nrow(wic_parcels) > 0 ) {
+     if ( !is.null(wic_parcels)) {
     
         kable(wic_parcels, caption = "Parcel attachment for new/changed workorders")
     
       }
 
-      if ( nrow(wic_parcels) > 0 & params$write == TRUE){
+      if (!is.null(wic_parcels) & params$write == TRUE){
     
         dbWriteTable (MARSDB_con, SQL("fieldwork.wic_parcels"),wic_parcels,append= TRUE, row.names = FALSE)
 
@@ -307,7 +313,7 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
 ```
 
 
-```{r Section 8- SMP intersect, include=FALSE, eval= nrow(wic_parcels) > 0 }
+```{r Section 8- SMP intersect, include=FALSE, eval= !is.null(wic_parcels) }
 
       basin <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBASIN", quiet = TRUE)) 
       blueroof <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBLUEROOF", quiet = TRUE)) 

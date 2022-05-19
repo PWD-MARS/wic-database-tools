@@ -273,7 +273,7 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
        
     # Add the workorder date 
        
-       WORKORDER_ID <- dbGetQuery(MARSDB_con, "SELECT * from fieldwork.wic_workorders")
+       WORKORDER_ID <- bind_rows(changed_wic_cityworks, new_wic)
        WORK_DATE <- WORKORDER_ID %>% select(workorder_id, wo_initiatedate)
        wic_parcels <- inner_join(wic_parcels, WORK_DATE, by = "workorder_id") %>% select(workorder_id, location, facility_id, wo_initiatedate)
        

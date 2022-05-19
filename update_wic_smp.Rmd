@@ -50,7 +50,7 @@ params:
   smp_milestones <- data.frame(matrix(NA, 0, 4))
   names(smp_milestones) <- c("workorder_id", "smp_id",  "phase", "buffer_ft")
   
-  wic_parcel_attach <- NULL
+  wic_parcel_attach <- data.frame(matrix(NA, 0, 4))
   wic_parcels <- NULL
   
 
@@ -268,9 +268,7 @@ params:
 ```
 
 
-The new and modified work orders (total = `r nrow(bind_rows(changed_wic_cityworks, new_wic))` ) were searched in GIS database by their facility id, location, and XY coordinate. This has resulted in `r nrow(wic_parcel_attach)` parcel attachment.  
-
-```{r Section 6- write to DB ,include=FALSE, eval = !is.null(wic_parcel_attach)}
+```{r Section 6- write to DB ,include=FALSE, eval = nrow(wic_parcel_attach)>0}
 
        
     # union the matching tables-Final output is in FACID_ADD_XY
@@ -294,6 +292,7 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
 
 ```
 
+The new and modified work orders (total = `r nrow(bind_rows(changed_wic_cityworks, new_wic))` ) were searched in GIS database by their facility id, location, and XY coordinate. This has resulted in `r nrow(wic_parcel_attach)` parcel attachment.
 
 
 ```{r Section 7- displaying tables of parcels attached to the new and changed work orders and write to DB ,echo=FALSE, results='asis'}

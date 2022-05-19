@@ -157,13 +157,13 @@ params:
 
   if (nrow(new_wic) > 0) {
 
-    kable(new_wic, caption = "New Work Orders in Cityworks Database")
+    kable(new_wic, caption = "New work orders in cityworks database")
     
   }
 
   if (nrow(changed_wic_cityworks) > 0) {
 
-    kable(nrow(changed_wic_cityworks), caption = "Modified Work Orders in Cityworks Database")
+    kable(nrow(changed_wic_cityworks), caption = "Modified work orders in cityworks database")
     
   }
 

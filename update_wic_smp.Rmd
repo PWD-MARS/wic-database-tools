@@ -342,12 +342,7 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
       st_crs(treetrench) <- 2272
       st_crs(trench) <- 2272
       st_crs (wetland) <- 2272
-      
-      
-  # Get the parcel layer-Shapefile stored in network 
-      
-      PARCELS_SPATIAL <- st_read(dsn = "\\\\pwdoows\\oows\\Watershed Sciences\\GSI Monitoring\\09 GIS Data\\PWD_PARCELS ", layer = "PWD_PARCELS")
-      st_crs(PARCELS_SPATIAL) = 2272
+  
       
   # filter to get WIC associated polygons and delete the layer
       

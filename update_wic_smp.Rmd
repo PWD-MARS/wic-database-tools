@@ -552,10 +552,11 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
 
 ```{r section 8- displaying summary table of SMP association, include=FALSE, eval= nrow(smp_milestones)>0}
 
-      smp_milestones['construction_phase'] <- replace(smp_milestones$phase_lookup_uid, smp_milestones$phase_lookup_uid == 1, "Pre-construction" )
-      smp_milestones['construction_phase'] <- replace(smp_milestones$phase_lookup_uid, smp_milestones$phase_lookup_uid == 2, "During-construction" )
-      smp_milestones['construction_phase'] <- replace(smp_milestones$phase_lookup_uid, smp_milestones$phase_lookup_uid == 3, "Post-construction" )
-      smp_milestones['construction_phase'] <- replace(smp_milestones$phase_lookup_uid, smp_milestones$phase_lookup_uid == 4, "Unknown" )
+      smp_milestones$construction_phase <- replace(smp_milestones$construction_phase, smp_milestones$construction_phase == 1, "Pre-construction" )
+      smp_milestones$construction_phase <- replace(smp_milestones$construction_phase, smp_milestones$construction_phase == 2, "During-construction" )
+      smp_milestones$construction_phase <- replace(smp_milestones$construction_phase, smp_milestones$construction_phase == 3, "Post-construction" )
+      smp_milestones$construction_phase <- replace(smp_milestones$construction_phase, smp_milestones$construction_phase == 4, "Unknown" )
+
       smp_milestones <- smp_milestones %>% select(workorder_id, smp_id, construction_phase, buffer_ft)
       
       kable(smp_milestones, caption = "New WIC_SMP association at 25, 50, and 100 ft buffer distance")

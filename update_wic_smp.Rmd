@@ -552,7 +552,9 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
 
 ```{r section 8- displaying summary table of SMP association, include=FALSE, eval= nrow(smp_milestones)>0}
 
-      smp_milestones <- smp_milestones %>% select(workorder_id, smp_id, construction_phase, buffer_ft)
+      
+
+      smp_milestones <- smp_milestones %>% select(workorder_id, smp_id,  construction_phase = phase_lookup_uid , buffer_ft)
       
       kable(smp_milestones, caption = "New WIC_SMP association at 25, 50, and 100 ft buffer distance")
 

@@ -567,10 +567,15 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
 
 ```
 
- `r       kable(smp_milestones, caption = "New WIC_SMP association at 25, 50, and 100 ft buffer distance")`
+
+```{r section 10-  showing the table in kable, include = FALSE, eval= nrow(smp_milestones)>0}
+
+      kable(smp_milestones, caption = "New WIC_SMP association at 25, 50, and 100 ft buffer distance")
+```
 
 
-```{r section 10- DB disconnect, include=FALSE}
+
+```{r section 11- DB disconnect, include=FALSE}
 
       dbDisconnect(MARSDB_con)
       dbDisconnect(cityworksDB_con)

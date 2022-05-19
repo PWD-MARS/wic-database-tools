@@ -545,7 +545,7 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
         dbWriteTable (con, SQL("fieldwork.wic_smps"),fieldwork.wic_smps,append= TRUE, row.names = FALSE)
       }
       
-      
+
    
 ```
 Public SMPs were intersected with parcels associated with new/changed WIC work orders within 25, 50, and 100 ft of distance from them. This resulted in `r nrow( smp_milestones %>% filter(phase_lookup_uid=="Pre-construction"))` SMP attachment in Pre-construction phase, `r nrow( smp_milestones %>% filter(phase_lookup_uid=="During-construction"))` SMP attachment during-construction phase, `r nrow( smp_milestones %>% filter(phase_lookup_uid=="Post-construction"))` SMP attachment in Post-construction phase, and `r nrow( smp_milestones %>% filter(phase_lookup_uid=="unknown"))` SMP attachment with unknown construction phase.
@@ -557,7 +557,7 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
 
 ```
 
-```{r section 9- displaying summary table of SMP association, include=FALSE, echo=FALSE, results='asis'}
+```{r section 9- displaying summary table of SMP association, include=FALSE, echo=FALSE, results='asis',eval= nrow(smp_milestones)>0}
 
       
       kable(smp_milestones, caption = "New WIC_SMP association at 25, 50, and 100 ft buffer distance")

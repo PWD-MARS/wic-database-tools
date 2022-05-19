@@ -261,6 +261,9 @@ params:
        
 ```
 
+
+The new and modified work orders (total = `r nrow(bind_rows(changed_wic_cityworks, new_wic))` ) were searched in GIS database by their facility id, location, and XY coordinate. This has resulted in `r nrow(wic_parcel_attach)` parcel attachment.  
+
 ```{r Section 5- write to DB ,include=FALSE}
 
        
@@ -285,10 +288,9 @@ params:
 
 ```
 
-The new and modified work orders (total = `r nrow(wo_noparcels)` ) were searched in GIS database by their facility id, location, and XY coordinate. This has resulted in `r nrow(wic_parcels)` parcel attachment.  
 
 
-```{r Section 5- displaying tables of parcels attached to the new and changed work orders and write to DB ,echo=FALSE, results='asis'}
+```{r Section 6- displaying tables of parcels attached to the new and changed work orders and write to DB ,echo=FALSE, results='asis'}
 
      if ( nrow(wic_parcels) > 0 ) {
     
@@ -305,7 +307,7 @@ The new and modified work orders (total = `r nrow(wo_noparcels)` ) were searched
 ```
 
 
-```{r Section 6- SMP intersect, include=FALSE, eval= nrow(wic_parcels) > 0 }
+```{r Section 7- SMP intersect, include=FALSE, eval= nrow(wic_parcels) > 0 }
 
       basin <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBASIN", quiet = TRUE)) 
       blueroof <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBLUEROOF", quiet = TRUE)) 
@@ -551,7 +553,7 @@ The new and modified work orders (total = `r nrow(wo_noparcels)` ) were searched
 ```
 Public SMPs were intersected with parcels associated with new/changed WIC work orders within 25, 50, and 100 ft of distance from them. This resulted in `r nrow(output_25)`, `r nrow(output_50)`, and `r nrow(output_100)` SMP_WIC attachment, respectively. 
 
-```{r section 7- displaying summary table of SMP association at buffer 25ft, include=FALSE, eval= nrow(output_25)>0}
+```{r section 8- displaying summary table of SMP association at buffer 25ft, include=FALSE, eval= nrow(output_25)>0}
 
       output_25['construction_phase'] <- replace(output_25$phase_lookup_uid, output_25$phase_lookup_uid == 1, "Pre-construction" )
       output_25['construction_phase'] <- replace(output_25$phase_lookup_uid, output_25$phase_lookup_uid == 2, "During-construction" )
@@ -563,7 +565,7 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
 
 ```
 
-```{r  section 8- displaying summary table of SMP association at buffer 50ft, include=FALSE, eval= nrow(output_50)>0}
+```{r  section 9- displaying summary table of SMP association at buffer 50ft, include=FALSE, eval= nrow(output_50)>0}
 
       output_50['construction_phase'] <- replace(output_50$phase_lookup_uid, output_50$phase_lookup_uid == 1, "Pre-construction" )
       output_50['construction_phase'] <- replace(output_50$phase_lookup_uid, output_50$phase_lookup_uid == 2, "During-construction" )
@@ -575,7 +577,7 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
 
 ```
 
-```{r section 9- displaying summary table of SMP association at buffer 100ft, include=FALSE, eval= nrow(output_100)>0}
+```{r section 10- displaying summary table of SMP association at buffer 100ft, include=FALSE, eval= nrow(output_100)>0}
     
       output_100['construction_phase'] <- replace(output_100$phase_lookup_uid, output_100$phase_lookup_uid == 1, "Pre-construction" )
       output_100['construction_phase'] <- replace(output_100$phase_lookup_uid, output_100$phase_lookup_uid == 2, "During-construction" )
@@ -587,7 +589,7 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
 
 ```
 
-```{r section 10- DB disconnect, include=FALSE}
+```{r section 11- DB disconnect, include=FALSE}
 
       dbDisconnect(MARSDB_con)
       dbDisconnect(cityworksDB_con)

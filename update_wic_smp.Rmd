@@ -553,7 +553,7 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
       
    
 ```
-Public SMPs were intersected with parcels associated with new/changed WIC work orders within 25, 50, and 100 ft of distance from them. This resulted in `r nrow( smp_miliestones %>% filter(phase_lookup_uid==1))` SMP attachment in Pre-construction phase, `r nrow( smp_miliestones %>% filter(phase_lookup_uid==2))` SMP attachment during-construction phase, `r nrow( smp_miliestones %>% filter(phase_lookup_uid==3))` SMP attachment in Post-construction phase, and `r nrow( smp_miliestones %>% filter(phase_lookup_uid==4))` SMP attachment with known construction phase.
+Public SMPs were intersected with parcels associated with new/changed WIC work orders within 25, 50, and 100 ft of distance from them. This resulted in `r nrow( smp_milestones %>% filter(phase_lookup_uid==1))` SMP attachment in Pre-construction phase, `r nrow( smp_milestones %>% filter(phase_lookup_uid==2))` SMP attachment during-construction phase, `r nrow( smp_milestones %>% filter(phase_lookup_uid==3))` SMP attachment in Post-construction phase, and `r nrow( smp_milestones %>% filter(phase_lookup_uid==4))` SMP attachment with known construction phase.
 
 ```{r section 8- displaying summary table of SMP association, include=FALSE, eval= nrow(smp_milestones)>0}
 

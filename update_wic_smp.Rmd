@@ -294,7 +294,7 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
 
      if ( nrow(wic_parcels) > 0 ) {
     
-        kable(wic_parcels, caption = "New and Modified WIC Parcels")
+        kable(wic_parcels, caption = "Parcel attachment for new/changed workorders")
     
       }
 
@@ -550,18 +550,22 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
 ```
 Public SMPs were intersected with parcels associated with new/changed WIC work orders within 25, 50, and 100 ft of distance from them. This resulted in `r nrow( smp_milestones %>% filter(phase_lookup_uid=="Pre-construction"))` SMP attachment in Pre-construction phase, `r nrow( smp_milestones %>% filter(phase_lookup_uid=="During-construction"))` SMP attachment during-construction phase, `r nrow( smp_milestones %>% filter(phase_lookup_uid=="Post-construction"))` SMP attachment in Post-construction phase, and `r nrow( smp_milestones %>% filter(phase_lookup_uid=="unknown"))` SMP attachment with unknown construction phase.
 
-```{r section 8- displaying summary table of SMP association, include=FALSE, eval= nrow(smp_milestones)>0}
 
-      
+```{r section 8- trimming for the showing the table in kable, include = FALSE, eval= nrow(smp_milestones)>0}
 
       smp_milestones <- smp_milestones %>% select(workorder_id, smp_id,  construction_phase = phase_lookup_uid , buffer_ft)
+
+```
+
+```{r section 9- displaying summary table of SMP association, include=FALSE, eval= nrow(smp_milestones)>0, echo=FALSE, results='asis'}
+
       
       kable(smp_milestones, caption = "New WIC_SMP association at 25, 50, and 100 ft buffer distance")
 
 ```
 
 
-```{r section 9- DB disconnect, include=FALSE}
+```{r section 10- DB disconnect, include=FALSE}
 
       dbDisconnect(MARSDB_con)
       dbDisconnect(cityworksDB_con)

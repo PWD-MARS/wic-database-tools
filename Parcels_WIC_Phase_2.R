@@ -186,6 +186,10 @@
      WORK_DATE <- WORKORDER_ID %>% select(workorder_id, wo_initiatedate)
      
      wic_parcels <- inner_join(wic_parcels, WORK_DATE, by = "workorder_id") %>% select(workorder_id, location, facility_id, wo_initiatedate)
+     
+     wic_parcels <- inner_join(wic_parcels, Parcels_Frame, by=c("facility_id"="FACILITYID")) %>% select(workorder_id, ADDRESS, facility_id, wo_initiatedate)
+     
+     names(wic_parcels) <- c("workorder_id","location","facility_id", "wo_initiatedate")
     
      
 ## Section 6: Writing results to DB

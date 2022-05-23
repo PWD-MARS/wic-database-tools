@@ -43,7 +43,6 @@ params:
                               "UID=gisread;",
                               "PWD=gisread;")
    
-  wic_parcels <- data.frame(matrix(NA, 0, 2)) #place holders (equivalent for 0-rows)
   output_25 <- data.frame(matrix(NA, 0, 2))
   output_50 <- data.frame(matrix(NA, 0, 2))
   output_100 <- data.frame(matrix(NA, 0, 2))
@@ -281,14 +280,6 @@ params:
        WORK_DATE <- WORKORDER_ID %>% select(workorder_id, wo_initiatedate)
        wic_parcels <- inner_join(wic_parcels, WORK_DATE, by = "workorder_id") %>% select(workorder_id, location, facility_id, wo_initiatedate)
        
-     
-    ## write to database
-     
-      if( nrow(wic_parcels) > 0 & params$write == TRUE ){
-      
-        dbWriteTable (MARSDB_con, SQL("fieldwork.wic_parcels"),wic_parcels,append= TRUE, row.names = FALSE)
-      
-      }
 
 ```
 
@@ -304,6 +295,9 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
       }
 
       if (!is.null(wic_parcels) & params$write == TRUE){
+        
+        sql_string <- "delete from fieldwork.wic_parcels WHERE workorder_id = %s;"
+        dbSendStatement(MARSDB_con, paste(sprintf(sql_string, wic_parcels$workorder_id), collapse=""))
     
         dbWriteTable (MARSDB_con, SQL("fieldwork.wic_parcels"),wic_parcels,append= TRUE, row.names = FALSE)
 
@@ -544,6 +538,9 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
         fieldwork.wic_smps['system_id'] <- gsub('-\\d+$','',fieldwork.wic_smps$smp_id ) 
       
         if (nrow(fieldwork.wic_smps) > 0 & params$write == TRUE){
+          
+          sql_string <- "delete from fieldwork.wic_smps WHERE workorder_id = %s;"
+          dbSendStatement(MARSDB_con, paste(sprintf(sql_string, fieldwork.wic_smp$workorder_id), collapse=""))
           dbWriteTable (MARSDB_con , SQL("fieldwork.wic_smps"),fieldwork.wic_smps,append= TRUE, row.names = FALSE)
         }
         

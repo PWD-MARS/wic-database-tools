@@ -20,7 +20,7 @@
 
     cw <- dbConnect(odbc(),
                 Driver = "ODBC Driver 17 for SQL Server",
-                Server = "PWDCWSQLT",
+                Server = "PWDCWSQLP",
                 Database = "PWD_Cityworks",
                 uid = Sys.getenv("cw_uid"),
                 pwd= Sys.getenv("cw_pwd"))

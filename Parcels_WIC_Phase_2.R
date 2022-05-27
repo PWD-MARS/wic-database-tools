@@ -60,6 +60,8 @@
     ###Regex = out: The first capture group
     
     WORKORDER_ID$facility_id<-gsub("\\{(.*)\\}","\\1",as.character(WORKORDER_ID$facility_id))
+    PARCELS_SPATIAL$FACILITYID<-gsub("\\{(.*)\\}","\\1",as.character(PARCELS_SPATIAL$FACILITYID))
+    
 
 
 ## Section 2: Matching by facility ID
@@ -162,7 +164,7 @@
      
      WO_MATCHED_XY <- mat_coor[Index_WO, ]
      
-     Parcel_Matched_Polyg <- Parcels_Frame[Index_Parcel, ]
+     Parcel_Matched_Polyg <- PARCELS_SPATIAL[Index_Parcel, ]
      
      COORD_MATCHED_TABLE <- cbind(Parcel_Matched_Polyg,WO_MATCHED_XY)
      

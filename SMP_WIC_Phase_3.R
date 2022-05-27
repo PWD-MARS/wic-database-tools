@@ -191,7 +191,7 @@
 
       Inters_Obj <- SMP_inters_25
       
-      GSI <- as.data.frame(SMP)
+      GSI <- SMP
       
       Buffer <- 25
       
@@ -206,36 +206,44 @@
         if (length(temp) > 0) {
           
             
-        FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
+        FACI_ID <- Parcels_WIC_Filterd[temp, "FACILITYID"] 
         
-        WO_ID <- Parcels_filtered_df[temp, "workorder_id"]
+        WO_ID <- Parcels_WIC_Filterd[temp, "workorder_id"]
         
-        WO_Date <- Parcels_filtered_df[temp, "wo_initiatedate"]
-        
-        
+        WO_Date <- Parcels_WIC_Filterd[temp, "wo_initiatedate"]
                  
         SMPID <- GSI [i,"SMP_ID"]
+        
+        FACI_ID <- FACI_ID %>% st_set_geometry(NULL)
+        
+        WO_ID <- WO_ID %>% st_set_geometry(NULL)
+        
+        WO_Date <- WO_Date %>% st_set_geometry(NULL)
+        
+        SMPID <- SMPID %>% st_set_geometry(NULL)
+        
+        
                  
-        SMPID_Vec <- rep(SMPID, length(temp))
-                 
-        Buffer_Vec <-  rep(Buffer, length(temp))
-                 
-        df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec, WO_ID, WO_Date)
+        df <- data.frame(SMPID, FACI_ID, Buffer, WO_ID, WO_Date)
                  
         output <- rbind(output, df ) 
         
         }
       
-      output_25 <-output
-       
+      output_25 <- output 
+      
       } 
+      
+      names(output_25) <- c("smp_id", "wic_facility_id","buffer_ft", "workorder_id","wo_initiatedate")
+      rownames(output_25) <- NULL
+      
       
       
   # buffer 50 ft 
       
       Inters_Obj <- SMP_inters_50
       
-      GSI <- as.data.frame(SMP)
+      GSI <- SMP
       
       Buffer <- 50
       
@@ -245,35 +253,47 @@
       
       for(i in 1:length(Inters_Obj)) {
         
-      temp <- Inters_Obj[[i]]
+        temp <- Inters_Obj[[i]]
         
         if (length(temp) > 0) {
-          FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
           
-          WO_ID <- Parcels_filtered_df[temp, "workorder_id"]
           
-          WO_Date <- Parcels_filtered_df[temp, "wo_initiatedate"]
+          FACI_ID <- Parcels_WIC_Filterd[temp, "FACILITYID"] 
+          
+          WO_ID <- Parcels_WIC_Filterd[temp, "workorder_id"]
+          
+          WO_Date <- Parcels_WIC_Filterd[temp, "wo_initiatedate"]
           
           SMPID <- GSI [i,"SMP_ID"]
           
-          SMPID_Vec <- rep(SMPID, length(temp))
+          FACI_ID <- FACI_ID %>% st_set_geometry(NULL)
           
-          Buffer_Vec <-  rep(Buffer, length(temp))
+          WO_ID <- WO_ID %>% st_set_geometry(NULL)
           
-          df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec, WO_ID, WO_Date)
+          WO_Date <- WO_Date %>% st_set_geometry(NULL)
+          
+          SMPID <- SMPID %>% st_set_geometry(NULL)
+          
+          
+          
+          df <- data.frame(SMPID, FACI_ID, Buffer, WO_ID, WO_Date)
           
           output <- rbind(output, df ) 
+          
         }
         
-      output_50 <-output
+        output_50 <- output 
         
-      }
+      } 
+      
+      names(output_50) <- c("smp_id", "wic_facility_id","buffer_ft", "workorder_id","wo_initiatedate")
+      rownames(output_50) <- NULL
       
   # buffer 100 ft 
       
       Inters_Obj <- SMP_inters_100
       
-      GSI <- as.data.frame(SMP)
+      GSI <- SMP
       
       Buffer <- 100
       
@@ -283,32 +303,41 @@
       
       for(i in 1:length(Inters_Obj)) {
         
-      temp <- Inters_Obj[[i]]
+        temp <- Inters_Obj[[i]]
         
         if (length(temp) > 0) {
           
-          FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
           
-          WO_ID <- Parcels_filtered_df[temp, "workorder_id"]
+          FACI_ID <- Parcels_WIC_Filterd[temp, "FACILITYID"] 
           
-          WO_Date <- Parcels_filtered_df[temp, "wo_initiatedate"]
+          WO_ID <- Parcels_WIC_Filterd[temp, "workorder_id"]
           
+          WO_Date <- Parcels_WIC_Filterd[temp, "wo_initiatedate"]
           
           SMPID <- GSI [i,"SMP_ID"]
           
-          SMPID_Vec <- rep(SMPID, length(temp))
+          FACI_ID <- FACI_ID %>% st_set_geometry(NULL)
           
-          Buffer_Vec <-  rep(Buffer, length(temp))
+          WO_ID <- WO_ID %>% st_set_geometry(NULL)
           
-          df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec, WO_ID, WO_Date)
+          WO_Date <- WO_Date %>% st_set_geometry(NULL)
+          
+          SMPID <- SMPID %>% st_set_geometry(NULL)
+          
+          
+          
+          df <- data.frame(SMPID, FACI_ID, Buffer, WO_ID, WO_Date)
           
           output <- rbind(output, df ) 
           
         }
-      
-        output_100 <-output
         
-      }
+        output_100 <- output 
+        
+      } 
+      
+      names(output_100) <- c("smp_id", "wic_facility_id","buffer_ft", "workorder_id","wo_initiatedate")
+      rownames(output_100) <- NULL
     
       
 ## Section 4: Final processing of the result data frame nad writing to DB 

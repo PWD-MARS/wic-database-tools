@@ -27,7 +27,7 @@ params:
   MARSDB_con <- dbConnect(odbc(), dsn = params$database)
   cityworksDB_con <- dbConnect(odbc(),
                   Driver = "ODBC Driver 17 for SQL Server",
-                  Server = "PWDCWSQLT",
+                  Server = "PWDCWSQLP",
                   Database = "PWD_Cityworks",
                   uid = Sys.getenv("cw_uid"),
                   pwd= Sys.getenv("cw_pwd"))
@@ -162,7 +162,7 @@ params:
 
   if (nrow(changed_wic_cityworks) > 0) {
 
-    kable(nrow(changed_wic_cityworks), caption = "Modified work orders in cityworks database")
+    kable(changed_wic_cityworks, caption = "Modified work orders in cityworks database")
     
   }
 

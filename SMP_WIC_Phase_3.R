@@ -460,7 +460,13 @@
       fieldwork.wic_smps <- smp_milestones %>% select(workorder_id,smp_id, wic_facility_id, buffer_ft, phase_lookup_uid)
 
       fieldwork.wic_smps['system_id'] <- gsub('-\\d+$','',fieldwork.wic_smps$smp_id ) 
-
+      
+      Parcels_WIC_Filterd <- Parcels_WIC_Filterd %>%
+        filter(Parcels_WIC_Filterd$workorder_id %in% smp_milestones$workorder_id)
+        
+      SMP <- SMP %>% 
+        filter(SMP$SMP_ID %in% smp_milestones$smp_id ) 
+        
       
 ## Section 6: Writing results to DB
       

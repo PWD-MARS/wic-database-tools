@@ -1,7 +1,7 @@
-#### Create the shiny deliverable of the WIC project
-#### Written by: Farshad Ebrahimi- 5/3/2022.
+  #### Create the shiny deliverable of the WIC project
+  #### Written by: Farshad Ebrahimi- 5/3/2022.
   
-### Section 1: data gathering
+  ### Section 1: data gathering
   
   
   library(DBI)
@@ -15,7 +15,6 @@
   con <- dbConnect(odbc::odbc(), dsn = "mars_data", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"))
   
   wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_workorders ")
-  wic_comments <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_comments ")
   wic_parcels <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels ")
   wic_smps <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_smps ")
   wic_conphase <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_conphase ")
@@ -46,11 +45,6 @@
   output_50ft_dl <- output_50ft
   output_100ft_dl <- output_100ft
   
-  output_25ft_dl <- output_25ft_dl %>% inner_join(wic_comments, by="workorder_id")
-  output_50ft_dl <- output_50ft_dl %>% inner_join(wic_comments, by="workorder_id")
-  output_100ft_dl <- output_100ft_dl %>% inner_join(wic_comments, by="workorder_id")
-  
-  
   output_25ft_dl$smp_id<- shQuote(output_25ft$smp_id)
   output_50ft_dl$smp_id<- shQuote(output_50ft$smp_id)
   output_100ft_dl$smp_id<- shQuote(output_100ft$smp_id)
@@ -59,13 +53,13 @@
   output_50ft_dl$system_id<- shQuote(output_50ft$system_id)
   output_100ft_dl$system_id<- shQuote(output_100ft$system_id)
   
-  names(output_25ft_dl) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date","Comments")
-  names(output_50ft_dl) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date","Comments")
-  names(output_100ft_dl) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date","Comments")
+  names(output_25ft_dl) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")
+  names(output_50ft_dl) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")
+  names(output_100ft_dl) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")
   
-  output_25ft_dl <- output_25ft_dl[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)","Comments")]
-  output_50ft_dl <- output_50ft_dl[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)","Comments")]
-  output_100ft_dl <- output_100ft_dl[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)","Comments")]
+  output_25ft_dl <- output_25ft_dl[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)")]
+  output_50ft_dl <- output_50ft_dl[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)")]
+  output_100ft_dl <- output_100ft_dl[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)")]
   
   
   names(output_25ft) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")
@@ -77,7 +71,7 @@
   output_100ft <- output_100ft[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)")]
   output_all <- bind_rows(output_25ft,output_50ft,output_100ft)
   
-### Section 3: shiny work-A navbarpage with two tabs, within tab 1 there will be 3 tabsets with 3 tables of data and corresponding download button on the sidebar
+  ### Section 3: shiny work-A navbarpage with two tabs, within tab 1 there will be 3 tabsets with 3 tables of data and corresponding download button on the sidebar
   
   ui <- fluidPage(
     navbarPage(

@@ -84,11 +84,23 @@ params:
    
    cityworks_workorders$WORKORDERID <- as.numeric(cityworks_workorders$WORKORDERID)
    cityworks_cm$WORKORDERID <- as.numeric(cityworks_cm$WORKORDERID)
+  
    
 # make names consistent    
 
    names(cityworks_workorders) <- c("workorder_id","wo_initiatedate","location","wo_xcoordinate","wo_ycoordinate","facility_id")
    names (cityworks_cm) <- c("workorder_id","comments")
+   
+   
+   mutate(cityworks_workorders, dupe = duplicated(workorder_id)) -> test
+   dupes <- test$workorder_id[test$dupe == TRUE]
+   filter(test, workorder_id %in% dupes) -> dup_table
+   distinct_wo <- dup_table %>% select(-dupe)
+   distinct_wo$facility_id <- NA
+   distinct_wo$facility_id <- as.character(distinct_wo$facility_id)
+   distinct_wo <- distinct_wo %>% distinct()
+   cityworks_workorders <- cityworks_workorders %>% anti_join(distinct_wo, by= "workorder_id")
+   cityworks_workorders <- bind_rows(cityworks_workorders, distinct_wo)
    
 # find the new wic complaint and changed ones in cityworks DB
    
@@ -223,40 +235,64 @@ params:
       
     # Build the spatial object from the XY coordinates in Cityworks
      
-      xy_coor <-  c(wo_noparcels[,"wo_xcoordinate"],wo_noparcels[,"wo_ycoordinate"])
-      mat_coor <- matrix(data = xy_coor, ncol = 2) %>% na.omit
-      WO_SPATIAL <- mat_coor |> 
-         as.matrix() |> 
-         st_multipoint() |> 
-         st_sfc() |> 
-         st_cast('POINT')
-      st_crs(WO_SPATIAL) <- 2272
+         
+        xy_coor <-  c(WORKORDER_ID[,"wo_xcoordinate"],WORKORDER_ID[,"wo_ycoordinate"])
+    
+        mat_coor <- matrix(data = xy_coor, ncol = 2) %>% na.omit
       
-    # Intersect the Parcel polygons and the points
-       WO_PARC_INTERSECT <- st_intersects(WO_SPATIAL, PARCELS_SPATIAL )
-   
-    # Get the index of intersecting XY coordinates and Parcel polygons
-       
-       Index_WO <- NULL
-       Index_Parcel <- NULL
-        for(i in 1:length(WO_PARC_INTERSECT)) {
-            temp <- WO_PARC_INTERSECT[[i]]
-              if (length(temp) > 0) {
-              WO <- rep(i, length(temp))
-              Parcel <- temp
-              Index_WO <- c(Index_WO, WO )
-              Index_Parcel <- c(Index_Parcel, Parcel ) 
-              }
-         }
-      
-    # attach the XY coordinate to the Parcel frame to create COORD_MATCHED_TABLE
-       
-       mat_coor <- data.frame (mat_coor)
-       names(mat_coor) <- c("wo_xcoordinate","wo_ycoordinate")
-       WO_MATCHED_XY <- mat_coor[Index_WO, ]
-       Parcel_Matched_Polyg <- Parcels_Frame[Index_Parcel, ]
-       COORD_MATCHED_TABLE <- cbind(Parcel_Matched_Polyg,WO_MATCHED_XY)
-       
+        WO_SPATIAL <- mat_coor |> 
+           as.matrix() |> 
+           st_multipoint() |> 
+           st_sfc() |> 
+           st_cast('POINT')
+         
+        st_crs(WO_SPATIAL) <- 2272
+         
+      # Intersect the Parcel polygons and the points
+         
+         WO_PARC_INTERSECT <- st_intersects(WO_SPATIAL, PARCELS_SPATIAL )
+         
+    ## Section 5: Matching WICs to parcels by geoprocessing
+         
+     
+      # Get the index of intersecting XY coordinates and Parcel polygons
+         
+         
+         Index_WO <- NULL
+         
+         Index_Parcel <- NULL
+         
+          for(i in 1:length(WO_PARC_INTERSECT)) {
+           
+              temp <- WO_PARC_INTERSECT[[i]]
+           
+                if (length(temp) > 0) {
+    
+                WO <- rep(i, length(temp))
+                
+                Parcel <- temp
+    
+                Index_WO <- c(Index_WO, WO )
+                
+                Index_Parcel <- c(Index_Parcel, Parcel ) 
+                
+                }
+                                                 
+           }
+         
+         
+      # attach the XY coordinate to the Parcel frame to create COORD_MATCHED_TABLE
+         
+         mat_coor <- data.frame (mat_coor)
+         
+         names(mat_coor) <- c("wo_xcoordinate","wo_ycoordinate")
+         
+         WO_MATCHED_XY <- mat_coor[Index_WO, ]
+         
+         Parcel_Matched_Polyg <- PARCELS_SPATIAL[Index_Parcel, ]
+         
+         COORD_MATCHED_TABLE <- cbind(Parcel_Matched_Polyg,WO_MATCHED_XY)
+     
     # Get workorderid, address, and facilityid (Third output is stored in WOID_Based_XY )
        
        WOID_Based_XY<- wo_noparcels %>% select(workorder_id, wo_initiatedate, location, wo_xcoordinate, wo_ycoordinate) %>% inner_join(COORD_MATCHED_TABLE, by = c("wo_xcoordinate" = "wo_xcoordinate", "wo_ycoordinate" = "wo_ycoordinate")) %>% select(workorder_id, location = ADDRESS, facility_id = FACILITYID) 
@@ -399,12 +435,16 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
   # create a conditional loop, that loops through each element of the list column of intersect (sparse matrix) , gets the indexes of the 
   # WIC_parcels, and populates a data frame, consisting the SMP_ID, FACILITYID of the wic -parcel, and the size of buffer
       
-  # buffer 25 ft
+   # buffer 25 ft
 
       Inters_Obj <- SMP_inters_25
-      GSI <- as.data.frame(SMP)
+      
+      GSI <- SMP
+      
       Buffer <- 25
+      
       output <- NULL
+      
       df <- NULL
       
       for(i in 1:length(Inters_Obj)) {
@@ -412,76 +452,138 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
       temp <- Inters_Obj[[i]]
        
         if (length(temp) > 0) {
-        FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
-        WO_ID <- Parcels_filtered_df[temp, "workorder_id"]
-        WO_Date <- Parcels_filtered_df[temp, "wo_initiatedate"]
+          
+            
+        FACI_ID <- Parcels_WIC_Filterd[temp, "FACILITYID"] 
+        
+        WO_ID <- Parcels_WIC_Filterd[temp, "workorder_id"]
+        
+        WO_Date <- Parcels_WIC_Filterd[temp, "wo_initiatedate"]
+                 
         SMPID <- GSI [i,"SMP_ID"]
-        SMPID_Vec <- rep(SMPID, length(temp))
-        Buffer_Vec <-  rep(Buffer, length(temp))
-        df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec, WO_ID, WO_Date)
+        
+        FACI_ID <- FACI_ID %>% st_set_geometry(NULL)
+        
+        WO_ID <- WO_ID %>% st_set_geometry(NULL)
+        
+        WO_Date <- WO_Date %>% st_set_geometry(NULL)
+        
+        SMPID <- SMPID %>% st_set_geometry(NULL)
+        
+        
+                 
+        df <- data.frame(SMPID, FACI_ID, Buffer, WO_ID, WO_Date)
+                 
         output <- rbind(output, df ) 
+        
         }
       
-      output_25 <-output
-       
+      output_25 <- output 
+      
       } 
+      
       
   # buffer 50 ft 
       
       Inters_Obj <- SMP_inters_50
-      GSI <- as.data.frame(SMP)
+      
+      GSI <- SMP
+      
       Buffer <- 50
+      
       output <- NULL
+      
       df <- NULL
+      
       for(i in 1:length(Inters_Obj)) {
-      temp <- Inters_Obj[[i]]
+        
+        temp <- Inters_Obj[[i]]
+        
         if (length(temp) > 0) {
-          FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
-          WO_ID <- Parcels_filtered_df[temp, "workorder_id"]
-          WO_Date <- Parcels_filtered_df[temp, "wo_initiatedate"]
+          
+          
+          FACI_ID <- Parcels_WIC_Filterd[temp, "FACILITYID"] 
+          
+          WO_ID <- Parcels_WIC_Filterd[temp, "workorder_id"]
+          
+          WO_Date <- Parcels_WIC_Filterd[temp, "wo_initiatedate"]
+          
           SMPID <- GSI [i,"SMP_ID"]
-          SMPID_Vec <- rep(SMPID, length(temp))
-          Buffer_Vec <-  rep(Buffer, length(temp))
-          df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec, WO_ID, WO_Date)
+          
+          FACI_ID <- FACI_ID %>% st_set_geometry(NULL)
+          
+          WO_ID <- WO_ID %>% st_set_geometry(NULL)
+          
+          WO_Date <- WO_Date %>% st_set_geometry(NULL)
+          
+          SMPID <- SMPID %>% st_set_geometry(NULL)
+          
+          
+          
+          df <- data.frame(SMPID, FACI_ID, Buffer, WO_ID, WO_Date)
+          
           output <- rbind(output, df ) 
+          
         }
         
-      output_50 <-output
+        output_50 <- output 
         
-      }
+      } 
       
   # buffer 100 ft 
       
       Inters_Obj <- SMP_inters_100
-      GSI <- as.data.frame(SMP)
+      
+      GSI <- SMP
+      
       Buffer <- 100
+      
       output <- NULL
+      
       df <- NULL
+      
       for(i in 1:length(Inters_Obj)) {
-      temp <- Inters_Obj[[i]]
+        
+        temp <- Inters_Obj[[i]]
+        
         if (length(temp) > 0) {
-          FACI_ID <- Parcels_filtered_df[temp, "FACILITYID"]
-          WO_ID <- Parcels_filtered_df[temp, "workorder_id"]
-          WO_Date <- Parcels_filtered_df[temp, "wo_initiatedate"]
+          
+          
+          FACI_ID <- Parcels_WIC_Filterd[temp, "FACILITYID"] 
+          
+          WO_ID <- Parcels_WIC_Filterd[temp, "workorder_id"]
+          
+          WO_Date <- Parcels_WIC_Filterd[temp, "wo_initiatedate"]
+          
           SMPID <- GSI [i,"SMP_ID"]
-          SMPID_Vec <- rep(SMPID, length(temp))
-          Buffer_Vec <-  rep(Buffer, length(temp))
-          df <- data.frame(SMPID_Vec, FACI_ID, Buffer_Vec, WO_ID, WO_Date)
+          
+          FACI_ID <- FACI_ID %>% st_set_geometry(NULL)
+          
+          WO_ID <- WO_ID %>% st_set_geometry(NULL)
+          
+          WO_Date <- WO_Date %>% st_set_geometry(NULL)
+          
+          SMPID <- SMPID %>% st_set_geometry(NULL)
+          
+          
+          
+          df <- data.frame(SMPID, FACI_ID, Buffer, WO_ID, WO_Date)
+          
           output <- rbind(output, df ) 
           
         }
+        
+        output_100 <- output 
+        
+      } 
       
-        output_100 <-output
-      
-      }
-    
 ## Section 4: Final processing of the result data frame nad writing to DB 
   #stick them together, name them, add the system id
 ###Taylor says: Filter to complete cases (ie, no NAs or gaps in data) and write to DB
       
       Result <- bind_rows(output_25, output_50, output_100) 
       if (length(Result) > 0) {
-        
+        rownames(Result) <- NULL
         names(Result) <- c("smp_id", "wic_facility_id","buffer_ft", "workorder_id","wo_initiatedate")
         Result <- Result %>% na.omit
         Result['system_id'] <- gsub('-\\d+$','',Result$smp_id )

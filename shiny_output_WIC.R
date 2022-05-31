@@ -39,9 +39,13 @@
       select(-wic_parcels_uid,-wic_facility_id) %>% 
       filter(buffer_ft == 100)
     
-    output_25ft$wo_initiatedate <- as.Date(output_25ft$wo_initiatedate)
-    output_50ft$wo_initiatedate <- as.Date(output_50ft$wo_initiatedate)
-    output_100ft$wo_initiatedate <- as.Date(output_100ft$wo_initiatedate)
+    output_25ft$smp_id<- shQuote(output_25ft$smp_id)
+    output_50ft$smp_id<- shQuote(output_50ft$smp_id)
+    output_100ft$smp_id<- shQuote(output_100ft$smp_id)
+    
+    output_25ft$system_id<- shQuote(output_25ft$system_id)
+    output_50ft$system_id<- shQuote(output_50ft$system_id)
+    output_100ft$system_id<- shQuote(output_100ft$system_id)
     
     names(output_25ft) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")
     names(output_50ft) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")

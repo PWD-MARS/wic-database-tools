@@ -11,6 +11,7 @@ params:
 ```{r setup, include=FALSE}
 
   knitr::opts_chunk$set(echo = TRUE)
+  knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 
   library(DBI)
   library(RPostgreSQL)

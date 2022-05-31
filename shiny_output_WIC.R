@@ -1,5 +1,5 @@
-  #### Create the shiny deliverable of the WIC project
-  #### Written by: Farshad Ebrahimi- 5/3/2022.
+#### Create the shiny deliverable of the WIC project
+#### Written by: Farshad Ebrahimi- 5/3/2022.
   
 ### Section 1: data gathering
   
@@ -15,13 +15,14 @@
   con <- dbConnect(odbc::odbc(), dsn = "mars_data", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"))
   
   wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_workorders ")
+  wic_comments <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_comments ")
   wic_parcels <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels ")
   wic_smps <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_smps ")
   wic_conphase <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_conphase ")
   
   
   
-### Section 2: processing the data into 3 tables (buffers: 25, 50, and 100 ft) and change the data format, column names and their order
+  ### Section 2: processing the data into 3 tables (buffers: 25, 50, and 100 ft) and change the data format, column names and their order
   
   output_25ft <- inner_join(wic_smps, wic_conphase, by=c("phase_lookup_uid"="wic_uid"))%>%
     select(-phase_lookup_uid,-wic_smps_uid) %>%
@@ -45,6 +46,11 @@
   output_50ft_dl <- output_50ft
   output_100ft_dl <- output_100ft
   
+  output_25ft_dl <- output_25ft_dl %>% inner_join(wic_comments, by="workorder_id")
+  output_50ft_dl <- output_50ft_dl %>% inner_join(wic_comments, by="workorder_id")
+  output_100ft_dl <- output_100ft_dl %>% inner_join(wic_comments, by="workorder_id")
+  
+  
   output_25ft_dl$smp_id<- shQuote(output_25ft$smp_id)
   output_50ft_dl$smp_id<- shQuote(output_50ft$smp_id)
   output_100ft_dl$smp_id<- shQuote(output_100ft$smp_id)
@@ -53,13 +59,13 @@
   output_50ft_dl$system_id<- shQuote(output_50ft$system_id)
   output_100ft_dl$system_id<- shQuote(output_100ft$system_id)
   
-  names(output_25ft_dl) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")
-  names(output_50ft_dl) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")
-  names(output_100ft_dl) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")
+  names(output_25ft_dl) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date","Comments")
+  names(output_50ft_dl) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date","Comments")
+  names(output_100ft_dl) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date","Comments")
   
-  output_25ft_dl <- output_25ft_dl[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)")]
-  output_50ft_dl <- output_50ft_dl[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)")]
-  output_100ft_dl <- output_100ft_dl[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)")]
+  output_25ft_dl <- output_25ft_dl[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)","Comments")]
+  output_50ft_dl <- output_50ft_dl[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)","Comments")]
+  output_100ft_dl <- output_100ft_dl[,c("SMP ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer (ft)","Comments")]
   
   
   names(output_25ft) <- c("Work Order ID", "SMP ID", "Buffer (ft)", "System ID", "Construction Phase","Address", "Complaint Date")

@@ -463,9 +463,25 @@
       
       Parcels_WIC_Filterd <- Parcels_WIC_Filterd %>%
         filter(Parcels_WIC_Filterd$workorder_id %in% smp_milestones$workorder_id)
+      
+      Parcels_WIC_Filterd <- inner_join(Parcels_WIC_Filterd, smp_milestones, by =c("FACILITYID"="wic_facility_id")) %>% select(ADDRESS, smp_id, buffer_ft)
+      
         
       SMP <- SMP %>% 
         filter(SMP$SMP_ID %in% smp_milestones$smp_id ) 
+      
+      SMP <- st_transform(SMP, 4326)
+      Parcels_WIC_Filterd <- st_transform(Parcels_WIC_Filterd, 4326)
+      
+      SMPtext <- SMP %>% st_geometry() %>% st_as_text()
+      Parcel_text <- Parcels_WIC_Filterd %>% st_geometry() %>% st_as_text()
+      
+      Parcel_address <- Parcels_WIC_Filterd %>% st_set_geometry(NULL)
+      SMP_ID <- SMP["SMP_ID"] %>% st_set_geometry(NULL)
+      
+      SMP_ID['WKT'] <- SMPtext
+      Parcel_address['WKT'] <-Parcel_text
+      Parcel_address <- distinct(Parcel_address)
         
       
 ## Section 6: Writing results to DB
@@ -473,6 +489,11 @@
       dbWriteTable (con, SQL("fieldwork.wic_smps"),fieldwork.wic_smps,append= TRUE, row.names = FALSE)
       
       dbWriteTable (con, SQL("fieldwork.wic_conphase"),wic_conphase,append= TRUE, row.names = FALSE)
+      
+      dbWriteTable (con, SQL("fieldwork.wic_smp_mapid"),SMP_ID,append= TRUE, row.names = FALSE)
+    
+      dbWriteTable (con, SQL("fieldwork.wic_parcels_address"),Parcel_address,append= TRUE, row.names = FALSE)
+      
       
       dbDisconnect(con)
         

@@ -88,7 +88,7 @@
                    
                    , width = 3
                    ), 
-                   mainPanel( leafletOutput("map",width = "115%" ,height = "550")
+                   mainPanel( leafletOutput("map",width = "115%" ,height = "525")
                    )
                  ),
                  reactableOutput("table_25ft")

@@ -140,7 +140,7 @@
     output$map <- renderLeaflet({
       
       leaflet()%>%addTiles(options = providerTileOptions(minZoom = 14, maxZoom = 18))%>%  
-        addPolygons(data=filter(smp_spatial, SMP_ID == input$smp_id  ), label = input$smp_id , color = "red", group = "SMP") %>%
+        addPolygons(data=filter(smp_spatial, SMP_ID == input$smp_id  ), label = paste("SMP ID:",input$smp_id) , color = "red", group = "SMP") %>%
         ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
         addPolygons(data = filter(parcel_spatial, smp_id == input$smp_id & buffer_ft == input$buffer), label = paste(labels_parcel()[,],""),group = "Parcels") 
     })

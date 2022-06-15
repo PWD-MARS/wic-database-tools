@@ -237,7 +237,7 @@ params:
     # Build the spatial object from the XY coordinates in Cityworks
      
          
-        xy_coor <-  c(WORKORDER_ID[,"wo_xcoordinate"],WORKORDER_ID[,"wo_ycoordinate"])
+        xy_coor <-  c(wo_noparcels[,"wo_xcoordinate"],wo_noparcels[,"wo_ycoordinate"])
     
         mat_coor <- matrix(data = xy_coor, ncol = 2) %>% na.omit
       

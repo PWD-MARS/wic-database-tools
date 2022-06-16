@@ -116,10 +116,16 @@
       
       output$table_stats <- renderTable({
           
+          
+        
           stat <- output_25ft %>% 
             filter(Buffer_ft==100 & `Complaint Date` >= as.character(input$date))%>% 
             group_by(SMP_ID)%>% 
             summarise(count = n()) 
+          
+          if (nrow(stat)==0) {
+            validate("There is no WIC for the selected starting date!")
+          }
           
           stat <- stat[order(stat$count, decreasing = TRUE), ]
           stat <- stat[1:7, ]

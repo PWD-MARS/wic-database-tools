@@ -181,7 +181,7 @@
     
     
     output$WIC_dl_25ft <- downloadHandler(
-      filename = function() {paste("WIC_SMP_25ft_buffer-", Sys.Date(), ".csv", sep="")},
+      filename = function() {paste("WIC_SMP-", Sys.Date(), ".csv", sep="")},
       content = function(file) {write.csv(filter(output_25ft, SMP_ID == input$smp_id & Buffer_ft == input$buffer), file,row.names=FALSE)}
     )
     

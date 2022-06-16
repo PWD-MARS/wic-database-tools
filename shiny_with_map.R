@@ -86,7 +86,7 @@
                      'buffer', label = 'Select a Buffer Size (ft)', choices = buffer,selected = 25,
                      options = list(maxOptions = 3)
                    ),
-                   dateInput('date',label = 'Enter the starting date for the stats table',value = "2021-01-01"
+                   dateInput('date',label = 'Enter the starting date for the stats table',value = "2022-01-01"
                    ), 
                     tableOutput("table_stats"),
                    

@@ -124,7 +124,7 @@
             summarise(count = n()) 
           
           if (nrow(stat)==0) {
-            validate("There is no WIC for the selected starting date!")
+            validate("There is no WIC complaint for the selected starting date!")
           }
           
           stat <- stat[order(stat$count, decreasing = TRUE), ]

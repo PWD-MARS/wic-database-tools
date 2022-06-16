@@ -86,8 +86,8 @@
                      'buffer', label = 'Select a Buffer Size (ft)', choices = buffer,selected = 25,
                      options = list(maxOptions = 3)
                    ),
-                   dateInput('date',label = 'Enter the starting date for the stats table',value = "2022-01-01"
-                   ), 
+                   dateInput('date',label = 'Enter The Starting Date For The Stats Table (SMPs with Highest WICs)',value = "2022-01-01"
+                   ),
                     tableOutput("table_stats"),
                    
                    width = 4
@@ -128,7 +128,7 @@
           }
           
           stat <- stat[order(stat$count, decreasing = TRUE), ]
-          stat <- stat[1:7, ]
+          stat <- stat[1:6, ]
           
           output_stat <- output_25ft %>%
             filter(output_25ft$SMP_ID %in% stat$SMP_ID) %>%
@@ -151,6 +151,8 @@
           output_stat[,5] <- as.integer(output_stat[,5])
           output_stat[,6] <- as.integer(output_stat[,6])
           output_stat <- output_stat[order(output_stat$Total, decreasing = TRUE), ]
+          
+          
           return(output_stat)
         })
       
@@ -176,9 +178,11 @@
             sep="\n")
     })
     
+    
+    
     output$WIC_dl_25ft <- downloadHandler(
       filename = function() {paste("WIC_SMP_25ft_buffer-", Sys.Date(), ".csv", sep="")},
-      content = function(file) {write.csv(output_25ft_dl, file,row.names=FALSE)}
+      content = function(file) {write.csv(filter(output_25ft, SMP_ID == input$smp_id & Buffer_ft == input$buffer), file,row.names=FALSE)}
     )
     
     

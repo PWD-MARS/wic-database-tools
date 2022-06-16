@@ -80,7 +80,7 @@
                  
                  sidebarLayout(
                    sidebarPanel(selectizeInput(
-                     'smp_id', label = 'Type a SMP ID', choices = data, selected = "178-1-1",
+                     'smp_id', label = 'Type a SMP ID', choices = data, selected = data[1],
                      options = list(maxOptions = 5)
                    ),selectizeInput(
                      'buffer', label = 'Select a Buffer Size (ft)', choices = buffer,selected = 25,

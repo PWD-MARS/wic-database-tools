@@ -156,6 +156,32 @@
       
       SMP <- SMP[SMPID_IND, ]
       
+      SMP_SYS <- SMP
+      
+  # combine sf object (SMPs) for each system id
+      
+      SMP_SYS['system_id'] <- gsub('-\\d+$','',SMP_SYS$SMP_ID ) 
+      
+      system_list <- SMP_SYS %>% 
+        select(system_id) %>%
+        st_set_geometry(NULL)%>%
+        distinct()
+      
+      system_sf_all <- NULL
+      for (i in 1:nrow(system_list)){
+        
+        id <- system_list[i,1]
+        sys_merge <- SMP_SYS %>% filter(system_id == id)
+        SMP_combined <- st_union(sys_merge, by_feature = FALSE)
+        system_sf <- bind_cols(id,SMP_combined)
+        system_sf_all <- bind_rows(system_sf_all, system_sf)
+        
+      }
+      system_sf_all <- st_as_sf(system_sf_all)
+      st_crs (system_sf_all) <- 2272
+      names(system_sf_all) <-c("system_id","SHAPE")
+      st_geometry(system_sf_all) <- "SHAPE"
+
       
 ## Section 2: Create buffers (25, 50, and 100 ft) around SMPs and intersect them with the WIC Parcels
       

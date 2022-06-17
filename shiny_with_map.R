@@ -83,7 +83,7 @@
                      'smp_id', label = 'Type a SMP ID', choices = data, selected = data[1],
                      options = list(maxOptions = 5)
                    ),selectizeInput(
-                     'buffer', label = 'Select a Buffer Size (ft)', choices = buffer,selected = 25,
+                     'buffer', label = 'Select a Buffer Size (ft)', choices = buffer,selected = 100,
                      options = list(maxOptions = 3)
                    ),
                    dateInput('date',label = 'Enter The Starting Date For The Stats Table (SMPs with Highest WICs)',value = "2022-01-01"

@@ -40,8 +40,15 @@
     parcel_spatial <- bind_cols(parcel_address, parcel_sf)
     parcel_spatial <- st_as_sf(parcel_spatial)
     st_crs(parcel_spatial) <- 4326
-
-
+    
+    smp_spatial['system_id'] <- gsub('-\\d+$','',smp_spatial$SMP_ID) 
+    parcel_spatial['system_id'] <- gsub('-\\d+$','',parcel_spatial$smp_id ) 
+    parcel_address['system_id'] <- gsub('-\\d+$','',parcel_address$smp_id) 
+    
+ 
+    
+    
+    
 
 ### Section 2: processing the data into 3 tables (buffers: 25, 50, and 100 ft) and change the data format, column names and their order
 
@@ -55,8 +62,9 @@
     output_25ft_dl$system_id<- shQuote(output_25ft$system_id)
     
     data <- output_25ft %>% 
-      select(smp_id)
-    names(data) <- "SMP ID"
+      select(system_id) %>%
+      distinct()
+    names(data) <- "SYSTEM ID"
     
     buffer <- c(25,50,100)
     
@@ -80,7 +88,7 @@
                  
                  sidebarLayout(
                    sidebarPanel(selectizeInput(
-                     'smp_id', label = 'Type a SMP ID', choices = data, selected = data[1],
+                     'system_id', label = 'Type a System ID', choices = data, selected = data[1],
                      options = list(maxOptions = 5)
                    ),selectizeInput(
                      'buffer', label = 'Select a Buffer Size (ft)', choices = buffer,selected = 100,
@@ -120,7 +128,7 @@
         
           stat <- output_25ft %>% 
             filter(Buffer_ft==100 & `Complaint Date` >= as.character(input$date))%>% 
-            group_by(SMP_ID)%>% 
+            group_by(`System ID`)%>% 
             summarise(count = n()) 
           
           if (nrow(stat)==0) {
@@ -131,19 +139,19 @@
           stat <- stat[1:6, ]
           
           output_stat <- output_25ft %>%
-            filter(output_25ft$SMP_ID %in% stat$SMP_ID) %>%
+            filter(output_25ft$`System ID` %in% stat$`System ID`) %>%
             filter(Buffer_ft==100 & `Complaint Date` >= as.character(input$date))%>%
-            select(SMP_ID,`Construction Phase`) %>% 
-            group_by(SMP_ID, `Construction Phase` )%>% 
+            select(`System ID`,`Construction Phase`) %>% 
+            group_by(`System ID`, `Construction Phase` )%>% 
             summarise(count = n()) 
           
           output_stat <- output_stat %>% pivot_wider(names_from = `Construction Phase`, values_from = count)
           output_stat <- as.data.frame(output_stat)
           output_stat[is.na(output_stat)] <- 0
-          vec_name <- c("SMP_ID","pre-construction","during construction","post-construction","unknown","Total")
+          vec_name <- c("System ID","pre-construction","during construction","post-construction","unknown","Total")
           output_stat[vec_name[!(vec_name %in% colnames(output_stat))]] = 0
           output_stat <- output_stat[,vec_name]
-          names(output_stat)<- c("SMP ID","Pre-Con","During-Con","Post-Con","Unknown","Total")
+          names(output_stat)<- c("System ID","Pre-Con","During-Con","Post-Con","Unknown","Total")
           output_stat$Total <- output_stat$`Pre-Con`+ output_stat$`During-Con`+ output_stat$`Post-Con`+output_stat$Unknown
           output_stat[,2] <- as.integer(output_stat[,2])
           output_stat[,3] <- as.integer(output_stat[,3])
@@ -158,7 +166,7 @@
       
       
       output$table_25ft <- renderReactable({
-        reactable(filter(output_25ft, SMP_ID == input$smp_id & Buffer_ft == input$buffer), showPageSizeOptions = TRUE, pageSizeOptions = c(5, 10, 15), defaultPageSize = 10,filterable = FALSE
+        reactable(filter(output_25ft, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address), showPageSizeOptions = TRUE, pageSizeOptions = c(10, 25, 50), defaultPageSize = 10,filterable = FALSE
         )
       })
       
@@ -182,23 +190,23 @@
     
     output$WIC_dl_25ft <- downloadHandler(
       filename = function() {paste("WIC_SMP-", Sys.Date(), ".csv", sep="")},
-      content = function(file) {write.csv(filter(output_25ft, SMP_ID == input$smp_id & Buffer_ft == input$buffer), file,row.names=FALSE)}
+      content = function(file) {write.csv(filter(output_25ft, `System ID` == input$system_id & Buffer_ft == input$buffer), file,row.names=FALSE)}
     )
     
     
     labels_parcel <- reactive({
-      return( filter(parcel_address, smp_id == input$smp_id & buffer_ft == input$buffer) %>% select(ADDRESS))
+      return( filter(parcel_address, system_id == input$system_id & buffer_ft == input$buffer) %>% select(ADDRESS))
     })
-    
     
     output$map <- renderLeaflet({
       
       leaflet()%>%addTiles(options = providerTileOptions(minZoom = 16, maxZoom = 19))%>%  
-        addPolygons(data=filter(smp_spatial, SMP_ID == input$smp_id  ), label = paste("SMP ID:",input$smp_id) , color = "red", group = "SMP") %>%
+        addPolygons(data=filter(smp_spatial, system_id == input$system_id ), label = paste("System ID:",input$system_id) , color = "red", group = "SMP System") %>%
         ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
-        addPolygons(data = filter(parcel_spatial, smp_id == input$smp_id & buffer_ft == input$buffer), label = paste(labels_parcel()[,],""),group = "Parcels") %>%
-        addLegend(colors = c("red","blue"), labels = c("SMP","Parcel"))
-    })
+        addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer), label = paste(labels_parcel()[,],""),group = "Parcels") %>%
+        addLegend(colors = c("red","blue"), labels = c("SMP System","Parcel"))
+    }) 
+  
     
     
   }

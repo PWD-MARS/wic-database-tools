@@ -16,6 +16,8 @@
       library(dplyr)
       library(sf)
       library(tidyr)
+      sf::sf_use_s2(FALSE)
+      
 
 
 
@@ -490,7 +492,9 @@
       Parcels_WIC_Filterd <- Parcels_WIC_Filterd %>%
         filter(Parcels_WIC_Filterd$workorder_id %in% smp_milestones$workorder_id)
       
-      Parcels_WIC_Filterd <- inner_join(Parcels_WIC_Filterd, smp_milestones, by =c("FACILITYID"="wic_facility_id")) %>% select(ADDRESS, smp_id, buffer_ft)
+      Parcels_WIC_Filterd <- inner_join(Parcels_WIC_Filterd, smp_milestones, by =c("FACILITYID"="wic_facility_id")) %>%
+        select(ADDRESS, smp_id, buffer_ft)%>%
+        distinct()
       
         
       SMP <- SMP %>% 
@@ -508,7 +512,8 @@
       SMP_ID['WKT'] <- SMPtext
       Parcel_address['WKT'] <-Parcel_text
       Parcel_address <- distinct(Parcel_address)
-        
+      
+ 
       
 ## Section 6: Writing results to DB
       

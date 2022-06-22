@@ -16,11 +16,7 @@
       library(dplyr)
       library(sf)
       library(tidyr)
-      sf::sf_use_s2(FALSE)
       
-
-
-
 
       con <- dbConnect(odbc(), dsn = "mars_data")
       SMP_FAC_ID <- dbGetQuery(con, "SELECT facility_id, smp_id FROM external.assets WHERE component_id is NULL ")

@@ -94,7 +94,7 @@
                      'buffer', label = 'Select a Buffer Size (ft)', choices = buffer,selected = 100,
                      options = list(maxOptions = 3)
                    ),
-                   dateInput('date',label = 'Enter The Starting Date For The Stats Table (SMPs with Highest WICs)',value = "2022-01-01"
+                   dateInput('date',label = 'Enter The Starting Date For The Stats Table (SMPs with Highest WICs)',value = "2012-06-06"
                    ),
                     tableOutput("table_stats"),
                    
@@ -204,7 +204,11 @@
         addPolygons(data=filter(smp_spatial, system_id == input$system_id ), label = paste("System ID:",input$system_id) , color = "red", group = "SMP System") %>%
         ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
         addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer), label = paste(labels_parcel()[,],""),group = "Parcels") %>%
-        addLegend(colors = c("red","blue"), labels = c("SMP System","Parcel"))
+        addLegend(colors = c("red","blue"), labels = c("SMP System","Parcel")) %>%
+        addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
+        editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions())
+      )
+        
     }) 
   
     

@@ -208,6 +208,7 @@
         addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE), polygonOptions = FALSE, circleOptions=FALSE,
                        rectangleOptions=FALSE, markerOptions=FALSE, circleMarkerOptions= FALSE,
         editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions())
+        
       )
         
     }) 

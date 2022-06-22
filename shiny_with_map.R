@@ -205,7 +205,8 @@
         ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
         addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer), label = paste(labels_parcel()[,],""),group = "Parcels") %>%
         addLegend(colors = c("red","blue"), labels = c("SMP System","Parcel")) %>%
-        addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
+        addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE), polygonOptions = FALSE, circleOptions=FALSE,
+                       rectangleOptions=FALSE, markerOptions=FALSE, circleMarkerOptions= FALSE,
         editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions())
       )
         

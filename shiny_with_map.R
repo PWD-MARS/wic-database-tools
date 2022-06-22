@@ -154,7 +154,7 @@ when the complaint was filed.",
             "Complaint Date: WIC complaint date",
             "Address: collected from GIS DB and referes to the addresses associated with the complaining parcels (houses etc)",
             "",
-            "The stats table shows the SMP systems with the highest number of WICs since the starting date specified by user (default is the date when the first ever WIC was filed",
+            "The stats table shows the SMP systems with the highest number of WICs since the starting date specified by user (default is the date when the first ever WIC was filed)",
             "The distances between objects in the map can be measured using the toolkit on the top left of the map",
             sep="\n")
     })

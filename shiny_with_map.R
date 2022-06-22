@@ -15,14 +15,11 @@
     library(leaflet.extras)
     library(tidyr)
     
-    
     con <- dbConnect(odbc::odbc(), dsn = "mars_data", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"))
-    
     wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_workorders ")
     wic_parcels <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels ")
     wic_smps <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_smps ")
     wic_conphase <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_conphase ")
-    
     smp <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_smp_mapid ")
     parcel <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels_address")
 
@@ -30,55 +27,37 @@
 
     smp_sf <- st_as_sfc(smp[,2], CRS = 4326)
     parcel_sf <- st_as_sfc(parcel[,4], crs = 4326)
-    
     smp_ids <- smp %>% select(SMP_ID)
     smp_spatial <- bind_cols(smp_ids, smp_sf)
     smp_spatial <- st_as_sf(smp_spatial)
     st_crs(smp_spatial) <- 4326
-    
     parcel_address <- parcel %>% select(-WKT)
     parcel_spatial <- bind_cols(parcel_address, parcel_sf)
     parcel_spatial <- st_as_sf(parcel_spatial)
     st_crs(parcel_spatial) <- 4326
-    
     smp_spatial['system_id'] <- gsub('-\\d+$','',smp_spatial$SMP_ID) 
     parcel_spatial['system_id'] <- gsub('-\\d+$','',parcel_spatial$smp_id ) 
     parcel_address['system_id'] <- gsub('-\\d+$','',parcel_address$smp_id) 
     
- 
-    
-    
-    
-
 ### Section 2: processing the data into 3 tables (buffers: 25, 50, and 100 ft) and change the data format, column names and their order
 
     output_25ft <- inner_join(wic_smps, wic_conphase, by=c("phase_lookup_uid"="wic_uid"))%>%
       select(-phase_lookup_uid,-wic_smps_uid) %>%
       inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>%
       select(-wic_parcels_uid,-wic_facility_id) 
-    
     output_25ft_dl <- output_25ft
     output_25ft_dl$smp_id<- shQuote(output_25ft$smp_id)
     output_25ft_dl$system_id<- shQuote(output_25ft$system_id)
-    
     data <- output_25ft %>% 
       select(system_id) %>%
       distinct()
     names(data) <- "SYSTEM ID"
-    
     buffer <- c(25,50,100)
-    
     names(output_25ft) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date")
-    
     names(output_25ft_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date")
-    
     output_25ft <- output_25ft[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft")]
-    
     output_25ft_dl <- output_25ft_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft")]
     
-
-
-
 ### Section 3: shiny work-A navbarpage with two tabs, within tab 1 there will be 3 tabsets with 3 tables of data and corresponding download button on the sidebar
 
     ui <- fluidPage(
@@ -106,8 +85,6 @@
                  reactableOutput("table_25ft"),
                  downloadButton("WIC_dl_25ft","Download Table in .CSV"
                  ),
-                 
-                 
         ),
         tabPanel("Help Page",verbatimTextOutput("help_text")
         ),
@@ -118,14 +95,7 @@
       
 ### Populate stat table
       
-      
-      
-      
-      
       output$table_stats <- renderTable({
-          
-          
-        
           stat <- output_25ft %>% 
             filter(Buffer_ft==100 & `Complaint Date` >= as.character(input$date))%>% 
             group_by(`System ID`)%>% 
@@ -170,7 +140,6 @@
         )
       })
       
-  
     output$help_text <- renderText({
       paste("This shiny app provides information about the water-in-cellar complaints recorded in the cityworks database during various stages of SMPs constructions.", 
             "WICs were identified by collecting the work requests that had 'WATER IN CELLAR' in their descriptions. These orders were later matched with their facility ids, addresses and XY coordinates in the GIS database to associate 
@@ -190,13 +159,10 @@ when the complaint was filed.",
             sep="\n")
     })
     
-    
-    
     output$WIC_dl_25ft <- downloadHandler(
       filename = function() {paste("WIC_SMP-", Sys.Date(), ".csv", sep="")},
       content = function(file) {write.csv(filter(output_25ft, `System ID` == input$system_id & Buffer_ft == input$buffer), file,row.names=FALSE)}
     )
-    
     
     labels_parcel <- reactive({
       return( filter(parcel_address, system_id == input$system_id & buffer_ft == input$buffer) %>% select(ADDRESS))
@@ -216,9 +182,7 @@ when the complaint was filed.",
       )
         
     }) 
-  
-    
-    
+
   }
   
   shinyApp(ui, server)

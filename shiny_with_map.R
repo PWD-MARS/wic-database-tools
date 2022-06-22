@@ -173,16 +173,20 @@
   
     output$help_text <- renderText({
       paste("This shiny app provides information about the water-in-cellar complaints recorded in the cityworks database during various stages of SMPs constructions.", 
-            "WICs were identified by collecting the work requests that had 'WATER IN CELLAR' in their descriptions. These orders were later matched with their facility ids, addresses and XY coordinates in the GIS database to associate them with parcel polygons (houses, bussinesses, etc.) near them at which water was detected in the cellar.",
-            "These WIC-associated parcels were then intersected with public SMPs within 25, 50, and 100 ft of distance from them. WIC complaints were also categorized based on the construction stage of the intersecting SMP at the time when the complaint was filed.",
+            "WICs were identified by collecting the work requests that had 'WATER IN CELLAR' in their descriptions. These orders were later matched with their facility ids, addresses and XY coordinates in the GIS database to associate 
+them with parcel polygons (houses, bussinesses, etc.) near them at which water was detected in the cellar.",
+            "These WIC-associated parcels were then intersected with public SMPs within 25, 50, and 100 ft of distance from them. WIC complaints were also categorized based on the construction stage of the intersecting SMP at the time 
+when the complaint was filed.",
             "The information contains:",
-            "SMP ID: ID of SMP",
+            "",
             "System ID: system id of SMP",
             "Work Order ID: Work order IDs of WIC complaints",
             "Construction Phase: Construction status of SMP (pre/during/post/unknown) when the WIC complaint has been filed",
             "Complaint Date: WIC complaint date",
             "Address: collected from GIS DB and referes to the addresses associated with the complaining parcels (houses etc)",
-            "Buffer (ft): Buffer distance (ft) from an SMP centroid",
+            "",
+            "The stats table shows the SMP systems with the highest number of WICs since the starting date specified by user (default is the date when the first ever WIC was filed",
+            "The distances between objects in the map can be measured using the toolkit on the top left of the map",
             sep="\n")
     })
     

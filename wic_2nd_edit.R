@@ -1,7 +1,7 @@
 
 ### Section 1: data gathering
 
-
+    #load the libraries
     library(DBI)
     library(odbc)
     library(dplyr)
@@ -13,8 +13,8 @@
     library(leaflet.extras)
     library(tidyr)
     library(shinydashboard)
-    
-    
+
+    #Gather the data from the database
     con <- dbConnect(odbc::odbc(), dsn = "mars_data", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"), MaxLongVarcharSize = 8190  )
     wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_workorders ")
     wic_comments <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_comments")
@@ -24,8 +24,7 @@
     smp <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_smp_mapid ")
     parcel <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels_address")
 
- ## map geoprocessing
-
+    #map geoprocessing
     smp_sf <- st_as_sfc(smp[,2], CRS = 4326)
     parcel_sf <- st_as_sfc(parcel[,4], crs = 4326)
     smp_ids <- smp %>% select(SMP_ID)
@@ -40,7 +39,7 @@
     parcel_spatial['system_id'] <- gsub('-\\d+$','',parcel_spatial$smp_id ) 
     parcel_address['system_id'] <- gsub('-\\d+$','',parcel_address$smp_id) 
     
-### Section 2: processing the data into a reactable tables 
+### Section 2: processing the "table" data 
     
     output_25ft <- inner_join(wic_smps, wic_conphase, by=c("phase_lookup_uid"="wic_uid"))%>%
       select(-phase_lookup_uid,-wic_smps_uid) %>%
@@ -61,21 +60,26 @@
     output_25ft <- output_25ft[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Comments")]
     output_25ft_dl <- output_25ft_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Comments")]
     
-
+### Section 3: Shiny work
 
   ui <- dashboardPage(skin = 'blue',
-                      dashboardHeader(title = "Water in Cellar (WIC) Complaints", titleWidth = 400),
+                      dashboardHeader(title = "Water in Cellar (WIC) Complaints", titleWidth = 500),
                       dashboardSidebar( 
-                        dateInput('date',label = 'Starting date for STATS Table:',value = "2012-06-06", width = 400
+                        fluidRow(
+                          column(12,
+                                 box(title = ' Total Number of WICs per SMP System (buffer 25 ft) ', width = 14, height = 40, background = "light-blue",solidHeader = TRUE)
+                          )),
+                        dateInput('date',label = 'Starting Date',value = "2012-06-06", width = 200
                         ),
                         
-                        tableOutput("table_stats"),
-                        width = 400),
+                         reactableOutput("table_stats"),
+
+                        width = 500),
                       dashboardBody(
                         #First Row
                     
                         fluidRow(
-                          leafletOutput("map",width = "100%" ,height = "575")
+                          leafletOutput("map",width = "100%" ,height = "650")
                         ),
                         #Second Row:
                         
@@ -106,11 +110,10 @@
   
   server <- function(input, output) {
     
-    ### Populate stat table
-    
-    output$table_stats <- renderTable({
+    #Populate reactive stat table
+    reactive_stats <- reactive({
       stat <- output_25ft %>% 
-        filter(Buffer_ft==100 & `Complaint Date` >= as.character(input$date))%>% 
+        filter(Buffer_ft==25 & `Complaint Date` >= as.character(input$date))%>% 
         group_by(`System ID`)%>% 
         summarise(count = n()) 
       
@@ -119,16 +122,15 @@
       }
       
       stat <- stat[order(stat$count, decreasing = TRUE), ]
-      stat <- stat[1:22, ]
-      
       output_stat <- output_25ft %>%
         filter(output_25ft$`System ID` %in% stat$`System ID`) %>%
-        filter(Buffer_ft==100 & `Complaint Date` >= as.character(input$date))%>%
+        filter(Buffer_ft==25 & `Complaint Date` >= as.character(input$date))%>%
         select(`System ID`,`Construction Phase`) %>% 
         group_by(`System ID`, `Construction Phase` )%>% 
         summarise(count = n()) 
       
-      output_stat <- output_stat %>% pivot_wider(names_from = `Construction Phase`, values_from = count)
+      output_stat <- output_stat %>%
+        pivot_wider(names_from = `Construction Phase`, values_from = count)
       output_stat <- as.data.frame(output_stat)
       output_stat[is.na(output_stat)] <- 0
       vec_name <- c("System ID","pre-construction","during construction","post-construction","unknown","Total")
@@ -143,13 +145,53 @@
       output_stat[,6] <- as.integer(output_stat[,6])
       output_stat <- output_stat[order(output_stat$Total, decreasing = TRUE), ]
       
-      
       return(output_stat)
+      
     })
     
     
+    output$table_stats <- renderReactable(reactable(reactive_stats(),
+                                                    searchable = FALSE,
+                                                    pagination = FALSE,
+                                                    height = 930,
+                                                    striped = TRUE,
+                                                    filterable = FALSE, 
+                                                    fullWidth = TRUE,
+                                                    columns = list(
+                                                      `System ID` = colDef(width = 85),
+                                                      `Pre-Con` = colDef(width = 75),
+                                                      `During-Con` = colDef(width = 85),
+                                                      `Post-Con` = colDef(width = 75),
+                                                       Unknown = colDef(width = 75),
+                                                       Total = colDef(width = 75)
+                                                      
+                                                      
+                                                                  ),
+                                                    theme = reactableTheme(
+                                                                            color = "hsl(233, 9%, 87%)",
+                                                                            backgroundColor = "hsl(233, 9%, 19%)",
+                                                                            borderColor = "hsl(233, 9%, 22%)",
+                                                                            stripedColor = "hsl(233, 12%, 22%)",
+                                                                            highlightColor = "hsl(233, 12%, 24%)",
+                                                                            inputStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
+                                                                            selectStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
+                                                                            pageButtonHoverStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
+                                                                            pageButtonActiveStyle = list(backgroundColor = "hsl(233, 9%, 28%)")
+                                                                          )
+                                                    )
+                                          )
+                                                                                                                                                                                                                           
+    
     output$table_25ft <- renderReactable({
-      reactable(filter(output_25ft, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address), showPageSizeOptions = TRUE, pageSizeOptions = c(10, 25, 50), defaultPageSize = 10,filterable = FALSE
+      reactable(filter(output_25ft, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address),
+                searchable = FALSE,
+                pagination = TRUE,
+                showPageSizeOptions = TRUE,
+                height = 300,
+                striped = TRUE,
+                fullWidth = TRUE,
+                filterable = FALSE
+                
       )
     })
     

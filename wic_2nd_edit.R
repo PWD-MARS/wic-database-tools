@@ -112,22 +112,15 @@
     
     #Populate reactive stat table
     reactive_stats <- reactive({
-      stat <- output_25ft %>% 
-        filter(Buffer_ft==25 & `Complaint Date` >= as.character(input$date))%>% 
-        group_by(`System ID`)%>% 
-        summarise(count = n()) 
-      
-      if (nrow(stat)==0) {
-        validate("There is no WIC complaint for the selected starting date!")
-      }
-      
-      stat <- stat[order(stat$count, decreasing = TRUE), ]
+     
       output_stat <- output_25ft %>%
-        filter(output_25ft$`System ID` %in% stat$`System ID`) %>%
         filter(Buffer_ft==25 & `Complaint Date` >= as.character(input$date))%>%
+        select(`System ID`,`Construction Phase`, `Work Order ID`) %>% 
+        distinct()%>%
         select(`System ID`,`Construction Phase`) %>% 
         group_by(`System ID`, `Construction Phase` )%>% 
         summarise(count = n()) 
+      output_stat <- output_stat[order(output_stat$count, decreasing = TRUE), ]
       
       output_stat <- output_stat %>%
         pivot_wider(names_from = `Construction Phase`, values_from = count)
@@ -183,7 +176,7 @@
                                                                                                                                                                                                                            
     
     output$table_25ft <- renderReactable({
-      reactable(filter(output_25ft, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address),
+      reactable(filter(output_25ft, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address)%>% distinct(),
                 searchable = FALSE,
                 pagination = TRUE,
                 showPageSizeOptions = TRUE,

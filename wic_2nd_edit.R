@@ -79,7 +79,7 @@
                         #First Row
                     
                         fluidRow(
-                          leafletOutput("map",width = "100%" ,height = "650")
+                          leafletOutput("map",width = "100%" ,height = "600")
                         ),
                         #Second Row:
                         
@@ -187,10 +187,11 @@
                 searchable = FALSE,
                 pagination = TRUE,
                 showPageSizeOptions = TRUE,
-                height = 300,
+                height = 350,
                 striped = TRUE,
                 fullWidth = TRUE,
                 filterable = FALSE
+                
                 
       )
     })

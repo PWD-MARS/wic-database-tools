@@ -13,6 +13,20 @@
     library(leaflet.extras)
     library(tidyr)
     library(shinydashboard)
+    library(tippy)
+    
+    render.reactable.cell.with.tippy <- function(text, tooltip){
+      div(
+        style = "text-decoration: underline;
+                text-decoration-style: dotted;
+                text-decoration-color: #FF6B00;
+                cursor: info;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;",
+        tippy(text = text, tooltip = tooltip)
+      )
+    }
 
     #Gather the data from the database
     con <- dbConnect(odbc::odbc(), dsn = "mars_data", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"), MaxLongVarcharSize = 8190  )
@@ -165,17 +179,25 @@
                                                                                                                                                                                                                            
     
     output$table_25ft <- renderReactable({
-      reactable(filter(output_25ft, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address)%>% distinct(),
+      reactable(filter(output_25ft, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address, Comments)%>% distinct(),
                 searchable = FALSE,
                 pagination = TRUE,
                 showPageSizeOptions = TRUE,
                 height = 350,
                 striped = TRUE,
                 fullWidth = TRUE,
-                filterable = FALSE
+                filterable = FALSE,
+                columns = list(
+                    Comments = colDef(
+                      html = TRUE,
+                      cell =  function(value, index, name) {
+                        render.reactable.cell.with.tippy(text = value, tooltip = value)}
+                    )
+                  )
+                )
                 
                 
-      )
+      
     })
     
     output$help_text <- renderText({

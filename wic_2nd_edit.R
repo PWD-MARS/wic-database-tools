@@ -87,7 +87,7 @@
                           ),
                           column(6,
                                  selectizeInput(
-                                   'buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 100,
+                                   'buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 25,
                                    options = list(maxOptions = 3), width = 900
                                  )
                                  

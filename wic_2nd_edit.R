@@ -115,8 +115,6 @@
         select(`System ID`,`Construction Phase`) %>% 
         group_by(`System ID`, `Construction Phase` )%>% 
         summarise(count = n()) 
-      output_stat <- output_stat[order(output_stat$count, decreasing = TRUE), ]
-      
       output_stat <- output_stat %>%
         pivot_wider(names_from = `Construction Phase`, values_from = count)
       output_stat <- as.data.frame(output_stat)
@@ -126,11 +124,7 @@
       output_stat <- output_stat[,vec_name]
       names(output_stat)<- c("System ID","Pre-Con","During-Con","Post-Con","Unknown","Total")
       output_stat$Total <- output_stat$`Pre-Con`+ output_stat$`During-Con`+ output_stat$`Post-Con`+output_stat$Unknown
-      output_stat[,2] <- as.integer(output_stat[,2])
-      output_stat[,3] <- as.integer(output_stat[,3])
-      output_stat[,4] <- as.integer(output_stat[,4])
-      output_stat[,5] <- as.integer(output_stat[,5])
-      output_stat[,6] <- as.integer(output_stat[,6])
+      output_stat <- output_stat %>% mutate(across(.cols=2:6, .fns=as.integer))
       output_stat <- output_stat[order(output_stat$Total, decreasing = TRUE), ]
       
       return(output_stat)

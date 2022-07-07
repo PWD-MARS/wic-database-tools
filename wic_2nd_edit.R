@@ -68,21 +68,16 @@
                         fluidRow(
                           column(12,
                                  box(title = ' Total Number of WICs per SMP System (buffer 25 ft) ', width = 14, height = 40, background = "light-blue",solidHeader = TRUE)
-                          )),
+                                )
+                                ),
                         dateInput('date',label = 'Starting Date',value = "2012-06-06", width = 200
-                        ),
-                        
+                                 ),
                          reactableOutput("table_stats"),
-
-                        width = 500),
+                                            width = 500),
                       dashboardBody(
-                        #First Row
-                    
                         fluidRow(
-                          leafletOutput("map",width = "100%" ,height = "600")
-                        ),
-                        #Second Row:
-                        
+                                 leafletOutput("map",width = "100%" ,height = "600")
+                                ),
                         fluidRow(
                           column(6,
                                  selectizeInput(
@@ -106,7 +101,7 @@
                           )
                         )
                       )
-  )
+                     )
   
   server <- function(input, output) {
     

@@ -67,6 +67,7 @@
     data <- output_25ft %>% 
       select(system_id) %>%
       distinct()
+    
     names(data) <- "SYSTEM ID"
     buffer <- c(25,50,100)
     names(output_25ft) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments")
@@ -95,7 +96,7 @@
                         fluidRow(
                           column(6,
                                  selectizeInput(
-                                   'system_id', label = 'System ID', choices = data, selected = data[1],
+                                   'system_id', label = 'System ID', choices = data, selected = "555-3",
                                    options = list(maxOptions = 5),width = 900
                                  )
                           ),

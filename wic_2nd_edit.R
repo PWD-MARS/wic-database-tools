@@ -1,5 +1,5 @@
 
-### Section 1: data gathering
+### Section 1: data gathering & prep
 
     #load the libraries
     library(DBI)
@@ -14,7 +14,7 @@
     library(tidyr)
     library(shinydashboard)
     library(tippy)
-    
+    #Creating a function to show comments in the table with hovering mouse
     render.reactable.cell.with.tippy <- function(text, tooltip){
       div(
         style = "text-decoration: underline;

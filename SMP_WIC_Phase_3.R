@@ -104,8 +104,6 @@
       
       Parcels_WIC_Filterd <- inner_join(PARCELS_SPATIAL, WIC_ID_TABLE, by = c("FACILITYID"="facility_id") )
       
-      rm(PARCELS_SPATIAL)
-      
       Parcels_filtered_df <-as.data.frame(Parcels_WIC_Filterd)
       
       Parcels_filtered_df$wo_initiatedate <- as.Date(Parcels_filtered_df$wo_initiatedate)
@@ -202,6 +200,9 @@
       
       SMP_inters_100 <- st_intersects(SMP_buffer_100, Parcels_WIC_Filterd)
       
+      SMP_inters_allparcels_25 <- st_intersects(SMP_buffer_25, PARCELS_SPATIAL)
+      
+      
       
       
 ## Section 3: Extract the intersecting SMP-PARCEL and populate the result dataframe 
@@ -210,7 +211,12 @@
   # create a conditional loop, that loops through each element of the list column of intersect (sparse matrix) , gets the indexes of the 
   # WIC_parcels, and populates a data frame, consisting the SMP_ID, FACILITYID of the wic -parcel, and the size of buffer
       
-    
+  #all parcels within 25ft of SMP
+      
+      all_parcel_index <- unlist(SMP_inters_allparcels_25)
+      all_parcels_smp <- PARCELS_SPATIAL[all_parcel_index,"ADDRESS"]
+      rownames(all_parcels_smp) <- NULL
+      
   # buffer 25 ft
 
       Inters_Obj <- SMP_inters_25
@@ -502,15 +508,39 @@
           SMP <- st_transform(SMP, 4326)
           Parcels_WIC_Filterd <- st_transform(Parcels_WIC_Filterd, 4326)
           
-          SMPtext <- SMP %>% st_geometry() %>% st_as_text()
-          Parcel_text <- Parcels_WIC_Filterd %>% st_geometry() %>% st_as_text()
+          SMPtext <- SMP %>%
+            st_geometry() %>%
+            st_as_text()
+          Parcel_text <- Parcels_WIC_Filterd %>%
+            st_geometry() %>% 
+            st_as_text()
           
-          Parcel_address <- Parcels_WIC_Filterd %>% st_set_geometry(NULL)
-          SMP_ID <- SMP["SMP_ID"] %>% st_set_geometry(NULL)
+          Parcel_address <- Parcels_WIC_Filterd %>%
+            st_set_geometry(NULL)
+          SMP_ID <- SMP["SMP_ID"] %>%
+            st_set_geometry(NULL)
           
           SMP_ID['WKT'] <- SMPtext
           Parcel_address['WKT'] <-Parcel_text
           Parcel_address <- distinct(Parcel_address)
+          
+          
+          all_parcels_smp <- st_transform(all_parcels_smp, 4326)
+          all_parcels_text <- all_parcels_smp %>%
+            st_geometry() %>%
+            st_as_text()
+          all_parcels_address <- all_parcels_smp %>%
+            st_set_geometry(NULL)
+          all_parcels_address['WKT'] <-all_parcels_text
+          all_parcels_address <- distinct(all_parcels_address)
+          names(all_parcels_address) <- c("address","wkt")
+          
+          
+          
+          
+          
+          
+          dbWriteTable (con, SQL("fieldwork.wic_all_parcels_wkt"),all_parcels_address,append= TRUE, row.names = FALSE)
           
           dbWriteTable (con, SQL("fieldwork.wic_smp_mapid"),SMP_ID,append= TRUE, row.names = FALSE)
           

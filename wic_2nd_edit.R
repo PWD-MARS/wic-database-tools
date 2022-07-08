@@ -271,7 +271,7 @@
                     color = "red", group = "SMP System") %>%
         ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
         addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
-                    label = paste(labels_parcel()[,],";","Distance:",labels_dist()[,],"ft"),
+                    label = paste(labels_parcel()[,],"|","Distance:",labels_dist()[,],"ft"),
                     group = "Parcels") %>%
         addLegend(colors = c("red","blue"), 
                   labels = c("SMP System","Parcel")) %>%

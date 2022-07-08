@@ -189,9 +189,6 @@ params:
      PARCELS_SPATIAL <- st_read(dsn = "\\\\pwdoows\\oows\\Watershed Sciences\\GSI Monitoring\\09 GIS Data\\PWD_PARCELS ", layer = "PWD_PARCELS")
      st_crs(PARCELS_SPATIAL) = 2272
      wo_noparcels$facility_id<-gsub("\\{(.*)\\}","\\1",as.character(wo_noparcels$facility_id))
-  
-
-
 
     ##Matching by facility ID
      
@@ -254,10 +251,8 @@ params:
          WO_PARC_INTERSECT <- st_intersects(WO_SPATIAL, PARCELS_SPATIAL )
          
     ## Section 5: Matching WICs to parcels by geoprocessing
-         
      
       # Get the index of intersecting XY coordinates and Parcel polygons
-         
          
          Index_WO <- NULL
          
@@ -300,7 +295,6 @@ params:
        
        wic_parcel_attach <- union_all (wic_parcel_attach, WOID_Based_XY)
 
-       
 ```
 
 
@@ -674,8 +668,6 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
       kable(smp_milestones, caption = "New WIC_SMP association at 25, 50, and 100 ft buffer distance")
     
   }
-
-
 
 ```
 

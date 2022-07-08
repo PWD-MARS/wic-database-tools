@@ -60,6 +60,8 @@
     parcel_all_spatial <- bind_cols(parcel_all_address, parcel_all_sf)
     parcel_all_spatial <- st_as_sf(parcel_all_spatial)
     st_crs(parcel_all_spatial) <- 4326
+    all_parcel_address <- parcel_all %>% select(-wkt)
+    
     
     
     
@@ -279,16 +281,20 @@
       return( filter(parcel_address, system_id == input$system_id & buffer_ft == input$buffer) %>% select(dist_ft))
     })
     
+    labels_address_all <- reactive({
+      return( filter(all_parcel_address, system_id == input$system_id) %>% select(address))
+    })
+    
     output$map <- renderLeaflet({
       
       map <- leaflet()%>%
         addTiles(options = providerTileOptions(minZoom = 16, maxZoom = 19))%>% 
         addPolygons(data = filter(parcel_all_spatial, system_id == input$system_id),
-                    group = "All_Parcels",
-                    color = "green") %>%
-        addLayersControl(overlayGroups = "All_Parcels")%>%
-        hideGroup("All_Parcels")%>%
-        
+                    group = "All Parcels within 25 ft",
+                    color = "green",
+                    label = paste(labels_address_all()[,],"")) %>%
+        addLayersControl(overlayGroups = "All Parcels within 25 ft")%>%
+        hideGroup("All Parcels within 25 ft")%>%
         addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
                     label = paste("System ID:",input$system_id) , 
                     color = "red", 
@@ -297,7 +303,6 @@
         addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
                     label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),
                     group = "Parcels") %>%
-        
         addLegend(colors = c("red","blue"), 
                   labels = c("SMP System","Parcel")) %>%
         addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),

@@ -35,23 +35,39 @@
     wic_parcels <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels ")
     wic_smps <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_smps ")
     wic_conphase <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_conphase ")
-    smp <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_smp_mapid ")
-    parcel <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels_address")
+    smp <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_smp_wkt ")
+    parcel <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels_wkt")
 
     #map geoprocessing
-    smp_sf <- st_as_sfc(smp[,2], CRS = 4326)
-    parcel_sf <- st_as_sfc(parcel[,4], crs = 4326)
-    smp_ids <- smp %>% select(SMP_ID)
+    smp_sf <- st_as_sfc(smp[,"wkt"], CRS = 4326)
+    parcel_sf <- st_as_sfc(parcel[,"wkt"], crs = 4326)
+    smp_ids <- smp %>% select(smp_id)
     smp_spatial <- bind_cols(smp_ids, smp_sf)
     smp_spatial <- st_as_sf(smp_spatial)
     st_crs(smp_spatial) <- 4326
-    parcel_address <- parcel %>% select(-WKT)
+    parcel_address <- parcel %>% select(-wkt)
     parcel_spatial <- bind_cols(parcel_address, parcel_sf)
     parcel_spatial <- st_as_sf(parcel_spatial)
     st_crs(parcel_spatial) <- 4326
-    smp_spatial['system_id'] <- gsub('-\\d+$','',smp_spatial$SMP_ID) 
+    smp_spatial['system_id'] <- gsub('-\\d+$','',smp_spatial$smp_id) 
     parcel_spatial['system_id'] <- gsub('-\\d+$','',parcel_spatial$smp_id ) 
     parcel_address['system_id'] <- gsub('-\\d+$','',parcel_address$smp_id) 
+    
+    #calculating distance from system
+    
+    distance_sys <-parcel_address %>%
+      select(system_id,address, distance_ft) %>% 
+      distinct()%>%
+      group_by(system_id, address )%>% 
+      summarise(dist_ft = min(distance_ft)) 
+    
+    parcel_address <- parcel_address %>%
+      select(-distance_ft)
+    
+    parcel_address <- parcel_address %>%
+      inner_join(distance_sys, by=c("system_id"="system_id","address"="address"))
+    
+    parcel_address[,"dist_ft"] <- format(round(parcel_address[,"dist_ft"], 2), nsmall = 2)
     
 ### Section 2: processing the "table" data 
     
@@ -226,7 +242,11 @@
     )
     
     labels_parcel <- reactive({
-      return( filter(parcel_address, system_id == input$system_id & buffer_ft == input$buffer) %>% select(ADDRESS))
+      return( filter(parcel_address, system_id == input$system_id & buffer_ft == input$buffer) %>% select(address))
+    })
+    
+    labels_dist <- reactive({
+      return( filter(parcel_address, system_id == input$system_id & buffer_ft == input$buffer) %>% select(dist_ft))
     })
     
     output$map <- renderLeaflet({
@@ -238,7 +258,7 @@
                     color = "red", group = "SMP System") %>%
         ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
         addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
-                    label = paste(labels_parcel()[,],""),
+                    label = paste(labels_parcel()[,],";","Distance:",labels_dist()[,],"ft"),
                     group = "Parcels") %>%
         addLegend(colors = c("red","blue"), 
                   labels = c("SMP System","Parcel")) %>%

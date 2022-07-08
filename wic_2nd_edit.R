@@ -61,6 +61,9 @@
       group_by(system_id, address )%>% 
       summarise(dist_ft = min(distance_ft)) 
     
+    distance_sys[,"dist_ft"] <- format(round(distance_sys[,"dist_ft"], 2), nsmall = 2)
+    
+    
     parcel_address <- parcel_address %>%
       select(-distance_ft)
     
@@ -69,6 +72,7 @@
     
     parcel_address[,"dist_ft"] <- format(round(parcel_address[,"dist_ft"], 2), nsmall = 2)
     
+    
 ### Section 2: processing the "table" data 
     
     output_25ft <- inner_join(wic_smps, wic_conphase, by=c("phase_lookup_uid"="wic_uid"))%>%
@@ -76,6 +80,12 @@
       inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>%
       inner_join(wic_comments, by="workorder_id")%>%
       select(-wic_parcels_uid,-wic_facility_id, -wic_comments_uid) 
+    
+    output_25ft <- output_25ft %>%
+      inner_join(distance_sys, by=c("system_id"="system_id","location"="address"))
+    
+    output_25ft[,"dist_ft"] <- format(round(output_25ft[,"dist_ft"], 2), nsmall = 2)
+    
     
     output_25ft_dl <- output_25ft
     output_25ft_dl$smp_id<- shQuote(output_25ft$smp_id)
@@ -86,10 +96,14 @@
     
     names(data) <- "SYSTEM ID"
     buffer <- c(25,50,100)
-    names(output_25ft) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments")
-    names(output_25ft_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments")
-    output_25ft <- output_25ft[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Comments")]
-    output_25ft_dl <- output_25ft_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Comments")]
+    names(output_25ft) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Distance (ft)")
+    names(output_25ft_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Distance (ft)")
+    output_25ft <- output_25ft[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Distance (ft)","Comments")]
+    output_25ft_dl <- output_25ft_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Distance (ft)","Comments")]
+    
+   
+    
+    
     
 ### Section 3: Shiny work
 
@@ -196,7 +210,7 @@
                                                                                                                                                                                                                            
     
     output$table_25ft <- renderReactable({
-      reactable(filter(output_25ft, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address, Comments)%>% distinct(),
+      reactable(filter(output_25ft, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Distance (ft)`, Comments)%>% distinct(),
                 searchable = FALSE,
                 pagination = TRUE,
                 showPageSizeOptions = TRUE,

@@ -217,6 +217,47 @@
       all_parcels_smp <- PARCELS_SPATIAL[all_parcel_index,"ADDRESS"]
       rownames(all_parcels_smp) <- NULL
       
+
+      Inters_Obj <- SMP_inters_allparcels_25 
+      
+      GSI <- SMP
+      GSI['system_id'] <- gsub('-\\d+$','',GSI$SMP_ID) 
+      
+      
+      output <- NULL
+      
+      df <- NULL
+      
+      for(i in 1:length(Inters_Obj)) {
+        
+        temp <- Inters_Obj[[i]]
+        
+        if (length(temp) > 0) {
+          
+          geometry <- PARCELS_SPATIAL[temp,c("ADDRESS","geometry")]
+          
+          SMPID <- GSI [i,c("SMP_ID","system_id")]
+  
+          SMPID <- SMPID %>% st_set_geometry(NULL)
+          
+          df <- data.frame(SMPID, geometry)
+          
+          output <- rbind(output, df ) 
+          
+        }
+        
+        output_parcel_all <- output 
+        
+      } 
+      rownames(output_parcel_all) <- NULL
+      output_parcel_all<- st_as_sf(output_parcel_all)
+      all_parcels_smp <- output_parcel_all %>%
+        select(-SMP_ID) %>%
+        distinct()
+      
+      
+
+      
   # buffer 25 ft
 
       Inters_Obj <- SMP_inters_25
@@ -529,18 +570,18 @@
           all_parcels_text <- all_parcels_smp %>%
             st_geometry() %>%
             st_as_text()
-          all_parcels_address <- all_parcels_smp %>%
+          all_parcels_specs<- all_parcels_smp %>%
             st_set_geometry(NULL)
-          all_parcels_address['WKT'] <-all_parcels_text
-          all_parcels_address <- distinct(all_parcels_address)
-          names(all_parcels_address) <- c("address","wkt")
+          all_parcels_specs['WKT'] <-all_parcels_text
+          all_parcels_specs <- distinct(all_parcels_specs)
+          names(all_parcels_specs) <- c("system_id","address","wkt")
           
           
           
           
           
           
-          dbWriteTable (con, SQL("fieldwork.wic_all_parcels_wkt"),all_parcels_address,append= TRUE, row.names = FALSE)
+          dbWriteTable (con, SQL("fieldwork.wic_all_parcels_wkt"),all_parcels_specs,append= TRUE, row.names = FALSE)
           
           dbWriteTable (con, SQL("fieldwork.wic_smp_mapid"),SMP_ID,append= TRUE, row.names = FALSE)
           

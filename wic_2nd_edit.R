@@ -37,6 +37,8 @@
     wic_conphase <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_conphase ")
     smp <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_smp_wkt ")
     parcel <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels_wkt")
+    parcel_all <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_all_parcels_wkt")
+    
 
     #map geoprocessing
     smp_sf <- st_as_sfc(smp[,"wkt"], CRS = 4326)
@@ -52,6 +54,19 @@
     smp_spatial['system_id'] <- gsub('-\\d+$','',smp_spatial$smp_id) 
     parcel_spatial['system_id'] <- gsub('-\\d+$','',parcel_spatial$smp_id ) 
     parcel_address['system_id'] <- gsub('-\\d+$','',parcel_address$smp_id) 
+    
+    parcel_all_sf <- st_as_sfc(parcel_all[,"wkt"], crs = 4326)
+    parcel_all_address <- parcel_all %>% select(-wkt,-wic_all_parcels_wkt_uid)
+    parcel_all_spatial <- bind_cols(parcel_all_address, parcel_all_sf)
+    parcel_all_spatial <- st_as_sf(parcel_all_spatial)
+    st_crs(parcel_all_spatial) <- 4326
+    
+    
+    
+    
+    
+    
+    
     
     #calculating distance from system
     
@@ -99,6 +114,8 @@
     names(output_25ft_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Distance (ft)")
     output_25ft <- output_25ft[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Distance (ft)","Comments")]
     output_25ft_dl <- output_25ft_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Distance (ft)","Comments")]
+    
+   
     
    
     
@@ -264,15 +281,23 @@
     
     output$map <- renderLeaflet({
       
-      leaflet()%>%
-        addTiles(options = providerTileOptions(minZoom = 16, maxZoom = 19))%>%  
+      map <- leaflet()%>%
+        addTiles(options = providerTileOptions(minZoom = 16, maxZoom = 19))%>% 
+        addPolygons(data = filter(parcel_all_spatial, system_id == input$system_id),
+                    group = "All_Parcels",
+                    color = "green") %>%
+        addLayersControl(overlayGroups = "All_Parcels")%>%
+        hideGroup("All_Parcels")%>%
+        
         addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
                     label = paste("System ID:",input$system_id) , 
-                    color = "red", group = "SMP System") %>%
+                    color = "red", 
+                    group = "SMP System") %>%
         ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
         addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
                     label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),
                     group = "Parcels") %>%
+        
         addLegend(colors = c("red","blue"), 
                   labels = c("SMP System","Parcel")) %>%
         addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
@@ -281,7 +306,7 @@
                        rectangleOptions=FALSE,
                        markerOptions=FALSE,
                        circleMarkerOptions= FALSE,
-                       editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions())
+                       editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions()) 
                        
         )
       

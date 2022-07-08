@@ -254,7 +254,7 @@
       content = function(file) {write.csv(filter(output_25ft_dl, `System ID` == shQuote(input$system_id) & Buffer_ft == input$buffer), file,row.names=FALSE)}
     )
     
-    labels_parcel <- reactive({
+    labels_address <- reactive({
       return( filter(parcel_address, system_id == input$system_id & buffer_ft == input$buffer) %>% select(address))
     })
     
@@ -271,7 +271,7 @@
                     color = "red", group = "SMP System") %>%
         ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
         addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
-                    label = paste(labels_parcel()[,],"|","Distance:",labels_dist()[,],"ft"),
+                    label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),
                     group = "Parcels") %>%
         addLegend(colors = c("red","blue"), 
                   labels = c("SMP System","Parcel")) %>%

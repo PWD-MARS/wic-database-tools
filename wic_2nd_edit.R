@@ -61,7 +61,6 @@
       group_by(system_id, address )%>% 
       summarise(dist_ft = min(distance_ft)) 
     
-    distance_sys[,"dist_ft"] <- format(round(distance_sys[,"dist_ft"], 2), nsmall = 2)
     
     
     parcel_address <- parcel_address %>%

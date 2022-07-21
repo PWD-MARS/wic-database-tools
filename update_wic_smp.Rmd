@@ -769,11 +769,13 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
         select(-SMP_ID) %>%
         distinct()
       
+
+      
  all_parcels_smp <- st_transform(all_parcels_smp, 4326)
- wic_all_parcels_wkt_df <- output_parcel_all %>%
+ wic_all_parcels_wkt_df <- all_parcels_smp %>%
             st_geometry() %>%
             st_as_text()
- wic_all_parcels_wkt <- output_parcel_all %>%
+ wic_all_parcels_wkt <- all_parcels_smp %>%
             select(system_id, address=ADDRESS) %>%
             st_set_geometry(NULL)
  wic_all_parcels_wkt['wkt'] <- wic_all_parcels_wkt_df

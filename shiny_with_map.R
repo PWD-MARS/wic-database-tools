@@ -70,17 +70,17 @@
       tabPanel("WIC-SMP Association ", titlePanel("WIC Complaints within 25, 50, and 100 feet of SMPs"),
                
                sidebarLayout(
-                 sidebarPanel(selectizeInput(
-                   'system_id', label = 'Type a System ID', choices = data, selected = data[1],
+                 sidebarPanel(
+                   dateInput('date',label = 'Starting date for STATS Table:',value = "2012-06-06"
+                   ),
+                   tableOutput("table_stats"),
+                   selectizeInput(
+                   'system_id', label = 'System ID', choices = data, selected = data[1],
                    options = list(maxOptions = 5)
-                 ),selectizeInput(
-                   'buffer', label = 'Select a Buffer Size (ft)', choices = buffer,selected = 100,
+                   ),selectizeInput(
+                   'buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 100,
                    options = list(maxOptions = 3)
-                 ),
-                 dateInput('date',label = 'Enter The Starting Date For The Stats Table (SMPs with Highest WICs)',value = "2012-06-06"
-                 ),
-                 tableOutput("table_stats"),
-                 
+                   ), 
                  width = 4
                  ), 
                  mainPanel( leafletOutput("map",width = "100%" ,height = "525")

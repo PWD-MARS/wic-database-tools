@@ -532,7 +532,7 @@
 
       fieldwork.wic_smps['system_id'] <- gsub('-\\d+$','',fieldwork.wic_smps$smp_id ) 
       
-      
+  ###map data section 
       if(FALSE) {
       
           Parcels_WIC_Filterd <- Parcels_WIC_Filterd %>%

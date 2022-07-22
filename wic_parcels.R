@@ -2,21 +2,6 @@
   #Written by: Farshad Ebrahimi- 4/22/2022.
 
 
-###Taylor says: Style comments - You should be using section headers, and hierarchical indentation to demarcate your sections
-###Section headers on the left at indent level 0
-  ###Comments and code at indent level 1
-    ###One level of indent per scope shift (curly brace) {
-      ###like this
-    #} Closing curly brace at same indent level as the line of code that opened the curly brace
-
-###Taylor says: Divide the script into the following sections:
-  ###1: Gathering nonspatial data
-  ###2: Matching WICs to parcels by facility ID
-  ###3: Matching WICs to parcels by address
-  ###4: Gathering spatial data
-  ###5: Matching WICs to parcels by geoprocessing
-  ###6: Writing results to DB
-
 ## Section 1: Gathering nonspatial data
 
     library(DBI)

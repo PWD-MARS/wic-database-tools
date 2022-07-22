@@ -686,7 +686,7 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
 
 ```
 
-```{r section 10- WIC parcels map data update, include = FALSE, eval= nrow(fieldwork.wic_smps)>0}
+```{r section 10- WIC parcels map data update, include = FALSE, eval= nrow(fieldwork.wic_smps)>0 & nrow(new_smp_spatial)>0}
 
  wic_parcels_spatial <- Parcels_WIC_Filterd %>%
    inner_join(fieldwork.wic_smps, by=c("FACILITYID"="wic_facility_id")) %>%
@@ -725,7 +725,7 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
 
 ```
 
-```{r section 11- all parcels (wic and non-wic) map data update, include = FALSE, eval= nrow(fieldwork.wic_smps)>0}
+```{r section 11- all parcels (wic and non-wic) map data update, include = FALSE, eval= nrow(fieldwork.wic_smps)>0 & nrow(new_smp_spatial)>0}
 
    new_smp_spatial_25ft <- st_buffer(new_smp_spatial, 25)
    SMP_inters_allparcels_25 <- st_intersects(new_smp_spatial_25ft, PARCELS_SPATIAL)

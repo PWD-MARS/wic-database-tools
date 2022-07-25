@@ -39,7 +39,6 @@
     parcel <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels_wkt")
     parcel_all <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_all_parcels_wkt")
     
-
     #map geoprocessing
     smp_sf <- st_as_sfc(smp[,"wkt"], CRS = 4326)
     parcel_sf <- st_as_sfc(parcel[,"wkt"], crs = 4326)
@@ -62,14 +61,6 @@
     st_crs(parcel_all_spatial) <- 4326
     all_parcel_address <- parcel_all %>% select(-wkt)
     
-    
-    
-    
-    
-    
-    
-    
-    
     #calculating distance from system
     
     distance_sys <-parcel_address %>%
@@ -78,8 +69,6 @@
       group_by(system_id, address )%>% 
       summarise(dist_ft = min(distance_ft)) 
     
-    
-    
     parcel_address <- parcel_address %>%
       select(-distance_ft)
     
@@ -87,7 +76,6 @@
       inner_join(distance_sys, by=c("system_id"="system_id","address"="address"))
     
     parcel_address[,"dist_ft"] <- format(round(parcel_address[,"dist_ft"], 2), nsmall = 2)
-    
     
 ### Section 2: processing the "table" data 
     
@@ -102,7 +90,6 @@
     
     output_25ft[,"dist_ft"] <- format(round(output_25ft[,"dist_ft"], 2), nsmall = 2)
     
-    
     output_25ft_dl <- output_25ft
     output_25ft_dl$smp_id<- shQuote(output_25ft$smp_id)
     output_25ft_dl$system_id<- shQuote(output_25ft$system_id)
@@ -116,12 +103,6 @@
     names(output_25ft_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Distance (ft)")
     output_25ft <- output_25ft[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Distance (ft)","Comments")]
     output_25ft_dl <- output_25ft_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Distance (ft)","Comments")]
-    
-   
-    
-   
-    
-    
     
 ### Section 3: Shiny work
 
@@ -194,7 +175,6 @@
       
     })
     
-    
     output$table_stats <- renderReactable(reactable(reactive_stats(),
                                                     searchable = FALSE,
                                                     pagination = FALSE,
@@ -248,25 +228,7 @@
                 
       
     })
-    
-    output$help_text <- renderText({
-      paste("This shiny app provides information about the water-in-cellar complaints recorded in the cityworks database during various stages of SMPs constructions.", 
-            "WICs were identified by collecting the work requests that had 'WATER IN CELLAR' in their descriptions. These orders were later matched with their facility ids, addresses and XY coordinates in the GIS database to associate 
-  them with parcel polygons (houses, bussinesses, etc.) near them at which water was detected in the cellar.",
-            "These WIC-associated parcels were then intersected with public SMPs within 25, 50, and 100 ft of distance from them. WIC complaints were also categorized based on the construction stage of the intersecting SMP at the time 
-  when the complaint was filed.",
-            "The information contains:",
-            "",
-            "System ID: system id of SMP",
-            "Work Order ID: Work order IDs of WIC complaints",
-            "Construction Phase: Construction status of SMP (pre/during/post/unknown) when the WIC complaint has been filed",
-            "Complaint Date: WIC complaint date",
-            "Address: collected from GIS DB and referes to the addresses associated with the complaining parcels (houses etc)",
-            "",
-            "The stats table shows the SMP systems with the highest number of WICs since the starting date specified by user (default is the date when the first ever WIC was filed)",
-            "The distances between objects in the map can be measured using the toolkit on the top left of the map",
-            sep="\n")
-    })
+
     
     output$WIC_dl_25ft <- downloadHandler(
       filename = function() {paste("WIC_SMP-", Sys.Date(), ".csv", sep="")},
@@ -318,6 +280,5 @@
     }) 
     
   }
-  
   
   shinyApp(ui, server)

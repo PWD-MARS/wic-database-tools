@@ -29,7 +29,7 @@
     }
 
     #Gather the data from the database
-    con <- dbConnect(odbc::odbc(), dsn = "mars_data", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"), MaxLongVarcharSize = 8190  )
+    con <- dbConnect(odbc::odbc(), dsn = "mars_data", uid = Sys.getenv("shiny_uid_pg12_user"), pwd = Sys.getenv("shiny_pwd_pg12_user"), MaxLongVarcharSize = 8190  )
     wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_workorders ")
     wic_comments <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_comments")
     wic_parcels <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels ")

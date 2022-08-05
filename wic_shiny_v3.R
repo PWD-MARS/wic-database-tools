@@ -250,12 +250,13 @@
     output$map <- renderLeaflet({
       
       map <- leaflet()%>%
-        addTiles(options = providerTileOptions(minZoom = 16, maxZoom = 19))%>% 
+        addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
+        addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
         addPolygons(data = filter(parcel_all_spatial, system_id == input$system_id),
                     group = "All Parcels within 25 ft",
                     color = "green",
                     label = paste(labels_address_all()[,],"")) %>%
-        addLayersControl(overlayGroups = "All Parcels within 25 ft")%>%
+        addLayersControl(overlayGroups = "All Parcels within 25 ft",baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
         hideGroup("All Parcels within 25 ft")%>%
         addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
                     label = paste("System ID:",input$system_id) , 

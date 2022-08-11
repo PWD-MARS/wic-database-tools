@@ -91,7 +91,7 @@
   # Get the parcel layer-Shapefile stored in network 
       
       PARCELS_SPATIAL <- st_read(dsn = "\\\\pwdoows\\oows\\Watershed Sciences\\GSI Monitoring\\09 GIS Data\\PWD_PARCELS ", layer = "PWD_PARCELS")
-      
+      #building_footprint <- st_read(dsn = "\\\\pwdoows\\oows\\Watershed Sciences\\GSI Monitoring\\09 GIS Data\\Building_Footprint_Shapefile", layer = "Building_Footprint")
       st_crs(PARCELS_SPATIAL) = 2272
       
       

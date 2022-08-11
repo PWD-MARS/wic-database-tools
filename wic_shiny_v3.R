@@ -143,7 +143,7 @@
                           ),
                           column(6,
                                  selectizeInput(
-                                   'buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 25,
+                                   'buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 100,
                                    options = list(maxOptions = 3), width = 900
                                  )
                                  
@@ -272,6 +272,10 @@
       map <- leaflet()%>%
         addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
         addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
+        addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
+                    label = paste("System ID:",input$system_id) , 
+                    color = "red", 
+                    group = "SMP System") %>%
         addPolygons(data = filter(parcel_all_spatial, system_id == input$system_id),
                     group = "All Parcels within 25 ft",
                     color = "green",
@@ -282,10 +286,6 @@
                     group = "Building Footprint") %>%
         addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
         hideGroup(c("All Parcels within 25 ft","Building Footprint"))%>%
-        addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
-                    label = paste("System ID:",input$system_id) , 
-                    color = "red", 
-                    group = "SMP System") %>%
         ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
         addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
                     label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),

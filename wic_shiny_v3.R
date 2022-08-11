@@ -38,6 +38,8 @@
     smp <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_smp_wkt ")
     parcel <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels_wkt")
     parcel_all <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_all_parcels_wkt")
+    buidling_footprint <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_buildingfootprint_wkt")
+    
     
     #map geoprocessing
     smp_sf <- st_as_sfc(smp[,"wkt"], CRS = 4326)
@@ -60,6 +62,16 @@
     parcel_all_spatial <- st_as_sf(parcel_all_spatial)
     st_crs(parcel_all_spatial) <- 4326
     all_parcel_address <- parcel_all %>% select(-wkt)
+    
+    
+    #building footprint
+    buidling_footprint_sf <- st_as_sfc(buidling_footprint[,"wkt"], crs = 4326)
+    buidling_footprint_df <- buidling_footprint %>% select(-wkt,-wic_buildingfootprint_wkt_uid)
+    buidling_footprint_spatial <- bind_cols(buidling_footprint_df, buidling_footprint_sf)
+    buidling_footprint_spatial <- st_as_sf(buidling_footprint_spatial)
+    st_crs(buidling_footprint_spatial) <- 4326
+    buidling_footprint_spatial['system_id'] <- gsub('-\\d+$','',buidling_footprint_spatial$smp_id ) 
+    buidling_footprint['system_id'] <- gsub('-\\d+$','',buidling_footprint$smp_id) 
     
     #calculating distance from system
     
@@ -99,10 +111,10 @@
     
     names(data) <- "SYSTEM ID"
     buffer <- c(25,50,100)
-    names(output_25ft) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Distance (ft)")
-    names(output_25ft_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Distance (ft)")
-    output_25ft <- output_25ft[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Distance (ft)","Comments")]
-    output_25ft_dl <- output_25ft_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Distance (ft)","Comments")]
+    names(output_25ft) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)")
+    names(output_25ft_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)")
+    output_25ft <- output_25ft[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Comments")]
+    output_25ft_dl <- output_25ft_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Comments")]
     
 ### Section 3: Shiny work
 
@@ -208,7 +220,7 @@
                                                                                                                                                                                                                            
     
     output$table_25ft <- renderReactable({
-      reactable(filter(output_25ft, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Distance (ft)`, Comments)%>% distinct(),
+      reactable(filter(output_25ft, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`, Comments)%>% distinct(),
                 searchable = FALSE,
                 pagination = TRUE,
                 showPageSizeOptions = TRUE,
@@ -247,6 +259,14 @@
       return( filter(all_parcel_address, system_id == input$system_id) %>% select(address))
     })
     
+    labels_footprint <- reactive({
+      return( filter(buidling_footprint, system_id == input$system_id & buffer_ft == input$buffer) %>% select(address))
+    })
+    
+    
+    
+    
+    
     output$map <- renderLeaflet({
       
       map <- leaflet()%>%
@@ -256,8 +276,12 @@
                     group = "All Parcels within 25 ft",
                     color = "green",
                     label = paste(labels_address_all()[,],"")) %>%
-        addLayersControl(overlayGroups = "All Parcels within 25 ft",baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
-        hideGroup("All Parcels within 25 ft")%>%
+        addPolygons(data = filter(buidling_footprint_spatial, system_id == input$system_id & buffer_ft == input$buffer),
+                    label = labels_footprint()[,],
+                    color = "black",
+                    group = "Building Footprint") %>%
+        addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
+        hideGroup(c("All Parcels within 25 ft","Building Footprint"))%>%
         addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
                     label = paste("System ID:",input$system_id) , 
                     color = "red", 

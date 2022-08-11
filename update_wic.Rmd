@@ -157,9 +157,10 @@ params:
    
    
    if(nrow(changed_comments_cityworks) > 0 & params$write == TRUE){
-     
-     sql_string <- "UPDATE fieldwork.wic_comments SET comments = '%s' WHERE workorder_id = %s;"
-     dbSendStatement(MARSDB_con, paste(sprintf(sql_string, changed_comments_cityworks$comments, changed_comments_cityworks$workorder_id), collapse=""))
+    
+      sql_string <- "delete from fieldwork.wic_comments WHERE workorder_id = %s;"
+          dbSendStatement(MARSDB_con, paste(sprintf(sql_string, changed_comments_cityworks$workorder_id), collapse=""))
+          dbWriteTable (MARSDB_con , SQL("fieldwork.wic_comments"),changed_comments_cityworks,append= TRUE, row.names = FALSE)
      
    }
    
@@ -686,7 +687,7 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
 
 ```
 
-```{r section 10- WIC parcels map data update, include = FALSE, eval= nrow(fieldwork.wic_smps)>0 & nrow(new_smp_spatial)>0}
+```{r section 10- WIC parcels map data update, include = FALSE, eval= nrow(fieldwork.wic_smps)>0}
 
  wic_parcels_spatial <- Parcels_WIC_Filterd %>%
    inner_join(fieldwork.wic_smps, by=c("FACILITYID"="wic_facility_id")) %>%
@@ -720,12 +721,43 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
           sql_string <- "delete from fieldwork.wic_parcels_wkt WHERE smp_id = '%s' and address = '%s';"
           dbSendStatement(MARSDB_con, paste(sprintf(sql_string, wic_parcels_wkt$smp_id, wic_parcels_wkt$address), collapse=""))
           dbWriteTable (MARSDB_con , SQL("fieldwork.wic_parcels_wkt"),wic_parcels_wkt,append= TRUE, row.names = FALSE)
-    }
+  }
+ 
+ 
+ #update the footprint polygons
+   building_footprint <- st_read(dsn = "\\\\pwdoows\\oows\\Watershed Sciences\\GSI Monitoring\\09 GIS Data\\Building_Footprint_Shapefile", layer = "Building_Footprint")
+
+   # create a table with address and wkt for building footprint
+  building_footprint <- building_footprint %>%
+    filter(building_footprint$ADDRESS %in% wic_parcels_wkt$address)
+
+  building_footprint <- st_transform(building_footprint, 4326)
+  building_footprint_text <- building_footprint %>%
+    st_geometry() %>%
+    st_as_text()
+  building_footprint_address<- building_footprint %>%
+    st_set_geometry(NULL) %>%
+    select(ADDRESS)
+  building_footprint_address['WKT'] <-building_footprint_text
+  names(building_footprint_address) <- c("address","wkt")
+  building_footprint <- building_footprint_address
+  
+# Create a new wkt table for the bulding footprint by updating the WKT column
+  parcel_building_footprint <- wic_parcels_wkt %>%
+    select(-wkt) %>%
+    inner_join(building_footprint, by="address")
+ #write to DB
+   if (nrow(parcel_building_footprint) > 0 & params$write == TRUE){
+          sql_string <- "delete from fieldwork.wic_buildingfootprint_wkt WHERE smp_id = '%s' and address = '%s';"
+          dbSendStatement(MARSDB_con, paste(sprintf(sql_string, parcel_building_footprint$smp_id, parcel_building_footprint$address), collapse=""))
+          dbWriteTable (MARSDB_con , SQL("fieldwork.wic_buildingfootprint_wkt"),parcel_building_footprint,append= TRUE, row.names = FALSE)
+  }
+  
   
 
 ```
 
-```{r section 11- all parcels (wic and non-wic) map data update, include = FALSE, eval= nrow(fieldwork.wic_smps)>0 & nrow(new_smp_spatial)>0}
+```{r section 11- all parcels (wic and non-wic) map data update, include = FALSE, eval= nrow(fieldwork.wic_smps)>0 }
 
    new_smp_spatial_25ft <- st_buffer(new_smp_spatial, 25)
    SMP_inters_allparcels_25 <- st_intersects(new_smp_spatial_25ft, PARCELS_SPATIAL)

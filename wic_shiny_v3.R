@@ -163,14 +163,22 @@
     
     #Populate reactive stat table
     reactive_stats <- reactive({
-     
+      
+      
+      
       output_stat <- output_25ft %>%
         filter(Buffer_ft==25 & `Complaint Date` >= as.character(input$date))%>%
         select(`System ID`,`Construction Phase`, `Work Order ID`) %>% 
         distinct()%>%
         select(`System ID`,`Construction Phase`) %>% 
         group_by(`System ID`, `Construction Phase` )%>% 
-        summarise(count = n()) 
+        summarise(count = n())
+      
+      if (nrow(output_stat)==0) {
+        validate("There is No WIC to Show for the Selectd Starting Date")
+      }
+      
+      
       output_stat <- output_stat %>%
         pivot_wider(names_from = `Construction Phase`, values_from = count)
       output_stat <- as.data.frame(output_stat)
@@ -182,6 +190,7 @@
       output_stat$Total <- output_stat$`Pre-Con`+ output_stat$`During-Con`+ output_stat$`Post-Con`+output_stat$Unknown
       output_stat <- output_stat %>% mutate(across(.cols=2:6, .fns=as.integer))
       output_stat <- output_stat[order(output_stat$Total, decreasing = TRUE), ]
+      
       
       return(output_stat)
       
@@ -269,6 +278,12 @@
     
     output$map <- renderLeaflet({
       
+      
+      if (nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer))==0) {
+        validate("There is No WIC to Show for this Buffer Size")
+      }
+      
+      
       map <- leaflet()%>%
         addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
         addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
@@ -301,6 +316,8 @@
                        editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions()) 
                        
         )
+      
+      return(map)
       
     }) 
     

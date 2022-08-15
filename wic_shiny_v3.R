@@ -91,30 +91,30 @@
     
 ### Section 2: processing the "table" data 
     
-    output_25ft <- inner_join(wic_smps, wic_conphase, by=c("phase_lookup_uid"="wic_uid"))%>%
+    output_all_buffers <- inner_join(wic_smps, wic_conphase, by=c("phase_lookup_uid"="wic_uid"))%>%
       select(-phase_lookup_uid,-wic_smps_uid) %>%
       inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>%
       inner_join(wic_comments, by="workorder_id")%>%
       select(-wic_parcels_uid,-wic_facility_id, -wic_comments_uid) 
     
-    output_25ft <- output_25ft %>%
+    output_all_buffers <- output_all_buffers %>%
       inner_join(distance_sys, by=c("system_id"="system_id","location"="address"))
     
-    output_25ft[,"dist_ft"] <- format(round(output_25ft[,"dist_ft"], 2), nsmall = 2)
+    output_all_buffers[,"dist_ft"] <- format(round(output_all_buffers[,"dist_ft"], 2), nsmall = 2)
     
-    output_25ft_dl <- output_25ft
-    output_25ft_dl$smp_id<- shQuote(output_25ft$smp_id)
-    output_25ft_dl$system_id<- shQuote(output_25ft$system_id)
-    data <- output_25ft %>% 
+    output_all_buffers_dl <- output_all_buffers
+    output_all_buffers_dl$smp_id<- shQuote(output_all_buffers$smp_id)
+    output_all_buffers_dl$system_id<- shQuote(output_all_buffers$system_id)
+    data <- output_all_buffers %>% 
       select(system_id) %>%
       distinct()
     
     names(data) <- "SYSTEM ID"
     buffer <- c(25,50,100)
-    names(output_25ft) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)")
-    names(output_25ft_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)")
-    output_25ft <- output_25ft[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Comments")]
-    output_25ft_dl <- output_25ft_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Comments")]
+    names(output_all_buffers) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)")
+    names(output_all_buffers_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)")
+    output_all_buffers <- output_all_buffers[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Comments")]
+    output_all_buffers_dl <- output_all_buffers_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Comments")]
     
 ### Section 3: Shiny work
 
@@ -166,7 +166,7 @@
       
       
       
-      output_stat <- output_25ft %>%
+      output_stat <- output_all_buffers %>%
         filter(Buffer_ft==25 & `Complaint Date` >= as.character(input$date))%>%
         select(`System ID`,`Construction Phase`, `Work Order ID`) %>% 
         distinct()%>%
@@ -229,7 +229,7 @@
                                                                                                                                                                                                                            
     
     output$table_25ft <- renderReactable({
-      reactable(filter(output_25ft, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`, Comments)%>% distinct(),
+      reactable(filter(output_all_buffers, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`, Comments)%>% distinct(),
                 searchable = FALSE,
                 pagination = TRUE,
                 showPageSizeOptions = TRUE,
@@ -253,7 +253,7 @@
     
     output$WIC_dl_25ft <- downloadHandler(
       filename = function() {paste("WIC_SMP-", Sys.Date(), ".csv", sep="")},
-      content = function(file) {write.csv(filter(output_25ft_dl, `System ID` == shQuote(input$system_id) & Buffer_ft == input$buffer), file,row.names=FALSE)}
+      content = function(file) {write.csv(filter(output_all_buffers_dl, `System ID` == shQuote(input$system_id) & Buffer_ft == input$buffer), file,row.names=FALSE)}
     )
     
     labels_address <- reactive({
@@ -289,7 +289,7 @@
         addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
         addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
                     label = paste("System ID:",input$system_id) , 
-                    color = "red", 
+                    color = "blue", 
                     group = "SMP System") %>%
         addPolygons(data = filter(parcel_all_spatial, system_id == input$system_id),
                     group = "All Parcels within 25 ft",
@@ -304,9 +304,10 @@
         ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
         addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
                     label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),
-                    group = "Parcels") %>%
-        addLegend(colors = c("red","blue"), 
-                  labels = c("SMP System","Parcel")) %>%
+                    group = "Parcels",
+                    color="red") %>%
+        addLegend(colors = c("blue","red","black","green"), 
+                  labels = c("System","WIC Property Line","WIC Building Footprint","All Property Lines (WIC/NON-WIC)")) %>%
         addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
                        polygonOptions = FALSE,
                        circleOptions=FALSE,

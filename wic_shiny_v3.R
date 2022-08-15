@@ -1,3 +1,5 @@
+### Water-in-Cellar Shiny App
+### Author: Farshad Ebrahimi, Last Modified: 08/15/2022
 
 ### Section 1: data gathering & prep
 
@@ -89,7 +91,7 @@
     
     parcel_address[,"dist_ft"] <- format(round(parcel_address[,"dist_ft"], 2), nsmall = 2)
     
-### Section 2: processing the "table" data 
+### Section 2: processing WIC tabular data 
     
     output_all_buffers <- inner_join(wic_smps, wic_conphase, by=c("phase_lookup_uid"="wic_uid"))%>%
       select(-phase_lookup_uid,-wic_smps_uid) %>%
@@ -256,6 +258,7 @@
       content = function(file) {write.csv(filter(output_all_buffers_dl, `System ID` == shQuote(input$system_id) & Buffer_ft == input$buffer), file,row.names=FALSE)}
     )
     
+  ## Reactive lables for map polygons 
     labels_address <- reactive({
       return( filter(parcel_address, system_id == input$system_id & buffer_ft == input$buffer) %>% select(address))
     })
@@ -272,9 +275,7 @@
       return( filter(buidling_footprint, system_id == input$system_id & buffer_ft == input$buffer) %>% select(address))
     })
     
-    
-    
-    
+  
     
     output$map <- renderLeaflet({
       

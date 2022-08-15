@@ -31,16 +31,19 @@
     }
 
     #Gather the data from the database
-    con <- dbConnect(odbc::odbc(), dsn = "mars_data", uid = Sys.getenv("shiny_uid_pg12_user"), pwd = Sys.getenv("shiny_pwd_pg12_user"), MaxLongVarcharSize = 8190  )
-    wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_workorders ")
-    wic_comments <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_comments")
-    wic_parcels <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels ")
-    wic_smps <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_smps ")
-    wic_conphase <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_conphase ")
-    smp <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_smp_wkt ")
-    parcel <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_parcels_wkt")
-    parcel_all <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_all_parcels_wkt")
-    buidling_footprint <- dbGetQuery(con, "SELECT * FROM fieldwork.wic_buildingfootprint_wkt")
+    con <- dbConnect(odbc::odbc(), dsn = "mars14_data", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"), MaxLongVarcharSize = 8190  )
+    #con <- dbConnect(odbc::odbc(), dsn = "mars_data_pg14", MaxLongVarcharSize = 8190  )
+    #con <- dbConnect(RPostgres::Postgres(), dbname = "mars_data", host="PWDOOWSDBS.pwd.phila.local" , port="5434", user="mars_admin", password="lepton-gossip-underreact-polo-chair")
+    
+    wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_workorders ")
+    wic_comments <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_comments")
+    wic_parcels <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_parcels ")
+    wic_smps <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_smps ")
+    wic_conphase <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_conphase ")
+    smp <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_smp_wkt ")
+    parcel <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_parcels_wkt")
+    parcel_all <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_all_parcels_wkt")
+    buidling_footprint <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_buildingfootprint_wkt")
     
     
     #map geoprocessing

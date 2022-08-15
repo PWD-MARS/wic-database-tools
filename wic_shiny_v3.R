@@ -152,10 +152,10 @@
                           )
                         ),
                         fluidRow(
-                          reactableOutput("table_25ft")
+                          reactableOutput("table_wic")
                         ),
                         fluidRow(
-                          downloadButton("WIC_dl_25ft","Download Table in .CSV"
+                          downloadButton("table_wic_dl","Download Table in .CSV"
                           )
                         )
                       )
@@ -230,7 +230,7 @@
                                           )
                                                                                                                                                                                                                            
     
-    output$table_25ft <- renderReactable({
+    output$table_wic <- renderReactable({
       reactable(filter(output_all_buffers, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`, Comments)%>% distinct(),
                 searchable = FALSE,
                 pagination = TRUE,
@@ -253,7 +253,7 @@
     })
 
     
-    output$WIC_dl_25ft <- downloadHandler(
+    output$table_wic_dl <- downloadHandler(
       filename = function() {paste("WIC_SMP-", Sys.Date(), ".csv", sep="")},
       content = function(file) {write.csv(filter(output_all_buffers_dl, `System ID` == shQuote(input$system_id) & Buffer_ft == input$buffer), file,row.names=FALSE)}
     )

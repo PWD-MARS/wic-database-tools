@@ -4,8 +4,8 @@ author: "Farshad Ebrahimi"
 date: "`r lubridate::now()`"
 output: html_document
 params:
-  database: mars_data
-  write: FALSE
+  database: mars14_data
+  write: TRUE
 ---
 
 ```{r setup, include=FALSE}
@@ -47,7 +47,7 @@ params:
   output_25 <- data.frame(matrix(NA, 0, 2))
   output_50 <- data.frame(matrix(NA, 0, 2))
   output_100 <- data.frame(matrix(NA, 0, 2))
-  fieldwork.wic_smps <- data.frame(matrix(NA, 0, 2))
+  fieldwork.tbl_wic_smps <- data.frame(matrix(NA, 0, 2))
   smp_milestones <- data.frame(matrix(NA, 0, 4))
   names(smp_milestones) <- c("workorder_id", "smp_id",  "phase", "buffer_ft")
   
@@ -76,8 +76,8 @@ params:
    
 # gather current wic orders and comments from MARS_Data
    
-   wic_workorders <- dbGetQuery(MARSDB_con, "SELECT * FROM fieldwork.wic_workorders ")
-   wic_comments <- dbGetQuery(MARSDB_con, "SELECT * FROM fieldwork.wic_comments ")
+   wic_workorders <- dbGetQuery(MARSDB_con, "SELECT * FROM fieldwork.tbl_wic_workorders ")
+   wic_comments <- dbGetQuery(MARSDB_con, "SELECT * FROM fieldwork.tbl_wic_comments ")
    
 # change the data column format; for some reason anti_join cannot match the dates in POSIXct
    
@@ -117,7 +117,7 @@ params:
    
    if( nrow(new_wic) > 0 & params$write == TRUE ){
   
-  dbWriteTable (MARSDB_con, SQL("fieldwork.wic_workorders"),new_wic,append= TRUE, row.names = FALSE)
+  dbWriteTable (MARSDB_con, SQL("fieldwork.tbl_wic_workorders"),new_wic,append= TRUE, row.names = FALSE)
      
   }
    
@@ -125,7 +125,7 @@ params:
    
    if(nrow(changed_wic_cityworks) > 0 & params$write == TRUE){
      
-     sql_string <- "UPDATE fieldwork.wic_workorders SET wo_initiatedate = '%s', location = '%s',  wo_xcoordinate = %s,wo_ycoordinate= %s,facility_id = '%s' WHERE workorder_id = %s;"
+     sql_string <- "UPDATE fieldwork.tbl_wic_workorders SET wo_initiatedate = '%s', location = '%s',  wo_xcoordinate = %s,wo_ycoordinate= %s,facility_id = '%s' WHERE workorder_id = %s;"
      dbSendStatement(MARSDB_con, paste(sprintf(sql_string, changed_wic_cityworks$wo_initiatedate, changed_wic_cityworks$location,changed_wic_cityworks$wo_xcoordinate,changed_wic_cityworks$wo_ycoordinate,changed_wic_cityworks$facility_id,changed_wic_cityworks$workorder_id), collapse=""))
      
    }
@@ -151,16 +151,16 @@ params:
    
     if( nrow(new_wo_comments) > 0 & params$write == TRUE ){
       
-  dbWriteTable (MARSDB_con, SQL("fieldwork.wic_comments"),new_wo_comments,append= TRUE, row.names = FALSE)
+  dbWriteTable (MARSDB_con, SQL("fieldwork.tbl_wic_comments"),new_wo_comments,append= TRUE, row.names = FALSE)
       
     }
    
    
    if(nrow(changed_comments_cityworks) > 0 & params$write == TRUE){
     
-      sql_string <- "delete from fieldwork.wic_comments WHERE workorder_id = %s;"
+      sql_string <- "delete from fieldwork.tbl_wic_comments WHERE workorder_id = %s;"
           dbSendStatement(MARSDB_con, paste(sprintf(sql_string, changed_comments_cityworks$workorder_id), collapse=""))
-          dbWriteTable (MARSDB_con , SQL("fieldwork.wic_comments"),changed_comments_cityworks,append= TRUE, row.names = FALSE)
+          dbWriteTable (MARSDB_con , SQL("fieldwork.tbl_wic_comments"),changed_comments_cityworks,append= TRUE, row.names = FALSE)
      
    }
    
@@ -331,10 +331,10 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
 
       if (!is.null(wic_parcels) & params$write == TRUE){
         
-        sql_string <- "delete from fieldwork.wic_parcels WHERE workorder_id = %s;"
+        sql_string <- "delete from fieldwork.tbl_wic_parcels WHERE workorder_id = %s;"
         dbSendStatement(MARSDB_con, paste(sprintf(sql_string, wic_parcels$workorder_id), collapse=""))
     
-        dbWriteTable (MARSDB_con, SQL("fieldwork.wic_parcels"),wic_parcels,append= TRUE, row.names = FALSE)
+        dbWriteTable (MARSDB_con, SQL("fieldwork.tbl_wic_parcels"),wic_parcels,append= TRUE, row.names = FALSE)
 
       }
 
@@ -586,8 +586,8 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
   
   ## section 5: categorizing the SMPs to pre, during, or post construction
         wic_conphase <- data.frame(wic_uid = 1:4, phase = c("pre-construction", "during construction", "post-construction", "unknown"))
-        external.cipit_project <- dbGetQuery(MARSDB_con, "SELECT * FROM external.cipit_project")
-        external.smpbdv <- dbGetQuery(MARSDB_con, "SELECT * FROM  external.smpbdv")
+        external.cipit_project <- dbGetQuery(MARSDB_con, "SELECT * FROM external.tbl_cipit_project")
+        external.smpbdv <- dbGetQuery(MARSDB_con, "SELECT * FROM  external.tbl_smpbdv")
         worknumber <- inner_join(Result,external.smpbdv, by = "smp_id" )  %>% select( smp_id, wic_facility_id,buffer_ft, workorder_id,wo_initiatedate, worknumber)
         smp_milestones <- inner_join(external.cipit_project, worknumber, by = c("work_number" = "worknumber"  ))  %>% select (smp_id, wic_facility_id,buffer_ft, workorder_id,wo_initiatedate, construction_start_date, pc_ntp_date, construction_complete_date, contract_closed_date) %>% unique()
         
@@ -634,14 +634,14 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
             }
         }
         
-        fieldwork.wic_smps <- smp_milestones %>% select(workorder_id,smp_id, wic_facility_id, buffer_ft, phase_lookup_uid)
-        fieldwork.wic_smps['system_id'] <- gsub('-\\d+$','',fieldwork.wic_smps$smp_id ) 
+        fieldwork.tbl_wic_smps <- smp_milestones %>% select(workorder_id,smp_id, wic_facility_id, buffer_ft, phase_lookup_uid)
+        fieldwork.tbl_wic_smps['system_id'] <- gsub('-\\d+$','',fieldwork.tbl_wic_smps$smp_id ) 
       
-        if (nrow(fieldwork.wic_smps) > 0 & params$write == TRUE){
+        if (nrow(fieldwork.tbl_wic_smps) > 0 & params$write == TRUE){
           
-          sql_string <- "delete from fieldwork.wic_smps WHERE workorder_id = %s;"
-          dbSendStatement(MARSDB_con, paste(sprintf(sql_string, fieldwork.wic_smps$workorder_id), collapse=""))
-          dbWriteTable (MARSDB_con , SQL("fieldwork.wic_smps"),fieldwork.wic_smps,append= TRUE, row.names = FALSE)
+          sql_string <- "delete from fieldwork.tbl_wic_smps WHERE workorder_id = %s;"
+          dbSendStatement(MARSDB_con, paste(sprintf(sql_string, fieldwork.tbl_wic_smps$workorder_id), collapse=""))
+          dbWriteTable (MARSDB_con , SQL("fieldwork.tbl_wic_smps"),fieldwork.tbl_wic_smps,append= TRUE, row.names = FALSE)
         }
         
         wic_conphase <- data.frame(wic_uid = 1:4, phase = c("Pre-construction", "During-construction", "Post-construction", "unknown"))
@@ -655,9 +655,9 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
 Public SMPs were intersected with parcels associated with new/changed WIC work orders within 25, 50, and 100 ft of distance from them. This resulted in `r nrow( smp_milestones %>% filter(phase=="Pre-construction"))` SMP attachment in Pre-construction phase, `r nrow( smp_milestones %>% filter(phase=="During-construction"))` SMP attachment during-construction phase, `r nrow( smp_milestones %>% filter(phase=="Post-construction"))` SMP attachment in Post-construction phase, and `r nrow( smp_milestones %>% filter(phase=="unknown"))` SMP attachment with unknown construction phase.
 
 
-```{r section 9- SMP map data update, include = FALSE, eval= nrow(fieldwork.wic_smps)>0}
+```{r section 9- SMP map data update, include = FALSE, eval= nrow(fieldwork.tbl_wic_smps)>0}
 
-  new_smp_list <- fieldwork.wic_smps %>% 
+  new_smp_list <- fieldwork.tbl_wic_smps %>% 
   select(smp_id) %>%
   distinct()
   new_smp_spatial <- SMP %>%
@@ -677,9 +677,9 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
   
    if (nrow(smp_wkt) > 0 & params$write == TRUE){
           
-          sql_string <- "delete from fieldwork.wic_smp_wkt WHERE smp_id = '%s';"
+          sql_string <- "delete from fieldwork.tbl_wic_smp_wkt WHERE smp_id = '%s';"
           dbSendStatement(MARSDB_con, paste(sprintf(sql_string, smp_wkt$smp_id), collapse=""))
-          dbWriteTable (MARSDB_con , SQL("fieldwork.wic_smp_wkt"),smp_wkt,append= TRUE, row.names = FALSE)
+          dbWriteTable (MARSDB_con , SQL("fieldwork.tbl_wic_smp_wkt"),smp_wkt,append= TRUE, row.names = FALSE)
     }
   
   }
@@ -687,10 +687,10 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
 
 ```
 
-```{r section 10- WIC parcels map data update, include = FALSE, eval= nrow(fieldwork.wic_smps)>0}
+```{r section 10- WIC parcels map data update, include = FALSE, eval= nrow(fieldwork.tbl_wic_smps)>0}
 
  wic_parcels_spatial <- Parcels_WIC_Filterd %>%
-   inner_join(fieldwork.wic_smps, by=c("FACILITYID"="wic_facility_id")) %>%
+   inner_join(fieldwork.tbl_wic_smps, by=c("FACILITYID"="wic_facility_id")) %>%
   select(smp_id, address=ADDRESS,buffer_ft) %>%
   distinct()
   
@@ -718,9 +718,9 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
  wic_parcels_wkt['wkt'] <- wic_parcels_wkt_df
  
   if (nrow(wic_parcels_wkt) > 0 & params$write == TRUE){
-          sql_string <- "delete from fieldwork.wic_parcels_wkt WHERE smp_id = '%s' and address = '%s';"
+          sql_string <- "delete from fieldwork.tbl_wic_parcels_wkt WHERE smp_id = '%s' and address = '%s';"
           dbSendStatement(MARSDB_con, paste(sprintf(sql_string, wic_parcels_wkt$smp_id, wic_parcels_wkt$address), collapse=""))
-          dbWriteTable (MARSDB_con , SQL("fieldwork.wic_parcels_wkt"),wic_parcels_wkt,append= TRUE, row.names = FALSE)
+          dbWriteTable (MARSDB_con , SQL("fieldwork.tbl_wic_parcels_wkt"),wic_parcels_wkt,append= TRUE, row.names = FALSE)
   }
  
  
@@ -748,16 +748,16 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
     inner_join(building_footprint, by="address")
  #write to DB
    if (nrow(parcel_building_footprint) > 0 & params$write == TRUE){
-          sql_string <- "delete from fieldwork.wic_buildingfootprint_wkt WHERE smp_id = '%s' and address = '%s';"
+          sql_string <- "delete from fieldwork.tbl_wic_buildingfootprint_wkt WHERE smp_id = '%s' and address = '%s';"
           dbSendStatement(MARSDB_con, paste(sprintf(sql_string, parcel_building_footprint$smp_id, parcel_building_footprint$address), collapse=""))
-          dbWriteTable (MARSDB_con , SQL("fieldwork.wic_buildingfootprint_wkt"),parcel_building_footprint,append= TRUE, row.names = FALSE)
+          dbWriteTable (MARSDB_con , SQL("fieldwork.tbl_wic_buildingfootprint_wkt"),parcel_building_footprint,append= TRUE, row.names = FALSE)
   }
   
   
 
 ```
 
-```{r section 11- all parcels (wic and non-wic) map data update, include = FALSE, eval= nrow(fieldwork.wic_smps)>0 }
+```{r section 11- all parcels (wic and non-wic) map data update, include = FALSE, eval= nrow(fieldwork.tbl_wic_smps)>0 }
 
    new_smp_spatial_25ft <- st_buffer(new_smp_spatial, 25)
    SMP_inters_allparcels_25 <- st_intersects(new_smp_spatial_25ft, PARCELS_SPATIAL)
@@ -813,9 +813,9 @@ Public SMPs were intersected with parcels associated with new/changed WIC work o
  wic_all_parcels_wkt['wkt'] <- wic_all_parcels_wkt_df
  
   if (nrow(wic_all_parcels_wkt) > 0 & params$write == TRUE){
-          sql_string <- "delete from fieldwork.wic_all_parcels_wkt WHERE system_id = '%s' and address = '%s';"
+          sql_string <- "delete from fieldwork.tbl_wic_all_parcels_wkt WHERE system_id = '%s' and address = '%s';"
           dbSendStatement(MARSDB_con, paste(sprintf(sql_string, wic_all_parcels_wkt$system_id, wic_all_parcels_wkt$address), collapse=""))
-          dbWriteTable (MARSDB_con , SQL("fieldwork.wic_all_parcels_wkt"),wic_all_parcels_wkt,append= TRUE, row.names = FALSE)
+          dbWriteTable (MARSDB_con , SQL("fieldwork.tbl_wic_all_parcels_wkt"),wic_all_parcels_wkt,append= TRUE, row.names = FALSE)
     }
   
 

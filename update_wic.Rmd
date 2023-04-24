@@ -39,7 +39,7 @@ params:
                   uid = Sys.getenv("gis_uid"),
                   pwd= Sys.getenv("gis_pwd"))
   
-  dsn_infra_pub <- paste0("MSSQL:server=PWDGISSQL;",
+  gis_apps_con <- paste0("MSSQL:server=PWDGISSQL;",
                               "database=GIS_APPS;",
                               "UID=gisread;",
                               "PWD=gisread;")
@@ -343,23 +343,23 @@ The new and modified work orders (total = `r nrow(bind_rows(changed_wic_citywork
 
 ```{r Section 8- SMP intersect, include=FALSE, eval= !is.null(wic_parcels) }
 
-      basin <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBASIN", quiet = TRUE)) 
-      blueroof <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBLUEROOF", quiet = TRUE)) 
-      bumpout <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIBUMPOUT", quiet = TRUE)) 
-      cistern <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWICISTERN", quiet = TRUE)) 
+      basin <- suppressWarnings(st_read(gis_apps_con, "gisad.GSWIBASIN", quiet = TRUE)) 
+      blueroof <- suppressWarnings(st_read(gis_apps_con, "gisad.GSWIBLUEROOF", quiet = TRUE)) 
+      bumpout <- suppressWarnings(st_read(gis_apps_con, "gisad.GSWIBUMPOUT", quiet = TRUE)) 
+      cistern <- suppressWarnings(st_read(gis_apps_con, "gisad.GSWICISTERN", quiet = TRUE)) 
       
   # something wrong with drainagewell 
       
-      #drainagewell <- suppressWarnings(st_read(dsn_infra_pub, "GISAD.gswiDrainageWell", quiet = TRUE))
+      #drainagewell <- suppressWarnings(st_read(gis_apps_con, "GISAD.gswiDrainageWell", quiet = TRUE))
       
-      greenroof <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIGREENROOF", quiet = TRUE))
-      permeablepavement <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIPERMEABLEPAVEMENT", quiet = TRUE))
-      planter <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIPLANTER", quiet = TRUE))
-      raingarden <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIRAINGARDEN", quiet = TRUE))
-      swale <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWISWALE", quiet = TRUE))
-      treetrench <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWITREETRENCH", quiet = TRUE))
-      trench <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWITRENCH", quiet = TRUE)) 
-      wetland <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIWETLAND", quiet = TRUE))
+      greenroof <- suppressWarnings(st_read(gis_apps_con, "gisad.GSWIGREENROOF", quiet = TRUE))
+      permeablepavement <- suppressWarnings(st_read(gis_apps_con, "gisad.GSWIPERMEABLEPAVEMENT", quiet = TRUE))
+      planter <- suppressWarnings(st_read(gis_apps_con, "gisad.GSWIPLANTER", quiet = TRUE))
+      raingarden <- suppressWarnings(st_read(gis_apps_con, "gisad.GSWIRAINGARDEN", quiet = TRUE))
+      swale <- suppressWarnings(st_read(gis_apps_con, "gisad.GSWISWALE", quiet = TRUE))
+      treetrench <- suppressWarnings(st_read(gis_apps_con, "gisad.GSWITREETRENCH", quiet = TRUE))
+      trench <- suppressWarnings(st_read(gis_apps_con, "gisad.GSWITRENCH", quiet = TRUE)) 
+      wetland <- suppressWarnings(st_read(gis_apps_con, "gisad.GSWIWETLAND", quiet = TRUE))
       st_crs ( basin) <- 2272 
       st_crs (blueroof) <- 2272
       st_crs(bumpout) <- 2272

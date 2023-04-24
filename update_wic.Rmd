@@ -40,7 +40,7 @@ params:
                   pwd= Sys.getenv("gis_pwd"))
   
   dsn_infra_pub <- paste0("MSSQL:server=PWDGISSQL;",
-                              "database=INFRASTRUCTURE_PUBLIC;",
+                              "database=GIS_APPS;",
                               "UID=gisread;",
                               "PWD=gisread;")
    

@@ -31,7 +31,7 @@
     }
 
     #Gather the data from the database
-    con <- dbConnect(odbc::odbc(), dsn = "mars14_data", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"), MaxLongVarcharSize = 8190  )
+    con <- dbConnect(odbc::odbc(), dsn = "mars14_datav2", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"), MaxLongVarcharSize = 8190  )
     #con <- dbConnect(odbc::odbc(), dsn = "mars_data_pg14", MaxLongVarcharSize = 8190  )
     #con <- dbConnect(RPostgres::Postgres(), dbname = "mars_data", host="PWDOOWSDBS.pwd.phila.local" , port="5434", user="mars_admin", password="lepton-gossip-underreact-polo-chair")
     

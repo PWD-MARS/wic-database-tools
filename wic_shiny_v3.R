@@ -199,7 +199,7 @@
                      column(6, selectizeInput('buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 100, options = list(maxOptions = 3), width = 500))),
                    reactableOutput("table_wic")
                    ),
-            column(6, leafletOutput("map",width = "100%" ,height = "770"))
+            column(6, leafletOutput("map",width = "100%" ,height = "830"))
                       )
           
         ),

@@ -1,5 +1,5 @@
 ### Water-in-Cellar Shiny App
-### Author: Farshad Ebrahimi, Last Modified: 08/15/2022
+### Author: Farshad Ebrahimi, Last Modified: 10/18/2023
 
 ### Section 1: data gathering & prep
 
@@ -31,36 +31,54 @@
     }
 
     #Gather the data from the database
-    con <- dbConnect(odbc::odbc(), dsn = "mars14_data", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"), MaxLongVarcharSize = 8190  )
+    con <- dbConnect(odbc::odbc(), dsn = "mars14_datav2", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"), MaxLongVarcharSize = 8190  )
     #con <- dbConnect(odbc::odbc(), dsn = "mars_data_pg14", MaxLongVarcharSize = 8190  )
     #con <- dbConnect(RPostgres::Postgres(), dbname = "mars_data", host="PWDOOWSDBS.pwd.phila.local" , port="5434", user="mars_admin", password="lepton-gossip-underreact-polo-chair")
     
+    # work orders
     wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_workorders ")
+    # comments
     wic_comments <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_comments")
+    # wic parcels and location
     wic_parcels <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_parcels ")
+    # wic-smp table
     wic_smps <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_smps ")
+    # construction phase
     wic_conphase <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_conphase ")
+    # smp polygons in wkt
     smp <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_smp_wkt ")
+    # wic parcel polygons in wkt
     parcel <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_parcels_wkt")
+    # all sourounding parcels within 25ft polygons in wkt
     parcel_all <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_all_parcels_wkt")
+    # Buildings footprints in wkt
     buidling_footprint <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_buildingfootprint_wkt")
     
     
-    #map geoprocessing
+    ## map geo-processioning; converting WKT to SF object
+    
+    # wkt to SF in CRS = 4326
     smp_sf <- st_as_sfc(smp[,"wkt"], CRS = 4326)
     parcel_sf <- st_as_sfc(parcel[,"wkt"], crs = 4326)
+    
+    # attaching the smp_ids and setting crs
     smp_ids <- smp %>% select(smp_id)
     smp_spatial <- bind_cols(smp_ids, smp_sf)
     smp_spatial <- st_as_sf(smp_spatial)
     st_crs(smp_spatial) <- 4326
+    
+    # attaching the address to parcels and setting crs
     parcel_address <- parcel %>% select(-wkt)
     parcel_spatial <- bind_cols(parcel_address, parcel_sf)
     parcel_spatial <- st_as_sf(parcel_spatial)
     st_crs(parcel_spatial) <- 4326
+    
+    # attaching the system ids
     smp_spatial['system_id'] <- gsub('-\\d+$','',smp_spatial$smp_id) 
     parcel_spatial['system_id'] <- gsub('-\\d+$','',parcel_spatial$smp_id ) 
     parcel_address['system_id'] <- gsub('-\\d+$','',parcel_address$smp_id) 
     
+    # converting all sorounding parcels to SF
     parcel_all_sf <- st_as_sfc(parcel_all[,"wkt"], crs = 4326)
     parcel_all_address <- parcel_all %>% select(-wkt,-wic_all_parcels_wkt_uid)
     parcel_all_spatial <- bind_cols(parcel_all_address, parcel_all_sf)
@@ -69,7 +87,7 @@
     all_parcel_address <- parcel_all %>% select(-wkt)
     
     
-    #building footprint
+    #building footprint, convert to SF and set crs, add system ids
     buidling_footprint_sf <- st_as_sfc(buidling_footprint[,"wkt"], crs = 4326)
     buidling_footprint_df <- buidling_footprint %>% select(-wkt,-wic_buildingfootprint_wkt_uid)
     buidling_footprint_spatial <- bind_cols(buidling_footprint_df, buidling_footprint_sf)
@@ -78,9 +96,8 @@
     buidling_footprint_spatial['system_id'] <- gsub('-\\d+$','',buidling_footprint_spatial$smp_id ) 
     buidling_footprint['system_id'] <- gsub('-\\d+$','',buidling_footprint$smp_id) 
     
-    #calculating distance from system
-    
-    distance_sys <-parcel_address %>%
+    #calculating distance from system; pick min distance of smp-wic parcel
+    distance_sys <- parcel_address %>%
       select(system_id,address, distance_ft) %>% 
       distinct()%>%
       group_by(system_id, address )%>% 
@@ -92,10 +109,12 @@
     parcel_address <- parcel_address %>%
       inner_join(distance_sys, by=c("system_id"="system_id","address"="address"))
     
+    # round the digits
     parcel_address[,"dist_ft"] <- format(round(parcel_address[,"dist_ft"], 2), nsmall = 2)
     
 ### Section 2: processing WIC tabular data 
     
+    # table for all buffers processing 
     output_all_buffers <- inner_join(wic_smps, wic_conphase, by=c("phase_lookup_uid"="wic_uid"))%>%
       select(-phase_lookup_uid,-wic_smps_uid) %>%
       inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>%
@@ -107,70 +126,103 @@
     
     output_all_buffers[,"dist_ft"] <- format(round(output_all_buffers[,"dist_ft"], 2), nsmall = 2)
     
+    # download table for all buffers processing 
     output_all_buffers_dl <- output_all_buffers
     output_all_buffers_dl$smp_id<- shQuote(output_all_buffers$smp_id)
     output_all_buffers_dl$system_id<- shQuote(output_all_buffers$system_id)
     data <- output_all_buffers %>% 
       select(system_id) %>%
       distinct()
-    
+    # vector  of all systems ids with wics 
     names(data) <- "SYSTEM ID"
+    # vector of all used buffers
     buffer <- c(25,50,100)
+    
+    # final name processing, order of columns for both the output and download tables
     names(output_all_buffers) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)")
     names(output_all_buffers_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)")
     output_all_buffers <- output_all_buffers[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Comments")]
     output_all_buffers_dl <- output_all_buffers_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Comments")]
     
-### Section 3: Shiny work
-
-  ui <- dashboardPage(skin = 'blue',
-                      dashboardHeader(title = "Water in Cellar (WIC) Complaints", titleWidth = 500),
-                      dashboardSidebar( 
-                        fluidRow(
-                          column(12,
-                                 box(title = ' Total Number of WICs per SMP System (buffer 25 ft) ', width = 14, height = 40, background = "light-blue",solidHeader = TRUE)
-                                )
-                                ),
-                        dateInput('date',label = 'Starting Date',value = "2012-06-06", width = 200
-                                 ),
-                         reactableOutput("table_stats"),
-                                            width = 500),
-                      dashboardBody(
-                        fluidRow(
-                                 leafletOutput("map",width = "100%" ,height = "600")
-                                ),
-                        fluidRow(
-                          column(6,
-                                 selectizeInput(
-                                   'system_id', label = 'System ID', choices = data, selected = "555-3",
-                                   options = list(maxOptions = 5),width = 900
-                                 )
-                          ),
-                          column(6,
-                                 selectizeInput(
-                                   'buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 100,
-                                   options = list(maxOptions = 3), width = 900
-                                 )
-                                 
-                          )
-                        ),
-                        fluidRow(
-                          reactableOutput("table_wic")
-                        ),
-                        fluidRow(
-                          downloadButton("table_wic_dl","Download Table in .CSV"
-                          )
-                        )
-                      )
-                     )
+### Section 3: Shiny work starts here
+# 
+#   ui <- dashboardPage(skin = 'blue',
+#                       dashboardHeader(title = "Water in Cellar (WIC) Complaints", titleWidth = 500),
+#                       dashboardSidebar( 
+#                         fluidRow(
+#                           column(12,
+#                                  box(title = ' Total Number of WICs per SMP System (buffer 25 ft) ', width = 14, height = 40, background = "light-blue",solidHeader = TRUE)
+#                                 )
+#                                 ),
+#                         dateInput('date',label = 'Starting Date',value = "2012-06-06", width = 200
+#                                  ),
+#                          reactableOutput("table_stats"),
+#                                             width = 500),
+#                       dashboardBody(
+#                         fluidRow(
+#                                  leafletOutput("map",width = "100%" ,height = "550")
+#                                 ),
+#                         fluidRow(
+#                           column(6,
+#                                  selectizeInput(
+#                                    'system_id', label = 'System ID', choices = data, selected = "555-3",
+#                                    options = list(maxOptions = 5),width = 900
+#                                  )
+#                           ),
+#                           column(6,
+#                                  selectizeInput(
+#                                    'buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 100,
+#                                    options = list(maxOptions = 3), width = 900
+#                                  )
+#                                  
+#                           )
+#                         ),
+#                         fluidRow(
+#                           reactableOutput("table_wic")
+#                         ),
+#                         fluidRow(
+#                           downloadButton("table_wic_dl","Download Table in .CSV"
+#                           )
+#                         )
+#                       )
+#                      )
   
+    ui <- fluidPage(
+      navbarPage(
+        "Water in Cellar (WIC) Complaints",
+        tabPanel(
+          "WIC",
+          fluidRow(
+            column(6, 
+                   fluidRow(
+                     column(6, selectizeInput('system_id', label = 'System ID', choices = data, selected = "555-3", options = list(maxOptions = 5),width = 500)),
+                     column(6, selectizeInput('buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 100, options = list(maxOptions = 3), width = 500))),
+                   reactableOutput("table_wic")
+                   ),
+            column(6, leafletOutput("map",width = "100%" ,height = "770"))
+                      )
+          
+        ),
+        tabPanel(
+          "Totalizer",
+          fluidRow(
+          column(12,
+          box(title = ' Total Number of WICs per SMP System (buffer 25 ft) ', width = 14, height = 40, background = "light-blue",solidHeader = TRUE))),
+          dateInput('date',label = 'Starting Date',value = "2012-06-06", width = 200),
+          reactableOutput("table_stats"),
+          downloadButton("table_wic_dl","Download Table in .CSV")
+          
+        )
+      )
+    )
+
   server <- function(input, output) {
     
     #Populate reactive stat table
     reactive_stats <- reactive({
       
       
-      
+      # grouping to get headcounts
       output_stat <- output_all_buffers %>%
         filter(Buffer_ft==25 & `Complaint Date` >= as.character(input$date))%>%
         select(`System ID`,`Construction Phase`, `Work Order ID`) %>% 
@@ -179,21 +231,27 @@
         group_by(`System ID`, `Construction Phase` )%>% 
         summarise(count = n())
       
+      # a message that no wic are to be shown 
       if (nrow(output_stat)==0) {
         validate("There is No WIC to Show for the Selectd Starting Date")
       }
       
-      
+      # transposing to the right format
       output_stat <- output_stat %>%
         pivot_wider(names_from = `Construction Phase`, values_from = count)
       output_stat <- as.data.frame(output_stat)
+      # replace NA with zero
       output_stat[is.na(output_stat)] <- 0
+      # renaming 
       vec_name <- c("System ID","pre-construction","during construction","post-construction","unknown","Total")
+      # replace NA with zero
       output_stat[vec_name[!(vec_name %in% colnames(output_stat))]] = 0
       output_stat <- output_stat[,vec_name]
       names(output_stat)<- c("System ID","Pre-Con","During-Con","Post-Con","Unknown","Total")
+      # summing up for the total row
       output_stat$Total <- output_stat$`Pre-Con`+ output_stat$`During-Con`+ output_stat$`Post-Con`+output_stat$Unknown
-      output_stat <- output_stat %>% mutate(across(.cols=2:6, .fns=as.integer))
+      output_stat <- output_stat %>% 
+        mutate(across(.cols=2:6, .fns=as.integer))
       output_stat <- output_stat[order(output_stat$Total, decreasing = TRUE), ]
       
       
@@ -236,9 +294,10 @@
     output$table_wic <- renderReactable({
       reactable(filter(output_all_buffers, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`, Comments)%>% distinct(),
                 searchable = FALSE,
+                defaultPageSize = 25,
                 pagination = TRUE,
                 showPageSizeOptions = TRUE,
-                height = 350,
+                height = 770,
                 striped = TRUE,
                 fullWidth = TRUE,
                 filterable = FALSE,
@@ -329,3 +388,5 @@
   }
   
   shinyApp(ui, server)
+  
+  

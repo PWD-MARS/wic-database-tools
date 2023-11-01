@@ -16,6 +16,8 @@
     library(tidyr)
     library(shinydashboard)
     library(tippy)
+    #shinyjs() to use easy java script functions
+    library(shinyjs)
     #Creating a function to show comments in the table with hovering mouse
     render.reactable.cell.with.tippy <- function(text, tooltip){
       div(
@@ -193,24 +195,24 @@
         tabPanel(
           "WIC",
           fluidRow(
-            column(6, 
+            column(7, 
                    fluidRow(
                      column(6, selectizeInput('system_id', label = 'System ID', choices = data, selected = "555-3", options = list(maxOptions = 5),width = 500)),
                      column(6, selectizeInput('buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 100, options = list(maxOptions = 3), width = 500))),
                    reactableOutput("table_wic")
                    ),
-            column(6, leafletOutput("map",width = "100%" ,height = "830"))
+            column(5, leafletOutput("map",width = "100%" ,height = "830"))
                       )
           
         ),
         tabPanel(
           "Totalizer",
-          fluidRow(
-          column(12,
-          box(title = ' Total Number of WICs per SMP System (buffer 25 ft) ', width = 14, height = 40, background = "light-blue",solidHeader = TRUE))),
-          dateInput('date',label = 'Starting Date',value = "2012-06-06", width = 200),
-          reactableOutput("table_stats"),
-          downloadButton("table_wic_dl","Download Table in .CSV")
+        fluidRow(column(5, box(title = ' Total Number of WICs per SMP System (buffer 25 ft) ', width = 14, height = 40, background = "light-blue",solidHeader = TRUE),
+                        dateInput('date',label = 'Starting Date',value = "2012-06-06", width = 200),
+                        reactableOutput("table_stats", width = 630)),
+                 column(7, box(title = ' Release Notes', width = 14, height = 40, background = "light-blue",solidHeader = TRUE),
+                        h4('10/25/2023: The outline changed into two tabs, giving more space to the WIC table and the map')))
+          #downloadButton("table_wic_dl","Download Table in .CSV")
           
         )
       )
@@ -262,37 +264,29 @@
     output$table_stats <- renderReactable(reactable(reactive_stats(),
                                                     searchable = FALSE,
                                                     pagination = FALSE,
-                                                    height = 930,
                                                     striped = TRUE,
                                                     filterable = FALSE, 
                                                     fullWidth = TRUE,
                                                     columns = list(
-                                                      `System ID` = colDef(width = 85),
-                                                      `Pre-Con` = colDef(width = 75),
-                                                      `During-Con` = colDef(width = 85),
-                                                      `Post-Con` = colDef(width = 75),
-                                                       Unknown = colDef(width = 75),
-                                                       Total = colDef(width = 75)
+                                                      `System ID` = colDef(width = 100),
+                                                      `Pre-Con` = colDef(width = 100),
+                                                      `During-Con` = colDef(width = 100),
+                                                      `Post-Con` = colDef(width = 100),
+                                                       Unknown = colDef(width = 100),
+                                                       Total = colDef(width = 100)
                                                       
                                                       
-                                                                  ),
-                                                    theme = reactableTheme(
-                                                                            color = "hsl(233, 9%, 87%)",
-                                                                            backgroundColor = "hsl(233, 9%, 19%)",
-                                                                            borderColor = "hsl(233, 9%, 22%)",
-                                                                            stripedColor = "hsl(233, 12%, 22%)",
-                                                                            highlightColor = "hsl(233, 12%, 24%)",
-                                                                            inputStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
-                                                                            selectStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
-                                                                            pageButtonHoverStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
-                                                                            pageButtonActiveStyle = list(backgroundColor = "hsl(233, 9%, 28%)")
-                                                                          )
-                                                    )
-                                          )
+                                                                  )
+                                          ))
+    
+    table_wic_rv <- reactive(output_all_buffers %>%
+                               filter(`System ID` == input$system_id & Buffer_ft == input$buffer) %>%
+                               select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`)%>% 
+                               distinct())
                                                                                                                                                                                                                            
     
     output$table_wic <- renderReactable({
-      reactable(filter(output_all_buffers, `System ID` == input$system_id & Buffer_ft == input$buffer) %>% select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`, Comments)%>% distinct(),
+      reactable(table_wic_rv(),
                 searchable = FALSE,
                 defaultPageSize = 25,
                 pagination = TRUE,
@@ -300,14 +294,34 @@
                 height = 770,
                 striped = TRUE,
                 fullWidth = TRUE,
+                selection = "single",
+                onClick = "select",
+                theme = reactableTheme(
+                  rowSelectedStyle = list(backgroundColor = "#ffe4cc", boxShadow = "inset 2px 0 0 0 #ffa62d")
+                ),
+                selectionId = "row_selected",
                 filterable = FALSE,
                 columns = list(
-                    Comments = colDef(
-                      html = TRUE,
-                      cell =  function(value, index, name) {
-                        render.reactable.cell.with.tippy(text = value, tooltip = value)}
-                    )
+                  `System ID` = colDef(width = 90),
+                  `Work Order ID` = colDef(width = 115),
+                  `Construction Phase` = colDef(width = 150),
+                  `Complaint Date` = colDef(width = 145),
+                   Address = colDef(width = 165),
+                  `Property Distance (ft)` = colDef(width = 165)
+                  
+                  
+                ),
+                details = function(index) {
+                  nested_notes <- wic_comments[wic_comments$workorder_id == table_wic_rv()$`Work Order ID`[index], ] %>%
+                    select(Comments = comments)
+                  htmltools::div(style = "padding: 1rem",
+                                 reactable(nested_notes, 
+                                           columns = list(
+                                             Comments = colDef(width = 800)
+                                           ), 
+                                           outlined = TRUE)
                   )
+                }
                 )
                 
                 
@@ -339,51 +353,163 @@
     
   
     
-    output$map <- renderLeaflet({
-      
-      
-      if (nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer))==0) {
-        validate("There is No WIC to Show for this Buffer Size")
-      }
-      
-      
-      map <- leaflet()%>%
-        addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
-        addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
-        addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
-                    label = paste("System ID:",input$system_id) , 
-                    color = "blue", 
-                    group = "SMP System") %>%
-        addPolygons(data = filter(parcel_all_spatial, system_id == input$system_id),
-                    group = "All Parcels within 25 ft",
-                    color = "green",
-                    label = paste(labels_address_all()[,],"")) %>%
-        addPolygons(data = filter(buidling_footprint_spatial, system_id == input$system_id & buffer_ft == input$buffer),
-                    label = labels_footprint()[,],
-                    color = "black",
-                    group = "Building Footprint") %>%
-        addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
-        hideGroup(c("All Parcels within 25 ft","Building Footprint"))%>%
-        ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
-        addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
-                    label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),
-                    group = "Parcels",
-                    color="red") %>%
-        addLegend(colors = c("blue","red","black","green"), 
-                  labels = c("System","WIC Property Line","WIC Building Footprint","All Property Lines (WIC/NON-WIC)")) %>%
-        addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
-                       polygonOptions = FALSE,
-                       circleOptions=FALSE,
-                       rectangleOptions=FALSE,
-                       markerOptions=FALSE,
-                       circleMarkerOptions= FALSE,
-                       editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions()) 
-                       
-        )
-      
-      return(map)
-      
-    }) 
+    # output$map <- renderLeaflet({
+    #   
+    #   
+    #   if (nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer))==0) {
+    #     validate("There is No WIC to Show for this Buffer Size")
+    #   }
+    #   
+    #   
+    #   map <- leaflet()%>%
+    #     addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
+    #     addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
+    #     addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
+    #                 label = paste("System ID:",input$system_id) , 
+    #                 color = "blue", 
+    #                 group = "SMP System") %>%
+    #     addPolygons(data = filter(parcel_all_spatial, system_id == input$system_id),
+    #                 group = "All Parcels within 25 ft",
+    #                 color = "green",
+    #                 label = paste(labels_address_all()[,],"")) %>%
+    #     addPolygons(data = filter(buidling_footprint_spatial, system_id == input$system_id & buffer_ft == input$buffer),
+    #                 label = labels_footprint()[,],
+    #                 color = "black",
+    #                 group = "Building Footprint") %>%
+    #     addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
+    #     hideGroup(c("All Parcels within 25 ft","Building Footprint"))%>%
+    #     ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
+    #     addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
+    #                 label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),
+    #                 group = "Parcels",
+    #                 color="red") %>%
+    #     addLegend(colors = c("blue","red","black","green"), 
+    #               labels = c("System","WIC Property Line","WIC Building Footprint","All Property Lines (WIC/NON-WIC)")) %>%
+    #     addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
+    #                    polygonOptions = FALSE,
+    #                    circleOptions=FALSE,
+    #                    rectangleOptions=FALSE,
+    #                    markerOptions=FALSE,
+    #                    circleMarkerOptions= FALSE,
+    #                    editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions()) 
+    #                    
+    #     )
+    #   
+    #   return(map)
+    #   
+    # }) 
+    
+    
+  
+### If a row is selected, the map will have an extra layer (the highlighted polygon in yellow)
+    observe({
+      if(length(input$row_selected) != 0){
+        
+        output$map <- renderLeaflet({
+          
+          
+          if (nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer))==0) {
+            validate("There is No WIC to Show for this Buffer Size")
+          }
+          
+          
+          map <- leaflet()%>%
+            addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
+            addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
+            addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
+                        label = paste("System ID:",input$system_id) , 
+                        color = "blue", 
+                        group = "SMP System") %>%
+            addPolygons(data = filter(parcel_all_spatial, system_id == input$system_id),
+                        group = "All Parcels within 25 ft",
+                        color = "green",
+                        label = paste(labels_address_all()[,],"")) %>%
+            addPolygons(data = filter(buidling_footprint_spatial, system_id == input$system_id & buffer_ft == input$buffer),
+                        label = labels_footprint()[,],
+                        color = "black",
+                        group = "Building Footprint") %>%
+            addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
+            hideGroup(c("All Parcels within 25 ft","Building Footprint"))%>%
+            ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
+            addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
+                        label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),
+                        group = "Parcels",
+                        color="red") %>%
+            addPolygons(data = filter(parcel_spatial, address == table_wic_rv()$Address[input$row_selected]),
+                        label = table_wic_rv()$Address[input$row_selected],
+                        color="yellow",
+                        group = "highlight",
+                        layerId = table_wic_rv()$Address[input$row_selected]) %>%
+            addLegend(colors = c("blue","red","black","green"), 
+                      labels = c("System","WIC Property Line","WIC Building Footprint","All Property Lines (WIC/NON-WIC)")) %>%
+            addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
+                           polygonOptions = FALSE,
+                           circleOptions=FALSE,
+                           rectangleOptions=FALSE,
+                           markerOptions=FALSE,
+                           circleMarkerOptions= FALSE,
+                           editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions()) 
+                           
+            )
+          
+          return(map)
+          
+        }) 
+
+      } else{
+        
+        output$map <- renderLeaflet({
+          
+          
+          if (nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer))==0) {
+            validate("There is No WIC to Show for this Buffer Size")
+          }
+          
+          
+          map <- leaflet()%>%
+            addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
+            addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
+            addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
+                        label = paste("System ID:",input$system_id) , 
+                        color = "blue", 
+                        group = "SMP System") %>%
+            addPolygons(data = filter(parcel_all_spatial, system_id == input$system_id),
+                        group = "All Parcels within 25 ft",
+                        color = "green",
+                        label = paste(labels_address_all()[,],"")) %>%
+            addPolygons(data = filter(buidling_footprint_spatial, system_id == input$system_id & buffer_ft == input$buffer),
+                        label = labels_footprint()[,],
+                        color = "black",
+                        group = "Building Footprint") %>%
+            addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
+            hideGroup(c("All Parcels within 25 ft","Building Footprint"))%>%
+            ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
+            addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
+                        label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),
+                        group = "Parcels",
+                        color="red") %>%
+            addLegend(colors = c("blue","red","black","green"), 
+                      labels = c("System","WIC Property Line","WIC Building Footprint","All Property Lines (WIC/NON-WIC)")) %>%
+            addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
+                           polygonOptions = FALSE,
+                           circleOptions=FALSE,
+                           rectangleOptions=FALSE,
+                           markerOptions=FALSE,
+                           circleMarkerOptions= FALSE,
+                           editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions()) 
+                           
+            )
+          
+          return(map)
+          
+        }) 
+        
+        }
+
+    }
+    )
+
+    
     
   }
   

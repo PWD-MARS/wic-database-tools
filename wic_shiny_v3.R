@@ -7,8 +7,10 @@
     library(DBI)
     library(odbc)
     library(dplyr)
+    library(tidyverse)
     library(shiny)
     library(reactable)
+    library(shinythemes)
     library(RPostgreSQL)
     library(sf)
     library(leaflet)
@@ -18,6 +20,9 @@
     library(tippy)
     #shinyjs() to use easy java script functions
     library(shinyjs)
+    #create negate of %in%
+    `%!in%` = Negate(`%in%`)
+    
     #Creating a function to show comments in the table with hovering mouse
     render.reactable.cell.with.tippy <- function(text, tooltip){
       div(
@@ -37,6 +42,39 @@
     #con <- dbConnect(odbc::odbc(), dsn = "mars_data_pg14", MaxLongVarcharSize = 8190  )
     #con <- dbConnect(RPostgres::Postgres(), dbname = "mars_data", host="PWDOOWSDBS.pwd.phila.local" , port="5434", user="mars_admin", password="lepton-gossip-underreact-polo-chair")
     
+    # get the unmonitored SMP list
+    unmonitored_smp_view_postcon_on <- dbGetQuery(con, "SELECT * FROM fieldwork.viw_unmonitored_postcon_on")
+    
+    #processing unmonitored smps
+    smpbdv_df <- dbGetQuery(con,"SELECT distinct system_id, smp_id FROM external.tbl_smpbdv")
+    inlets <- dbGetQuery(con, " SELECT admin.fun_component_to_smp(i.component_id) AS smp_id, admin.fun_smp_to_system(admin.fun_component_to_smp(i.component_id)) AS system_id, * FROM external.tbl_gswiinlet i
+  WHERE i.component_id IS NOT NULL AND i.component_id NOT like '%-53-%' AND lifecycle_status != 'REM' AND plug_status != 'NA'
+  ORDER BY (admin.fun_component_to_smp(i.component_id));") %>%
+      select(system_id, component_id, plug_status) %>%
+      distinct()
+    
+    # get the list of system with eligible inlet critera_table 4 encompasses all-no inlet or at least one online:
+    eligble_inlet <- unmonitored_smp_view_postcon_on %>%
+      left_join(inlets, by = "system_id") %>%
+      filter(plug_status == "ONLINE" | is.na(plug_status)) %>%
+      dplyr::select(system_id) %>%
+      distinct()
+    
+    #systems in which all smps are NOT available
+    system_with_null_smps <- smpbdv_df %>%
+      left_join(unmonitored_smp_view_postcon_on, by = c("system_id","smp_id"), multiple = "all") %>%
+      filter(is.na(smp_type)) %>%
+      select(system_id) %>%
+      distinct() 
+    
+    
+    unmonitored_list <- unmonitored_smp_view_postcon_on %>%
+      filter(system_id %in% eligble_inlet$system_id) %>%
+      anti_join(system_with_null_smps, by = "system_id") %>%
+      dplyr::select(system_id) %>%
+      distinct()
+    
+    
     # work orders
     wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_workorders ")
     # comments
@@ -53,6 +91,19 @@
     parcel <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_parcels_wkt")
     # all sourounding parcels within 25ft polygons in wkt
     parcel_all <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_all_parcels_wkt")
+    
+    # get all smps in Philadelphia
+    smp_all <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_all_smp_wkt")
+    
+    
+    ## highlight keywords such as STORM, RAIN, GSI
+    wic_comments <- wic_comments  %>% mutate(Keywords = paste(ifelse(str_detect(wic_comments$comments, fixed("STORM")), "STORM", ""),
+                                                    ifelse(str_detect(wic_comments$comments, fixed("RAIN")), "RAIN", ""), 
+                                                    ifelse(str_detect(wic_comments$comments, fixed("GSI")), "GSI", ""),
+                                                    sep = " "))
+    
+    
+    
     # Buildings footprints in wkt
     buidling_footprint <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_buildingfootprint_wkt")
     
@@ -62,12 +113,19 @@
     # wkt to SF in CRS = 4326
     smp_sf <- st_as_sfc(smp[,"wkt"], CRS = 4326)
     parcel_sf <- st_as_sfc(parcel[,"wkt"], crs = 4326)
+    smp_all_sf <- st_as_sfc(smp_all[,"wkt"], crs = 4326)
     
     # attaching the smp_ids and setting crs
     smp_ids <- smp %>% select(smp_id)
+    smp_ids_all <- smp_all %>% select(smp_id)
+    
     smp_spatial <- bind_cols(smp_ids, smp_sf)
     smp_spatial <- st_as_sf(smp_spatial)
     st_crs(smp_spatial) <- 4326
+    
+    smp_all_spatial <- bind_cols(smp_ids_all, smp_all_sf)
+    smp_all_spatial <- st_as_sf(smp_all_spatial)
+    st_crs(smp_all_spatial) <- 4326
     
     # attaching the address to parcels and setting crs
     parcel_address <- parcel %>% select(-wkt)
@@ -191,7 +249,7 @@
   
     ui <- fluidPage(
       navbarPage(
-        "Water in Cellar (WIC) Complaints",
+        "Water in Cellar (WIC) Complaints", #theme = shinytheme("cerulean"),
         tabPanel(
           "WIC",
           fluidRow(
@@ -281,7 +339,9 @@
     
     table_wic_rv <- reactive(output_all_buffers %>%
                                filter(`System ID` == input$system_id & Buffer_ft == input$buffer) %>%
-                               select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`)%>% 
+                               mutate("Eligible for Monitoring?" =  case_when(`System ID` %in% unmonitored_list$system_id ~ "Yes",
+                                                                              `System ID` %!in% unmonitored_list$system_id ~ "No")) %>%
+                               select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`, `Eligible for Monitoring?`)%>% 
                                distinct())
                                                                                                                                                                                                                            
     
@@ -313,11 +373,12 @@
                 ),
                 details = function(index) {
                   nested_notes <- wic_comments[wic_comments$workorder_id == table_wic_rv()$`Work Order ID`[index], ] %>%
-                    select(Comments = comments)
+                    select(Comments = comments,  Keywords)
                   htmltools::div(style = "padding: 1rem",
                                  reactable(nested_notes, 
                                            columns = list(
-                                             Comments = colDef(width = 800)
+                                             Comments = colDef(width = 800),
+                                             Keywords = colDef(width = 200)
                                            ), 
                                            outlined = TRUE)
                   )
@@ -413,6 +474,11 @@
           }
           
           
+          bounds <- reactive(smp_spatial %>% 
+                               filter(system_id == input$system_id) %>%
+                               st_bbox() %>% 
+                               as.character())
+          
           map <- leaflet()%>%
             addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
             addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
@@ -428,8 +494,13 @@
                         label = labels_footprint()[,],
                         color = "black",
                         group = "Building Footprint") %>%
-            addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
-            hideGroup(c("All Parcels within 25 ft","Building Footprint"))%>%
+            addPolygons(data= smp_all_spatial,
+                        label = paste("SMP ID:", smp_all_spatial$smp_id) , 
+                        color = "purple", 
+                        group = "All SMP") %>%
+            fitBounds(bounds()[1], bounds()[2], bounds()[3], bounds()[4]) %>%
+            addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint", "All SMP"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
+            hideGroup(c("All Parcels within 25 ft","Building Footprint", "All SMP"))%>%
             ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
             addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
                         label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),
@@ -466,6 +537,11 @@
           }
           
           
+          bounds <- reactive(smp_spatial %>% 
+                               filter(system_id == input$system_id) %>%
+                               st_bbox() %>% 
+                               as.character())
+          
           map <- leaflet()%>%
             addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
             addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
@@ -481,8 +557,13 @@
                         label = labels_footprint()[,],
                         color = "black",
                         group = "Building Footprint") %>%
-            addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
-            hideGroup(c("All Parcels within 25 ft","Building Footprint"))%>%
+            addPolygons(data= smp_all_spatial,
+                        label = paste("SMP ID:", smp_all_spatial$smp_id) , 
+                        color = "purple", 
+                        group = "All SMP") %>%
+            fitBounds(bounds()[1], bounds()[2], bounds()[3], bounds()[4]) %>%
+            addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint", "All SMP"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
+            hideGroup(c("All Parcels within 25 ft","Building Footprint", "All SMP"))%>%
             ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
             addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
                         label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),

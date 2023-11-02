@@ -179,7 +179,7 @@
       select(-phase_lookup_uid,-wic_smps_uid) %>%
       inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>%
       inner_join(wic_comments, by="workorder_id")%>%
-      select(-wic_parcels_uid,-wic_facility_id, -wic_comments_uid) 
+      select(-wic_parcels_uid,-wic_facility_id, -wic_comments_uid, -Keywords) 
     
     output_all_buffers <- output_all_buffers %>%
       inner_join(distance_sys, by=c("system_id"="system_id","location"="address"))

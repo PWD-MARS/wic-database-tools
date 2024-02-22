@@ -17,6 +17,7 @@
     library(leaflet.extras)
     library(tidyr)
     library(shinydashboard)
+    library(shinyWidgets)
     library(tippy)
     #shinyjs() to use easy java script functions
     library(shinyjs)
@@ -249,7 +250,7 @@
   
     ui <- fluidPage(
       navbarPage(
-        "Water in Cellar (WIC) Complaints", #theme = shinytheme("cerulean"),
+        "MARS Water in Cellar (WIC) Complaints", theme = shinytheme("cerulean"),
         tabPanel(
           "WIC",
           fluidRow(
@@ -259,7 +260,7 @@
                      column(6, selectizeInput('buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 100, options = list(maxOptions = 3), width = 500))),
                    reactableOutput("table_wic")
                    ),
-            column(5, leafletOutput("map",width = "100%" ,height = "830"))
+            column(5,leafletOutput("map",width = "100%" ,height = "830"))
                       )
           
         ),
@@ -268,8 +269,16 @@
         fluidRow(column(5, box(title = ' Total Number of WICs per SMP System (buffer 25 ft) ', width = 14, height = 40, background = "light-blue",solidHeader = TRUE),
                         dateInput('date',label = 'Starting Date',value = "2012-06-06", width = 200),
                         reactableOutput("table_stats", width = 630)),
-                 column(7, box(title = ' Release Notes', width = 14, height = 40, background = "light-blue",solidHeader = TRUE),
-                        h4('10/25/2023: The outline changed into two tabs, giving more space to the WIC table and the map')))
+                 column(7, box(title = ' Release Notes by Farshad Ebrahimi (Farshad.Ebrahimi@Phila.Gov)', width = 14, height = 40, background = "light-blue",solidHeader = TRUE),
+                        h3('WIC App v.3.0.0, 11/02/2023:'),
+                        h5("1.	Added “Eligible for Monitoring” column to the WIC app to show if the system is in the unmonitored smp app list"),
+                        h5("2.  The adjacent GSI systems have been incorporated  into the map as “All SMP” layer that can be shown through the top right menu of the map (default: hidden)"),
+                        h5("3.	Comment section became an arrow (nested table) that expands if the user clicks"),
+                        h5("4.	Highlighting keywords such as RAIN, STORMWATER, GSI can help sort out the systems: I added “Keywords” column in the nested table, if empty, no keywords detected "),
+                        h5("5.	Changed the columns width so that all columns have appropriate space (system id should be narrow, address line wider) "),
+                        h5("6.	Clicking on the table rows should highlight the map polygon in yellow"),
+                        h5("7.	At %100 browser zoom level, all components of the app (totalizer, map, and table) are reasonably visible and there is not a need to scroll to see things. "),
+                        h5("8.	Totalizer and versioning comments are now under a new tab (“Totalizer”).")))
           #downloadButton("table_wic_dl","Download Table in .CSV")
           
         )

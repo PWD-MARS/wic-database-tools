@@ -40,9 +40,7 @@
 
     #Gather the data from the database
     con <- dbConnect(odbc::odbc(), dsn = "mars14_datav2", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"), MaxLongVarcharSize = 8190  )
-    #con <- dbConnect(odbc::odbc(), dsn = "mars_data_pg14", MaxLongVarcharSize = 8190  )
-    #con <- dbConnect(RPostgres::Postgres(), dbname = "mars_data", host="PWDOOWSDBS.pwd.phila.local" , port="5434", user="mars_admin", password="lepton-gossip-underreact-polo-chair")
-    
+
     # get the unmonitored SMP list
     unmonitored_smp_view_postcon_on <- dbGetQuery(con, "SELECT * FROM fieldwork.viw_unmonitored_postcon_on")
     
@@ -204,49 +202,7 @@
     names(output_all_buffers_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)")
     output_all_buffers <- output_all_buffers[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Comments")]
     output_all_buffers_dl <- output_all_buffers_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Comments")]
-    
-### Section 3: Shiny work starts here
-# 
-#   ui <- dashboardPage(skin = 'blue',
-#                       dashboardHeader(title = "Water in Cellar (WIC) Complaints", titleWidth = 500),
-#                       dashboardSidebar( 
-#                         fluidRow(
-#                           column(12,
-#                                  box(title = ' Total Number of WICs per SMP System (buffer 25 ft) ', width = 14, height = 40, background = "light-blue",solidHeader = TRUE)
-#                                 )
-#                                 ),
-#                         dateInput('date',label = 'Starting Date',value = "2012-06-06", width = 200
-#                                  ),
-#                          reactableOutput("table_stats"),
-#                                             width = 500),
-#                       dashboardBody(
-#                         fluidRow(
-#                                  leafletOutput("map",width = "100%" ,height = "550")
-#                                 ),
-#                         fluidRow(
-#                           column(6,
-#                                  selectizeInput(
-#                                    'system_id', label = 'System ID', choices = data, selected = "555-3",
-#                                    options = list(maxOptions = 5),width = 900
-#                                  )
-#                           ),
-#                           column(6,
-#                                  selectizeInput(
-#                                    'buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 100,
-#                                    options = list(maxOptions = 3), width = 900
-#                                  )
-#                                  
-#                           )
-#                         ),
-#                         fluidRow(
-#                           reactableOutput("table_wic")
-#                         ),
-#                         fluidRow(
-#                           downloadButton("table_wic_dl","Download Table in .CSV"
-#                           )
-#                         )
-#                       )
-#                      )
+
   
     ui <- fluidPage(
       navbarPage(
@@ -421,56 +377,7 @@
       return( filter(buidling_footprint, system_id == input$system_id & buffer_ft == input$buffer) %>% select(address))
     })
     
-  
-    
-    # output$map <- renderLeaflet({
-    #   
-    #   
-    #   if (nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer))==0) {
-    #     validate("There is No WIC to Show for this Buffer Size")
-    #   }
-    #   
-    #   
-    #   map <- leaflet()%>%
-    #     addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
-    #     addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
-    #     addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
-    #                 label = paste("System ID:",input$system_id) , 
-    #                 color = "blue", 
-    #                 group = "SMP System") %>%
-    #     addPolygons(data = filter(parcel_all_spatial, system_id == input$system_id),
-    #                 group = "All Parcels within 25 ft",
-    #                 color = "green",
-    #                 label = paste(labels_address_all()[,],"")) %>%
-    #     addPolygons(data = filter(buidling_footprint_spatial, system_id == input$system_id & buffer_ft == input$buffer),
-    #                 label = labels_footprint()[,],
-    #                 color = "black",
-    #                 group = "Building Footprint") %>%
-    #     addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
-    #     hideGroup(c("All Parcels within 25 ft","Building Footprint"))%>%
-    #     ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
-    #     addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
-    #                 label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),
-    #                 group = "Parcels",
-    #                 color="red") %>%
-    #     addLegend(colors = c("blue","red","black","green"), 
-    #               labels = c("System","WIC Property Line","WIC Building Footprint","All Property Lines (WIC/NON-WIC)")) %>%
-    #     addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
-    #                    polygonOptions = FALSE,
-    #                    circleOptions=FALSE,
-    #                    rectangleOptions=FALSE,
-    #                    markerOptions=FALSE,
-    #                    circleMarkerOptions= FALSE,
-    #                    editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions()) 
-    #                    
-    #     )
-    #   
-    #   return(map)
-    #   
-    # }) 
-    
-    
-  
+
 ### If a row is selected, the map will have an extra layer (the highlighted polygon in yellow)
     observe({
       if(length(input$row_selected) != 0){

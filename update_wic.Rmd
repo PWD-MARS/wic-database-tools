@@ -4,7 +4,7 @@ author: "Farshad Ebrahimi"
 date: "`r lubridate::now()`"
 output: html_document
 params:
-  database: mars14_data
+  database: mars14_datav2
   write: TRUE
 ---
 
@@ -25,7 +25,7 @@ params:
   library(lubridate)
   library(knitr)
 
-  MARSDB_con <- dbConnect(odbc(), dsn = params$database)
+  MARSDB_con <- dbConnect(odbc(), dsn = params$database, uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd") )
   cityworksDB_con <- dbConnect(odbc(),
                   Driver = "ODBC Driver 17 for SQL Server",
                   Server = "PWDCWSQLP",

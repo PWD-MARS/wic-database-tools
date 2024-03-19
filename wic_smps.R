@@ -55,6 +55,8 @@
       
       treetrench <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWITREETRENCH", quiet = TRUE))
       
+      tree <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWITree", quiet = TRUE))
+      
       trench <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWITRENCH", quiet = TRUE)) 
       
       wetland <- suppressWarnings(st_read(dsn_infra_pub, "gisad.GSWIWETLAND", quiet = TRUE))
@@ -133,6 +135,9 @@
       
       treetrench <- treetrench %>% select(SMP_ID)
       
+      tree <- tree %>% select(SMP_ID)
+      
+      
       trench<- trench %>% select(SMP_ID)
       
       wetland <- wetland %>% select(SMP_ID)
@@ -141,7 +146,7 @@
       
      # SMP <- bind_rows(basin, blueroof, bumpout, cistern, drainagewell, greenroof, permeablepavement, planter, raingarden, swale, treetrench, trench, wetland)
         
-      SMP <- bind_rows(basin, blueroof, bumpout, cistern, greenroof, permeablepavement, planter, raingarden, swale, treetrench, trench, wetland)
+      SMP <- bind_rows(basin,tree, blueroof, bumpout, cistern, greenroof, permeablepavement, planter, raingarden, swale, treetrench, trench, wetland)
       
       
   # filter SMPs to non-private ones

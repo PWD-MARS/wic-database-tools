@@ -189,7 +189,7 @@
     output_all_buffers_dl <- output_all_buffers
     output_all_buffers_dl$smp_id<- shQuote(output_all_buffers$smp_id)
     output_all_buffers_dl$system_id<- shQuote(output_all_buffers$system_id)
-    data <- output_all_buffers %>% 
+    data <- smpbdv_df %>% 
       select(system_id) %>%
       distinct()
     # vector  of all systems ids with wics 
@@ -212,7 +212,7 @@
           fluidRow(
             column(7, 
                    fluidRow(
-                     column(6, selectizeInput('system_id', label = 'System ID', choices = data, selected = "555-3", options = list(maxOptions = 5),width = 500)),
+                     column(6, selectizeInput('system_id', label = 'System ID', choices = data, selected = "555-3", width = 500)),
                      column(6, selectizeInput('buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 100, options = list(maxOptions = 3), width = 500))),
                    reactableOutput("table_wic")
                    ),

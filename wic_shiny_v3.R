@@ -41,39 +41,13 @@
     #Gather the data from the database
     con <- dbConnect(odbc::odbc(), dsn = "mars14_datav2", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"), MaxLongVarcharSize = 8190  )
 
-    # get the unmonitored SMP list
-    unmonitored_smp_view_postcon_on <- dbGetQuery(con, "SELECT * FROM fieldwork.viw_unmonitored_postcon_on")
+    # Get deployment table
+    deployments_list <- dbGetQuery(con, "SELECT *, admin.fun_smp_to_system(smp_id) as system_id FROM fieldwork.viw_deployment_full_cwl") %>%
+      select(system_id)
     
     #processing unmonitored smps
     smpbdv_df <- dbGetQuery(con,"SELECT distinct system_id, smp_id FROM external.tbl_smpbdv")
-    inlets <- dbGetQuery(con, " SELECT admin.fun_component_to_smp(i.component_id) AS smp_id, admin.fun_smp_to_system(admin.fun_component_to_smp(i.component_id)) AS system_id, * FROM external.tbl_gswiinlet i
-  WHERE i.component_id IS NOT NULL AND i.component_id NOT like '%-53-%' AND lifecycle_status != 'REM' AND plug_status != 'NA'
-  ORDER BY (admin.fun_component_to_smp(i.component_id));") %>%
-      select(system_id, component_id, plug_status) %>%
-      distinct()
-    
-    # get the list of system with eligible inlet critera_table 4 encompasses all-no inlet or at least one online:
-    eligble_inlet <- unmonitored_smp_view_postcon_on %>%
-      left_join(inlets, by = "system_id") %>%
-      filter(plug_status == "ONLINE" | is.na(plug_status)) %>%
-      dplyr::select(system_id) %>%
-      distinct()
-    
-    #systems in which all smps are NOT available
-    system_with_null_smps <- smpbdv_df %>%
-      left_join(unmonitored_smp_view_postcon_on, by = c("system_id","smp_id"), multiple = "all") %>%
-      filter(is.na(smp_type)) %>%
-      select(system_id) %>%
-      distinct() 
-    
-    
-    unmonitored_list <- unmonitored_smp_view_postcon_on %>%
-      filter(system_id %in% eligble_inlet$system_id) %>%
-      anti_join(system_with_null_smps, by = "system_id") %>%
-      dplyr::select(system_id) %>%
-      distinct()
-    
-    
+   
     # work orders
     wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_workorders ")
     # comments
@@ -189,9 +163,8 @@
     output_all_buffers_dl <- output_all_buffers
     output_all_buffers_dl$smp_id<- shQuote(output_all_buffers$smp_id)
     output_all_buffers_dl$system_id<- shQuote(output_all_buffers$system_id)
-    data <- smpbdv_df %>% 
-      select(system_id) %>%
-      distinct()
+    data <- odbc::dbGetQuery(con, paste0("select distinct system_id from external.mat_assets where system_id like '%-%'")) %>% 
+      dplyr::arrange(system_id)
     # vector  of all systems ids with wics 
     names(data) <- "SYSTEM ID"
     # vector of all used buffers
@@ -304,13 +277,19 @@
     
     table_wic_rv <- reactive(output_all_buffers %>%
                                filter(`System ID` == input$system_id & Buffer_ft == input$buffer) %>%
-                               mutate("Eligible for Monitoring?" =  case_when(`System ID` %in% unmonitored_list$system_id ~ "Yes",
-                                                                              `System ID` %!in% unmonitored_list$system_id ~ "No")) %>%
-                               select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`, `Eligible for Monitoring?`)%>% 
+                               mutate("Previously Monitored?" =  case_when(`System ID` %in% deployments_list$system_id ~ "Yes",
+                                                                              `System ID` %!in% deployments_list$system_id ~ "No")) %>%
+                               select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`, `Previously Monitored?`)%>% 
                                distinct())
                                                                                                                                                                                                                            
     
     output$table_wic <- renderReactable({
+      
+      if (nrow(filter(parcel_spatial, system_id == input$system_id)) != 0 & nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer)) == 0) {
+        validate("There is No WIC to Show within this Buffer Size, Expand the Buffer!")
+      } else if (nrow(filter(parcel_spatial, system_id == input$system_id)) == 0)  {
+        validate("There is No WIC within 100 ft to Show for this System ID")
+      }
       reactable(table_wic_rv(),
                 searchable = FALSE,
                 defaultPageSize = 25,
@@ -385,9 +364,22 @@
         output$map <- renderLeaflet({
           
           
-          if (nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer))==0) {
-            validate("There is No WIC to Show for this Buffer Size")
-          }
+          if (nrow(filter(parcel_spatial, system_id == input$system_id))== 0) {
+            validate("There is No WIC within 100 ft to Show for this System ID")
+          } else if (nrow(filter(parcel_spatial, system_id == input$system_id)) != 0 & nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer)) == 0) {
+            
+            map <- leaflet()%>%
+              addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>%
+              addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
+                          label = paste("System ID:",input$system_id) ,
+                          color = "blue",
+                          group = "SMP System")
+            
+            
+            
+            
+          } else {
+
           
           
           bounds <- reactive(smp_spatial %>% 
@@ -441,18 +433,33 @@
           
           return(map)
           
+          }  
         }) 
 
       } else{
         
         output$map <- renderLeaflet({
           
+          if (nrow(filter(parcel_spatial, system_id == input$system_id))== 0) {
+            validate("There is No WIC within 100 ft to Show for this System ID")
+          } else if (nrow(filter(parcel_spatial, system_id == input$system_id)) != 0 & nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer)) == 0) {
+            
+              map <- leaflet()%>%
+                addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>%
+                addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
+                            label = paste("System ID:",input$system_id) ,
+                            color = "blue",
+                            group = "SMP System")
+
+            
+            
+            
+          } else {
           
-          if (nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer))==0) {
-            validate("There is No WIC to Show for this Buffer Size")
-          }
-          
-          
+          # if (nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer))==0) {
+          #   validate("There is No WIC to Show for this Buffer Size")
+          # }
+
           bounds <- reactive(smp_spatial %>% 
                                filter(system_id == input$system_id) %>%
                                st_bbox() %>% 
@@ -499,6 +506,8 @@
           
           return(map)
           
+          
+          }  
         }) 
         
         }

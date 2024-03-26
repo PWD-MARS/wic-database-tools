@@ -110,6 +110,8 @@
     smp_spatial['system_id'] <- gsub('-\\d+$','',smp_spatial$smp_id) 
     parcel_spatial['system_id'] <- gsub('-\\d+$','',parcel_spatial$smp_id ) 
     parcel_address['system_id'] <- gsub('-\\d+$','',parcel_address$smp_id) 
+    smp_all_spatial['system_id'] <- gsub('-\\d+$','',smp_all_spatial$smp_id) 
+    
     
     # converting all sorounding parcels to SF
     parcel_all_sf <- st_as_sfc(parcel_all[,"wkt"], crs = 4326)
@@ -365,7 +367,14 @@
           
           
           if (nrow(filter(parcel_spatial, system_id == input$system_id))== 0) {
-            validate("There is No WIC within 100 ft to Show for this System ID")
+            #validate("There is No WIC within 100 ft to Show for this System ID")
+            map <- leaflet()%>%
+              addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>%
+              addPolygons(data=filter(smp_all_spatial, system_id == input$system_id ),
+                          label = paste("System ID:",input$system_id) ,
+                          color = "blue",
+                          group = "SMP System")
+            
           } else if (nrow(filter(parcel_spatial, system_id == input$system_id)) != 0 & nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer)) == 0) {
             
             map <- leaflet()%>%
@@ -441,7 +450,14 @@
         output$map <- renderLeaflet({
           
           if (nrow(filter(parcel_spatial, system_id == input$system_id))== 0) {
-            validate("There is No WIC within 100 ft to Show for this System ID")
+            #validate("There is No WIC within 100 ft to Show for this System ID")
+            map <- leaflet()%>%
+              addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>%
+              addPolygons(data=filter(smp_all_spatial, system_id == input$system_id ),
+                          label = paste("System ID:",input$system_id) ,
+                          color = "blue",
+                          group = "SMP System")
+            
           } else if (nrow(filter(parcel_spatial, system_id == input$system_id)) != 0 & nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer)) == 0) {
             
               map <- leaflet()%>%

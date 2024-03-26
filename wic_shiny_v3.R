@@ -373,7 +373,9 @@
               addPolygons(data=filter(smp_all_spatial, system_id == input$system_id ),
                           label = paste("System ID:",input$system_id) ,
                           color = "blue",
-                          group = "SMP System")
+                          group = "SMP System") %>%
+              addLegend(colors = "blue", 
+                        labels = "System")
             
           } else if (nrow(filter(parcel_spatial, system_id == input$system_id)) != 0 & nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer)) == 0) {
             
@@ -382,7 +384,9 @@
               addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
                           label = paste("System ID:",input$system_id) ,
                           color = "blue",
-                          group = "SMP System")
+                          group = "SMP System") %>%
+              addLegend(colors = "blue", 
+                        labels = "System")
             
             
             
@@ -456,7 +460,9 @@
               addPolygons(data=filter(smp_all_spatial, system_id == input$system_id ),
                           label = paste("System ID:",input$system_id) ,
                           color = "blue",
-                          group = "SMP System")
+                          group = "SMP System") %>%
+              addLegend(colors = "blue", 
+                        labels = "System")
             
           } else if (nrow(filter(parcel_spatial, system_id == input$system_id)) != 0 & nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer)) == 0) {
             
@@ -465,7 +471,9 @@
                 addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
                             label = paste("System ID:",input$system_id) ,
                             color = "blue",
-                            group = "SMP System")
+                            group = "SMP System") %>%
+                addLegend(colors = "blue", 
+                          labels = "System")
 
             
             

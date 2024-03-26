@@ -480,10 +480,6 @@
             
           } else {
           
-          # if (nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer))==0) {
-          #   validate("There is No WIC to Show for this Buffer Size")
-          # }
-
           bounds <- reactive(smp_spatial %>% 
                                filter(system_id == input$system_id) %>%
                                st_bbox() %>% 

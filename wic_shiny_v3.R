@@ -131,7 +131,7 @@
     buidling_footprint_spatial['system_id'] <- gsub('-\\d+$','',buidling_footprint_spatial$smp_id ) 
     buidling_footprint['system_id'] <- gsub('-\\d+$','',buidling_footprint$smp_id) 
     
-    #calculating distance from system; pick min distance of smp-wic parcel
+    #calculating property distance from system; pick min distance of smp-wic parcel
     distance_sys <- parcel_address %>%
       select(system_id,address, distance_ft) %>% 
       distinct()%>%
@@ -147,6 +147,16 @@
     # round the digits
     parcel_address[,"dist_ft"] <- format(round(parcel_address[,"dist_ft"], 2), nsmall = 2)
     
+    
+    
+    #calculating building footprint distance from system; pick min distance of smp-wic parcel
+    footprint_distance_sys <- buidling_footprint %>%
+      select(system_id, address, distance_footprint_ft) %>% 
+      distinct()%>%
+      group_by(system_id, address )%>% 
+      summarise(distance_bld_footprint_ft = min(distance_footprint_ft)) 
+    
+    
 ### Section 2: processing WIC tabular data 
     
     # table for all buffers processing 
@@ -157,9 +167,12 @@
       select(-wic_parcels_uid,-wic_facility_id, -wic_comments_uid, -Keywords) 
     
     output_all_buffers <- output_all_buffers %>%
-      inner_join(distance_sys, by=c("system_id"="system_id","location"="address"))
+      inner_join(distance_sys, by=c("system_id"="system_id","location"="address")) %>%
+      inner_join(footprint_distance_sys, by=c("system_id"="system_id","location"="address"))
     
     output_all_buffers[,"dist_ft"] <- format(round(output_all_buffers[,"dist_ft"], 2), nsmall = 2)
+    output_all_buffers[,"distance_bld_footprint_ft"] <- format(round(output_all_buffers[,"distance_bld_footprint_ft"], 2), nsmall = 2)
+    
     
     # download table for all buffers processing 
     output_all_buffers_dl <- output_all_buffers
@@ -173,10 +186,10 @@
     buffer <- c(25,50,100)
     
     # final name processing, order of columns for both the output and download tables
-    names(output_all_buffers) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)")
-    names(output_all_buffers_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)")
-    output_all_buffers <- output_all_buffers[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Comments")]
-    output_all_buffers_dl <- output_all_buffers_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Comments")]
+    names(output_all_buffers) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)","Buidling Footprint Distance (ft)")
+    names(output_all_buffers_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)","Buidling Footprint Distance (ft)")
+    output_all_buffers <- output_all_buffers[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Buidling Footprint Distance (ft)","Comments")]
+    output_all_buffers_dl <- output_all_buffers_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Buidling Footprint Distance (ft)","Comments")]
 
   
     ui <- fluidPage(
@@ -281,7 +294,7 @@
                                filter(`System ID` == input$system_id & Buffer_ft == input$buffer) %>%
                                mutate("Previously Monitored?" =  case_when(`System ID` %in% deployments_list$system_id ~ "Yes",
                                                                               `System ID` %!in% deployments_list$system_id ~ "No")) %>%
-                               select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`, `Previously Monitored?`)%>% 
+                               select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`,`Buidling Footprint Distance (ft)`, `Previously Monitored?`)%>% 
                                distinct())
                                                                                                                                                                                                                            
     

@@ -41,38 +41,12 @@ render.reactable.cell.with.tippy <- function(text, tooltip){
 #Gather the data from the database
 con <- dbConnect(odbc::odbc(), dsn = "mars14_datav2", uid = Sys.getenv("shiny_uid"), pwd = Sys.getenv("shiny_pwd"), MaxLongVarcharSize = 8190  )
 
-# get the unmonitored SMP list
-unmonitored_smp_view_postcon_on <- dbGetQuery(con, "SELECT * FROM fieldwork.viw_unmonitored_postcon_on")
+# Get deployment table
+deployments_list <- dbGetQuery(con, "SELECT *, admin.fun_smp_to_system(smp_id) as system_id FROM fieldwork.viw_deployment_full_cwl") %>%
+  select(system_id)
 
 #processing unmonitored smps
 smpbdv_df <- dbGetQuery(con,"SELECT distinct system_id, smp_id FROM external.tbl_smpbdv")
-inlets <- dbGetQuery(con, " SELECT admin.fun_component_to_smp(i.component_id) AS smp_id, admin.fun_smp_to_system(admin.fun_component_to_smp(i.component_id)) AS system_id, * FROM external.tbl_gswiinlet i
-  WHERE i.component_id IS NOT NULL AND i.component_id NOT like '%-53-%' AND lifecycle_status != 'REM' AND plug_status != 'NA'
-  ORDER BY (admin.fun_component_to_smp(i.component_id));") %>%
-  select(system_id, component_id, plug_status) %>%
-  distinct()
-
-# get the list of system with eligible inlet critera_table 4 encompasses all-no inlet or at least one online:
-eligble_inlet <- unmonitored_smp_view_postcon_on %>%
-  left_join(inlets, by = "system_id") %>%
-  filter(plug_status == "ONLINE" | is.na(plug_status)) %>%
-  dplyr::select(system_id) %>%
-  distinct()
-
-#systems in which all smps are NOT available
-system_with_null_smps <- smpbdv_df %>%
-  left_join(unmonitored_smp_view_postcon_on, by = c("system_id","smp_id"), multiple = "all") %>%
-  filter(is.na(smp_type)) %>%
-  select(system_id) %>%
-  distinct() 
-
-
-unmonitored_list <- unmonitored_smp_view_postcon_on %>%
-  filter(system_id %in% eligble_inlet$system_id) %>%
-  anti_join(system_with_null_smps, by = "system_id") %>%
-  dplyr::select(system_id) %>%
-  distinct()
-
 
 # work orders
 wic_workorders <- dbGetQuery(con, "SELECT * FROM fieldwork.tbl_wic_workorders ")
@@ -136,6 +110,8 @@ st_crs(parcel_spatial) <- 4326
 smp_spatial['system_id'] <- gsub('-\\d+$','',smp_spatial$smp_id) 
 parcel_spatial['system_id'] <- gsub('-\\d+$','',parcel_spatial$smp_id ) 
 parcel_address['system_id'] <- gsub('-\\d+$','',parcel_address$smp_id) 
+smp_all_spatial['system_id'] <- gsub('-\\d+$','',smp_all_spatial$smp_id) 
+
 
 # converting all sorounding parcels to SF
 parcel_all_sf <- st_as_sfc(parcel_all[,"wkt"], crs = 4326)
@@ -155,7 +131,7 @@ st_crs(buidling_footprint_spatial) <- 4326
 buidling_footprint_spatial['system_id'] <- gsub('-\\d+$','',buidling_footprint_spatial$smp_id ) 
 buidling_footprint['system_id'] <- gsub('-\\d+$','',buidling_footprint$smp_id) 
 
-#calculating distance from system; pick min distance of smp-wic parcel
+#calculating property distance from system; pick min distance of smp-wic parcel
 distance_sys <- parcel_address %>%
   select(system_id,address, distance_ft) %>% 
   distinct()%>%
@@ -171,6 +147,16 @@ parcel_address <- parcel_address %>%
 # round the digits
 parcel_address[,"dist_ft"] <- format(round(parcel_address[,"dist_ft"], 2), nsmall = 2)
 
+
+
+#calculating building footprint distance from system; pick min distance of smp-wic parcel
+footprint_distance_sys <- buidling_footprint %>%
+  select(system_id, address, distance_footprint_ft) %>% 
+  distinct()%>%
+  group_by(system_id, address )%>% 
+  summarise(distance_bld_footprint_ft = min(distance_footprint_ft)) 
+
+
 ### Section 2: processing WIC tabular data 
 
 # table for all buffers processing 
@@ -181,27 +167,29 @@ output_all_buffers <- inner_join(wic_smps, wic_conphase, by=c("phase_lookup_uid"
   select(-wic_parcels_uid,-wic_facility_id, -wic_comments_uid, -Keywords) 
 
 output_all_buffers <- output_all_buffers %>%
-  inner_join(distance_sys, by=c("system_id"="system_id","location"="address"))
+  inner_join(distance_sys, by=c("system_id"="system_id","location"="address")) %>%
+  inner_join(footprint_distance_sys, by=c("system_id"="system_id","location"="address"))
 
 output_all_buffers[,"dist_ft"] <- format(round(output_all_buffers[,"dist_ft"], 2), nsmall = 2)
+output_all_buffers[,"distance_bld_footprint_ft"] <- format(round(output_all_buffers[,"distance_bld_footprint_ft"], 2), nsmall = 2)
+
 
 # download table for all buffers processing 
 output_all_buffers_dl <- output_all_buffers
 output_all_buffers_dl$smp_id<- shQuote(output_all_buffers$smp_id)
 output_all_buffers_dl$system_id<- shQuote(output_all_buffers$system_id)
-data <- output_all_buffers %>% 
-  select(system_id) %>%
-  distinct()
+data <- odbc::dbGetQuery(con, paste0("select distinct system_id from external.mat_assets where system_id like '%-%'")) %>% 
+  dplyr::arrange(system_id)
 # vector  of all systems ids with wics 
 names(data) <- "SYSTEM ID"
 # vector of all used buffers
 buffer <- c(25,50,100)
 
 # final name processing, order of columns for both the output and download tables
-names(output_all_buffers) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)")
-names(output_all_buffers_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)")
-output_all_buffers <- output_all_buffers[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Comments")]
-output_all_buffers_dl <- output_all_buffers_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Comments")]
+names(output_all_buffers) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)","Buidling Footprint Distance (ft)")
+names(output_all_buffers_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)","Buidling Footprint Distance (ft)")
+output_all_buffers <- output_all_buffers[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Buidling Footprint Distance (ft)","Comments")]
+output_all_buffers_dl <- output_all_buffers_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Buidling Footprint Distance (ft)","Comments")]
 
 
 ui <- fluidPage(
@@ -212,11 +200,11 @@ ui <- fluidPage(
       fluidRow(
         column(7, 
                fluidRow(
-                 column(6, selectizeInput('system_id', label = 'System ID', choices = data, selected = "555-3", options = list(maxOptions = 5),width = 500)),
-                 column(6, selectizeInput('buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 100, options = list(maxOptions = 3), width = 500))),
+                 column(6, selectizeInput('system_id', label = 'System ID', choices = data, selected = "555-3", width = 500)),
+                 column(6, selectizeInput('buffer', label = 'Buffer Size from Property (ft)', choices = buffer,selected = 100, options = list(maxOptions = 3), width = 500))),
                reactableOutput("table_wic")
         ),
-        column(5,leafletOutput("map",width = "100%" ,height = "830"))
+        column(5,leafletOutput("map",width = "90%" ,height = "830"))
       )
       
     ),
@@ -304,13 +292,19 @@ server <- function(input, output) {
   
   table_wic_rv <- reactive(output_all_buffers %>%
                              filter(`System ID` == input$system_id & Buffer_ft == input$buffer) %>%
-                             mutate("Eligible for Monitoring?" =  case_when(`System ID` %in% unmonitored_list$system_id ~ "Yes",
-                                                                            `System ID` %!in% unmonitored_list$system_id ~ "No")) %>%
-                             select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`, `Eligible for Monitoring?`)%>% 
+                             mutate("Previously Monitored?" =  case_when(`System ID` %in% deployments_list$system_id ~ "Yes",
+                                                                         `System ID` %!in% deployments_list$system_id ~ "No")) %>%
+                             select(ID = `Work Order ID`, `Construction Phase`,Date = `Complaint Date`, Address,`Property Distance (ft)`,`Footprint Distance (ft)`=`Buidling Footprint Distance (ft)`, `Previously Monitored?`)%>% 
                              distinct())
   
   
   output$table_wic <- renderReactable({
+    
+    if (nrow(filter(parcel_spatial, system_id == input$system_id)) != 0 & nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer)) == 0) {
+      validate("There is No WIC to Show within this Buffer Size, Expand the Buffer!")
+    } else if (nrow(filter(parcel_spatial, system_id == input$system_id)) == 0)  {
+      validate("There is No WIC within 100 ft to Show for this System ID")
+    }
     reactable(table_wic_rv(),
               searchable = FALSE,
               defaultPageSize = 25,
@@ -327,12 +321,13 @@ server <- function(input, output) {
               selectionId = "row_selected",
               filterable = FALSE,
               columns = list(
-                `System ID` = colDef(width = 90),
-                `Work Order ID` = colDef(width = 115),
+                #`System ID` = colDef(width = 90),
+                ID = colDef(width = 75),
                 `Construction Phase` = colDef(width = 150),
-                `Complaint Date` = colDef(width = 145),
+                Date = colDef(width = 110),
                 Address = colDef(width = 165),
-                `Property Distance (ft)` = colDef(width = 165)
+                `Property Distance (ft)` = colDef(width = 165),
+                `Footprint Distance (ft)` = colDef(width = 170)
                 
                 
               ),
@@ -385,120 +380,168 @@ server <- function(input, output) {
       output$map <- renderLeaflet({
         
         
-        if (nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer))==0) {
-          validate("There is No WIC to Show for this Buffer Size")
-        }
-        
-        
-        bounds <- reactive(smp_spatial %>% 
-                             filter(system_id == input$system_id) %>%
-                             st_bbox() %>% 
-                             as.character())
-        
-        map <- leaflet()%>%
-          addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
-          addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
-          addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
-                      label = paste("System ID:",input$system_id) , 
-                      color = "blue", 
-                      group = "SMP System") %>%
-          addPolygons(data = filter(parcel_all_spatial, system_id == input$system_id),
-                      group = "All Parcels within 25 ft",
-                      color = "green",
-                      label = paste(labels_address_all()[,],"")) %>%
-          addPolygons(data = filter(buidling_footprint_spatial, system_id == input$system_id & buffer_ft == input$buffer),
-                      label = labels_footprint()[,],
-                      color = "black",
-                      group = "Building Footprint") %>%
-          addPolygons(data= smp_all_spatial,
-                      label = paste("SMP ID:", smp_all_spatial$smp_id) , 
-                      color = "purple", 
-                      group = "All SMP") %>%
-          fitBounds(bounds()[1], bounds()[2], bounds()[3], bounds()[4]) %>%
-          addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint", "All SMP"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
-          hideGroup(c("All Parcels within 25 ft","Building Footprint", "All SMP"))%>%
-          ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
-          addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
-                      label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),
-                      group = "Parcels",
-                      color="red") %>%
-          addPolygons(data = filter(parcel_spatial, address == table_wic_rv()$Address[input$row_selected]),
-                      label = table_wic_rv()$Address[input$row_selected],
-                      color="yellow",
-                      group = "highlight",
-                      layerId = table_wic_rv()$Address[input$row_selected]) %>%
-          addLegend(colors = c("blue","red","black","green"), 
-                    labels = c("System","WIC Property Line","WIC Building Footprint","All Property Lines (WIC/NON-WIC)")) %>%
-          addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
-                         polygonOptions = FALSE,
-                         circleOptions=FALSE,
-                         rectangleOptions=FALSE,
-                         markerOptions=FALSE,
-                         circleMarkerOptions= FALSE,
-                         editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions()) 
-                         
-          )
-        
-        return(map)
-        
+        if (nrow(filter(parcel_spatial, system_id == input$system_id))== 0) {
+          #validate("There is No WIC within 100 ft to Show for this System ID")
+          map <- leaflet()%>%
+            addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>%
+            addPolygons(data=filter(smp_all_spatial, system_id == input$system_id ),
+                        label = paste("System ID:",input$system_id) ,
+                        color = "blue",
+                        group = "SMP System") %>%
+            addLegend(colors = "blue", 
+                      labels = "System")
+          
+        } else if (nrow(filter(parcel_spatial, system_id == input$system_id)) != 0 & nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer)) == 0) {
+          
+          map <- leaflet()%>%
+            addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>%
+            addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
+                        label = paste("System ID:",input$system_id) ,
+                        color = "blue",
+                        group = "SMP System") %>%
+            addLegend(colors = "blue", 
+                      labels = "System")
+          
+          
+          
+          
+        } else {
+          
+          
+          
+          bounds <- reactive(smp_spatial %>% 
+                               filter(system_id == input$system_id) %>%
+                               st_bbox() %>% 
+                               as.character())
+          
+          map <- leaflet()%>%
+            addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
+            addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
+            addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
+                        label = paste("System ID:",input$system_id) , 
+                        color = "blue", 
+                        group = "SMP System") %>%
+            addPolygons(data = filter(parcel_all_spatial, system_id == input$system_id),
+                        group = "All Parcels within 25 ft",
+                        color = "green",
+                        label = paste(labels_address_all()[,],"")) %>%
+            addPolygons(data = filter(buidling_footprint_spatial, system_id == input$system_id & buffer_ft == input$buffer),
+                        label = labels_footprint()[,],
+                        color = "black",
+                        group = "Building Footprint") %>%
+            addPolygons(data= smp_all_spatial,
+                        label = paste("SMP ID:", smp_all_spatial$smp_id) , 
+                        color = "purple", 
+                        group = "All SMP") %>%
+            fitBounds(bounds()[1], bounds()[2], bounds()[3], bounds()[4]) %>%
+            addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint", "All SMP"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
+            hideGroup(c("All Parcels within 25 ft","Building Footprint", "All SMP"))%>%
+            ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
+            addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
+                        label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),
+                        group = "Parcels",
+                        color="red") %>%
+            addPolygons(data = filter(parcel_spatial, address == table_wic_rv()$Address[input$row_selected]),
+                        label = table_wic_rv()$Address[input$row_selected],
+                        color="yellow",
+                        group = "highlight",
+                        layerId = table_wic_rv()$Address[input$row_selected]) %>%
+            addLegend(colors = c("blue","red","black","green"), 
+                      labels = c("System","WIC Property Line","WIC Building Footprint","All Property Lines (WIC/NON-WIC)")) %>%
+            addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
+                           polygonOptions = FALSE,
+                           circleOptions=FALSE,
+                           rectangleOptions=FALSE,
+                           markerOptions=FALSE,
+                           circleMarkerOptions= FALSE,
+                           editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions()) 
+                           
+            )
+          
+          return(map)
+          
+        }  
       }) 
       
     } else{
       
       output$map <- renderLeaflet({
         
-        
-        if (nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer))==0) {
-          validate("There is No WIC to Show for this Buffer Size")
-        }
-        
-        
-        bounds <- reactive(smp_spatial %>% 
-                             filter(system_id == input$system_id) %>%
-                             st_bbox() %>% 
-                             as.character())
-        
-        map <- leaflet()%>%
-          addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
-          addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
-          addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
-                      label = paste("System ID:",input$system_id) , 
-                      color = "blue", 
-                      group = "SMP System") %>%
-          addPolygons(data = filter(parcel_all_spatial, system_id == input$system_id),
-                      group = "All Parcels within 25 ft",
-                      color = "green",
-                      label = paste(labels_address_all()[,],"")) %>%
-          addPolygons(data = filter(buidling_footprint_spatial, system_id == input$system_id & buffer_ft == input$buffer),
-                      label = labels_footprint()[,],
-                      color = "black",
-                      group = "Building Footprint") %>%
-          addPolygons(data= smp_all_spatial,
-                      label = paste("SMP ID:", smp_all_spatial$smp_id) , 
-                      color = "purple", 
-                      group = "All SMP") %>%
-          fitBounds(bounds()[1], bounds()[2], bounds()[3], bounds()[4]) %>%
-          addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint", "All SMP"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
-          hideGroup(c("All Parcels within 25 ft","Building Footprint", "All SMP"))%>%
-          ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
-          addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
-                      label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),
-                      group = "Parcels",
-                      color="red") %>%
-          addLegend(colors = c("blue","red","black","green"), 
-                    labels = c("System","WIC Property Line","WIC Building Footprint","All Property Lines (WIC/NON-WIC)")) %>%
-          addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
-                         polygonOptions = FALSE,
-                         circleOptions=FALSE,
-                         rectangleOptions=FALSE,
-                         markerOptions=FALSE,
-                         circleMarkerOptions= FALSE,
-                         editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions()) 
-                         
-          )
-        
-        return(map)
-        
+        if (nrow(filter(parcel_spatial, system_id == input$system_id))== 0) {
+          #validate("There is No WIC within 100 ft to Show for this System ID")
+          map <- leaflet()%>%
+            addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>%
+            addPolygons(data=filter(smp_all_spatial, system_id == input$system_id ),
+                        label = paste("System ID:",input$system_id) ,
+                        color = "blue",
+                        group = "SMP System") %>%
+            addLegend(colors = "blue", 
+                      labels = "System")
+          
+        } else if (nrow(filter(parcel_spatial, system_id == input$system_id)) != 0 & nrow(filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer)) == 0) {
+          
+          map <- leaflet()%>%
+            addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>%
+            addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
+                        label = paste("System ID:",input$system_id) ,
+                        color = "blue",
+                        group = "SMP System") %>%
+            addLegend(colors = "blue", 
+                      labels = "System")
+          
+          
+          
+          
+        } else {
+          
+          bounds <- reactive(smp_spatial %>% 
+                               filter(system_id == input$system_id) %>%
+                               st_bbox() %>% 
+                               as.character())
+          
+          map <- leaflet()%>%
+            addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
+            addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(minZoom = 16, maxZoom = 19)) %>% 
+            addPolygons(data=filter(smp_spatial, system_id == input$system_id ),
+                        label = paste("System ID:",input$system_id) , 
+                        color = "blue", 
+                        group = "SMP System") %>%
+            addPolygons(data = filter(parcel_all_spatial, system_id == input$system_id),
+                        group = "All Parcels within 25 ft",
+                        color = "green",
+                        label = paste(labels_address_all()[,],"")) %>%
+            addPolygons(data = filter(buidling_footprint_spatial, system_id == input$system_id & buffer_ft == input$buffer),
+                        label = labels_footprint()[,],
+                        color = "black",
+                        group = "Building Footprint") %>%
+            addPolygons(data= smp_all_spatial,
+                        label = paste("SMP ID:", smp_all_spatial$smp_id) , 
+                        color = "purple", 
+                        group = "All SMP") %>%
+            fitBounds(bounds()[1], bounds()[2], bounds()[3], bounds()[4]) %>%
+            addLayersControl(overlayGroups = c("All Parcels within 25 ft","Building Footprint", "All SMP"),baseGroups = c('OpenStreetMap', 'ESRI Satellite'))%>%
+            hideGroup(c("All Parcels within 25 ft","Building Footprint", "All SMP"))%>%
+            ## Had to do label = paste(labels_parcel()[,],""), the only way labels showed correctly 
+            addPolygons(data = filter(parcel_spatial, system_id == input$system_id & buffer_ft == input$buffer),
+                        label = paste(labels_address()[,],"|","Distance:",labels_dist()[,],"ft"),
+                        group = "Parcels",
+                        color="red") %>%
+            addLegend(colors = c("blue","red","black","green"), 
+                      labels = c("System","WIC Property Line","WIC Building Footprint","All Property Lines (WIC/NON-WIC)")) %>%
+            addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
+                           polygonOptions = FALSE,
+                           circleOptions=FALSE,
+                           rectangleOptions=FALSE,
+                           markerOptions=FALSE,
+                           circleMarkerOptions= FALSE,
+                           editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions()) 
+                           
+            )
+          
+          return(map)
+          
+          
+        }  
       }) 
       
     }

@@ -201,10 +201,10 @@
             column(7, 
                    fluidRow(
                      column(6, selectizeInput('system_id', label = 'System ID', choices = data, selected = "555-3", width = 500)),
-                     column(6, selectizeInput('buffer', label = 'Buffer Size (ft)', choices = buffer,selected = 100, options = list(maxOptions = 3), width = 500))),
+                     column(6, selectizeInput('buffer', label = 'Buffer Size from Property (ft)', choices = buffer,selected = 100, options = list(maxOptions = 3), width = 500))),
                    reactableOutput("table_wic")
                    ),
-            column(5,leafletOutput("map",width = "100%" ,height = "830"))
+            column(5,leafletOutput("map",width = "90%" ,height = "830"))
                       )
           
         ),
@@ -294,7 +294,7 @@
                                filter(`System ID` == input$system_id & Buffer_ft == input$buffer) %>%
                                mutate("Previously Monitored?" =  case_when(`System ID` %in% deployments_list$system_id ~ "Yes",
                                                                               `System ID` %!in% deployments_list$system_id ~ "No")) %>%
-                               select(`System ID`, `Work Order ID`, `Construction Phase`,`Complaint Date`, Address,`Property Distance (ft)`,`Buidling Footprint Distance (ft)`, `Previously Monitored?`)%>% 
+                               select(ID = `Work Order ID`, `Construction Phase`,Date = `Complaint Date`, Address,`Property Distance (ft)`,`Footprint Distance (ft)`=`Buidling Footprint Distance (ft)`, `Previously Monitored?`)%>% 
                                distinct())
                                                                                                                                                                                                                            
     
@@ -321,12 +321,13 @@
                 selectionId = "row_selected",
                 filterable = FALSE,
                 columns = list(
-                  `System ID` = colDef(width = 90),
-                  `Work Order ID` = colDef(width = 115),
+                  #`System ID` = colDef(width = 90),
+                   ID = colDef(width = 75),
                   `Construction Phase` = colDef(width = 150),
-                  `Complaint Date` = colDef(width = 145),
+                   Date = colDef(width = 110),
                    Address = colDef(width = 165),
-                  `Property Distance (ft)` = colDef(width = 165)
+                  `Property Distance (ft)` = colDef(width = 165),
+                  `Footprint Distance (ft)` = colDef(width = 170)
                   
                   
                 ),

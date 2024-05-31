@@ -332,7 +332,7 @@ server <- function(input, output) {
                 
               ),
               details = function(index) {
-                nested_notes <- wic_comments[wic_comments$workorder_id == table_wic_rv()$`Work Order ID`[index], ] %>%
+                nested_notes <- wic_comments[wic_comments$workorder_id == table_wic_rv()$ID[index], ] %>%
                   select(Comments = comments,  Keywords)
                 htmltools::div(style = "padding: 1rem",
                                reactable(nested_notes, 

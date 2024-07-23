@@ -5,7 +5,7 @@ date: "`r lubridate::now()`"
 output: html_document
 params:
   database: mars14_datav2
-  write: TRUE
+  write: FALSE
 ---
 
 ```{r setup, include=FALSE}

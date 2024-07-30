@@ -163,7 +163,7 @@
     output_all_buffers <- inner_join(wic_smps, wic_conphase, by=c("phase_lookup_uid"="wic_uid"))%>%
       select(-phase_lookup_uid,-wic_smps_uid) %>%
       inner_join(wic_parcels, by = c("wic_facility_id"="facility_id","workorder_id" = "workorder_id")) %>%
-      inner_join(wic_comments, by="workorder_id")%>%
+      left_join(wic_comments, by="workorder_id")%>%
       select(-wic_parcels_uid,-wic_facility_id, -wic_comments_uid, -Keywords) 
     
     output_all_buffers <- output_all_buffers %>%
@@ -190,7 +190,14 @@
     names(output_all_buffers_dl) <- c("Work Order ID", "SMP_ID", "Buffer_ft", "System ID", "Construction Phase","Address", "Complaint Date","Comments","Property Distance (ft)","Buidling Footprint Distance (ft)")
     output_all_buffers <- output_all_buffers[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Buidling Footprint Distance (ft)","Comments")]
     output_all_buffers_dl <- output_all_buffers_dl[,c("SMP_ID","System ID","Work Order ID", "Construction Phase", "Complaint Date","Address","Buffer_ft","Property Distance (ft)","Buidling Footprint Distance (ft)","Comments")]
-
+    
+    # date of latest wic in the app
+    latest_wic_date <- output_all_buffers %>%
+      arrange(desc(`Complaint Date`)) %>%
+      select(`Complaint Date`) %>%
+      pull %>%
+      .[1]
+      
   
     ui <- fluidPage(
       navbarPage(
@@ -210,7 +217,7 @@
         ),
         tabPanel(
           "Totalizer",
-        fluidRow(column(5, box(title = ' Total Number of WICs per SMP System (buffer 25 ft) ', width = 14, height = 40, background = "light-blue",solidHeader = TRUE),
+        fluidRow(column(5, box(title = paste(' Total WICs per System (buffer 25 ft); ', 'Latest WIC Date: ', latest_wic_date ), width = 14, height = 40, background = "light-blue",solidHeader = TRUE),
                         dateInput('date',label = 'Starting Date',value = "2012-06-06", width = 200),
                         reactableOutput("table_stats", width = 630)),
                  column(7, box(title = ' Release Notes by Farshad Ebrahimi (Farshad.Ebrahimi@Phila.Gov)', width = 14, height = 40, background = "light-blue",solidHeader = TRUE),

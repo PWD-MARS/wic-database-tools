@@ -92,7 +92,7 @@ status_choice <- status_lookup %>%
 # Define UI
 ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme = shinytheme("flatly"),
                                        tabPanel("WIC Status", value = "status", 
-                                                titlePanel("Systems Near WICs"),
+                                                titlePanel("System Status Near WICs"),
                                                 sidebarLayout(
                                                   
                                                   sidebarPanel(
@@ -177,7 +177,8 @@ server <- function(input, output, session) {
                                              property_dist_ft <= input$prop_dist))
   
   output$wic_table <- renderReactable(
-    reactable(rv$wic_table_filter(), 
+    reactable(rv$wic_table_filter() %>%
+                select(`System ID` = system_id, `Workorder ID` = workorder_id, `Address` = wic_address, `Recent WIC Date` = date, Phase = phase, `Dist. Property (ft)` = property_dist_ft, `Dist. Footprint (ft)` = footprint_dist_ft , Status = status), 
               fullWidth = TRUE,
               selection = "single",
               searchable = TRUE,
@@ -185,7 +186,14 @@ server <- function(input, output, session) {
               showPageSizeOptions = TRUE,
               pageSizeOptions = c(25, 50, 100),
               defaultPageSize = 25,
-              height = 1000))
+              height = 1000,
+              columns = list(
+                `System ID` = colDef(width = 100),
+                `Workorder ID` = colDef(width = 120),
+                `Dist. Property (ft)` = colDef(width = 140),
+                `Dist. Footprint (ft)` = colDef(width = 140),
+                 Phase = colDef(width = 150))
+              ))
   
 
 }

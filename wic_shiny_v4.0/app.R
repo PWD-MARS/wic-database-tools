@@ -5,19 +5,23 @@
 
 # 0.0 Set Up 
 # 0.1 Load libraries ----
+# Shiny
 library(shiny)
 library(shinyjs)
 library(shinydashboard)
 library(shinyWidgets)
+library(shinythemes)
+library(reactable)
+# Connection
 library(DBI)
 library(odbc)
-library(tidyverse)
-library(reactable)
-library(shinythemes)
 library(RPostgreSQL)
+# Data Processing/Mapping
+library(tidyverse)
 library(sf)
 library(leaflet)
 library(leaflet.extras)
+# else 
 library(xlsx)
 
 #create negate of %in%
@@ -75,8 +79,9 @@ q_list <- fq_lookup %>%
   select(fiscal_quarter) %>%
   pull
 
-# Post-con status look up
+# WIC status look up
 status_lookup <- dbGetQuery(mars_con, "select * from fieldwork.beta_tbl_wic_status_lookup")
+
 # Status list
 status_choice <- status_lookup %>%
   select(status) %>%
@@ -91,23 +96,28 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                 sidebarLayout(
                                                   
                                                   sidebarPanel(
+                                                    selectInput("system_id", "System ID", choices = c("All", system_id_all), selected = "All"),
                                                     selectInput("date_range", "Date Range", choices = c("To-Date", "Fiscal Quarter")),
                                                     conditionalPanel(condition = "input.date_range == 'Fiscal Quarter'", 
                                                                      fluidRow(column(12,
                                                                                      selectInput("f_q", "Fiscal Quarter", choices = q_list, selected = "FY24Q2")))
                                                     ), 
-                                                    selectInput("status", "System Status", choices = c("", status_choice) , selected = ""),
-                                                    
+                                                    selectInput("status", "System Status", choices = c("All", status_choice) , selected = "All"),
+                                                    sliderInput("prop_dist",
+                                                                "Property Distance (ft):",
+                                                                min = 0,
+                                                                max = 100,
+                                                                value = 25),
                                                     # DL Button 
                                                     
                                                     fluidRow(column(12, strong("Download all WICs"))),
                                                     
-                                                    downloadButton("download_table", "Download")
+                                                    downloadButton("download_table", "Download"), width = 3
                                                   ),
                                                   
                                                   mainPanel(
                                                     strong(span(textOutput("table_name"), style = "font-size:22px")),
-                                                    reactableOutput("wic_table")
+                                                    reactableOutput("wic_table"), width = 9
                                                     
                                                   )
                                                 )
@@ -147,9 +157,27 @@ server <- function(input, output, session) {
   
   #initialzie reactive values
   rv <- reactiveValues()
+  rv$date_filter <- reactive(ifelse(input$date_range == "To-Date", return(q_list), return(input$f_q)))
+  rv$sys_filter <- reactive(ifelse(input$system_id == "All", return(system_id_all), return(input$system_id)))
+  rv$status_filter <- reactive(ifelse(input$status == "All", return(status_choice), return(input$status)))
+  rv$recent_wic_filter <- reactive(wic_sys %>%
+                                     arrange(desc(date)) %>%
+                                     group_by(system_id) %>%
+                                     summarise(workorder_id = workorder_id[1]) %>%
+                                     pull)
+  
+  
+  # filter the table based on the sidebar inputs-get the most recent wic per system
+  rv$wic_table_filter <- reactive(wic_sys %>%
+                                    mutate(status = "Not Suspected") %>%
+                                    filter(workorder_id %in% rv$recent_wic_filter() &
+                                             quarter %in% rv$date_filter() &
+                                             system_id %in% rv$sys_filter() &
+                                             status %in% rv$status_filter() &
+                                             property_dist_ft <= input$prop_dist))
   
   output$wic_table <- renderReactable(
-    reactable(wic_sys, 
+    reactable(rv$wic_table_filter(), 
               fullWidth = TRUE,
               selection = "single",
               searchable = TRUE,

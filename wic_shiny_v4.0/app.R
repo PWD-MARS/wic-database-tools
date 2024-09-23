@@ -91,7 +91,7 @@ status_choice <- status_lookup %>%
 # 1.0 Define UI ----
 # Define UI
 ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme = shinytheme("flatly"),
-                                       tabPanel("Post-Construction Status Table", value = "status", 
+                                       tabPanel("WIC Status", value = "status", 
                                                 titlePanel("Systems Near WICs"),
                                                 sidebarLayout(
                                                   
@@ -107,7 +107,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                                 "Property Distance (ft):",
                                                                 min = 0,
                                                                 max = 100,
-                                                                value = 25),
+                                                                value = 100),
                                                     # DL Button 
                                                     
                                                     fluidRow(column(12, strong("Download all WICs"))),
@@ -116,7 +116,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                   ),
                                                   
                                                   mainPanel(
-                                                    strong(span(textOutput("table_name"), style = "font-size:22px")),
+                                                    h2(strong("Status of Systems near WICs (Only Most Recent WIC per System Shown):")),
                                                     reactableOutput("wic_table"), width = 9
                                                     
                                                   )

@@ -111,6 +111,8 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                                 min = 0,
                                                                 max = 100,
                                                                 value = 100),
+                                                    checkboxInput("single_wic", "Only Show Most Recent WIC per System ID", value = TRUE, width = NULL),
+                                                    
                                                     # DL Button 
                                                     
                                                     fluidRow(column(12, strong("Download all WICs"))),
@@ -119,14 +121,14 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                   ),
                                                   
                                                   mainPanel(
-                                                    h2(strong("Status of Systems near WICs (Only Most Recent WIC per System Shown):")),
+                                                    strong(span(textOutput("table_name"), style = "font-size:22px")),
                                                     reactableOutput("wic_table"), width = 9
                                                     
                                                   )
                                                 )
                                        ),
-                                       tabPanel("WIC Investigation", value = "add_edit_insight", 
-                                                titlePanel("Add/Edit WIC Findings"), 
+                                       tabPanel("WIC Investigation", value = "wic_insight", 
+                                                titlePanel("WICs around the System"), 
                                                 sidebarLayout(
                                                   
                                                   sidebarPanel(
@@ -158,6 +160,9 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
 # 2.0 Define server logic ----
 server <- function(input, output, session) {
   
+  # Table name
+  output$table_name <- renderText(ifelse(input$single_wic, return(paste("Most Recent WIC Per System within ", input$prop_dist," ft from Property Line: ")), return(paste("All WICs within ", input$prop_dist," ft from Property Line: "))))
+  
   #initialzie reactive values
   rv <- reactiveValues()
   
@@ -171,16 +176,20 @@ server <- function(input, output, session) {
   rv$wic_wo_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_wo_status 
                                               INNER JOIN fieldwork.beta_tbl_wic_wo_status_lookup
                                               USING(wic_wo_status_lookup_uid)"))
-  
+  # filtering table to show most recent wo-id per system
+  all_wo <- wic_sys %>%
+    select(workorder_id) %>%
+    pull
+  single_wo <- wic_sys %>%
+    arrange(desc(date)) %>%
+    group_by(system_id) %>%
+    summarise(workorder_id = workorder_id[1]) %>%
+    pull
   # reactive filters
   rv$date_filter <- reactive(ifelse(input$date_range == "To-Date", return(q_list), return(input$f_q)))
   rv$sys_filter <- reactive(ifelse(input$system_id == "All", return(system_id_all), return(input$system_id)))
   rv$status_filter <- reactive(ifelse(input$status == "All", return(status_choice), return(input$status)))
-  rv$recent_wic_filter <- reactive(wic_sys %>%
-                                     arrange(desc(date)) %>%
-                                     group_by(system_id) %>%
-                                     summarise(workorder_id = workorder_id[1]) %>%
-                                     pull)
+  rv$recent_wic_filter <- reactive(ifelse(input$single_wic, return(single_wo), return(all_wo)))
   
   
   # filter the table based on the sidebar inputs-get the most recent wic per system
@@ -194,7 +203,7 @@ server <- function(input, output, session) {
   
   output$wic_table <- renderReactable(
     reactable(rv$wic_table_filter() %>%
-                select(`System ID` = system_id, `Workorder ID` = workorder_id, `Address` = wic_address, `Recent WIC Date` = date, Phase = phase, `Dist. Property (ft)` = property_dist_ft, `Dist. Footprint (ft)` = footprint_dist_ft , Status = status), 
+                select(`System ID` = system_id, `Workorder ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist. Property (ft)` = property_dist_ft, `Dist. Footprint (ft)` = footprint_dist_ft , `System Status` = status), 
               fullWidth = TRUE,
               selection = "single",
               searchable = TRUE,
@@ -214,11 +223,11 @@ server <- function(input, output, session) {
                  Phase = colDef(width = 150)),
               details = function(index) {
                 sys_nested_notes <- rv$wic_system_status()[rv$wic_system_status()$system_id == rv$wic_table_filter()$system_id[index], ] %>%
-                  select(`MARS Comments` = notes)
+                  select(`MARS Comments on the System:` = notes)
                 htmltools::div(style = "padding: 1rem",
                                reactable(sys_nested_notes, 
                                          columns = list(
-                                           `MARS Comments` = colDef(width = 1000)
+                                           `MARS Comments on the System:` = colDef(width = 1000)
                                          ), 
                                          outlined = TRUE)
                 )

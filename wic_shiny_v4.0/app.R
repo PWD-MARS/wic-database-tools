@@ -41,6 +41,12 @@ mars_con <- dbConnect(RPostgres::Postgres(),
 wic_sys <- dbGetQuery(mars_con, "SELECT *, data.fun_date_to_fiscal_quarter(date) as quarter FROM fieldwork.viw_wics_100ft")
 # WICs Comments
 wic_comments <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_comment")
+
+# Look up tables for status record keeping
+wic_system_status_lookup <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_system_status_lookup")
+wic_wo_status_lookup <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_wo_status_lookup")
+
+
 # WIC Polygons- crs global 4326 for leaflet mapping
 wic_property_geom <- st_read(dsn = mars_con, Id(schema="fieldwork", table = "beta_tbl_wic_propertyline_geom")) %>%
   st_transform(crs = 4326)
@@ -79,11 +85,8 @@ q_list <- fq_lookup %>%
   select(fiscal_quarter) %>%
   pull
 
-# WIC status look up
-status_lookup <- dbGetQuery(mars_con, "select * from fieldwork.beta_tbl_wic_status_lookup")
-
-# Status list
-status_choice <- status_lookup %>%
+# WIC system Status list
+status_choice <- wic_system_status_lookup %>%
   select(status) %>%
   distinct() %>%
   pull
@@ -157,6 +160,19 @@ server <- function(input, output, session) {
   
   #initialzie reactive values
   rv <- reactiveValues()
+  
+  # reactive filters
+  
+  # Tables with the system ids and workorder ids for status record keeping
+  rv$wic_system_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_system_status
+                                              INNER JOIN fieldwork.beta_tbl_wic_system_status_lookup
+                                              USING(wic_system_status_lookup_uid)"))
+  
+  rv$wic_wo_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_wo_status 
+                                              INNER JOIN fieldwork.beta_tbl_wic_wo_status_lookup
+                                              USING(wic_wo_status_lookup_uid)"))
+  
+  # reactive filters
   rv$date_filter <- reactive(ifelse(input$date_range == "To-Date", return(q_list), return(input$f_q)))
   rv$sys_filter <- reactive(ifelse(input$system_id == "All", return(system_id_all), return(input$system_id)))
   rv$status_filter <- reactive(ifelse(input$status == "All", return(status_choice), return(input$status)))
@@ -169,7 +185,7 @@ server <- function(input, output, session) {
   
   # filter the table based on the sidebar inputs-get the most recent wic per system
   rv$wic_table_filter <- reactive(wic_sys %>%
-                                    mutate(status = "Not Suspected") %>%
+                                    inner_join(rv$wic_system_status(), by = "system_id") %>%
                                     filter(workorder_id %in% rv$recent_wic_filter() &
                                              quarter %in% rv$date_filter() &
                                              system_id %in% rv$sys_filter() &

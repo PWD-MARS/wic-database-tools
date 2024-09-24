@@ -69,10 +69,10 @@ wic_smp_geom['system_id'] <- gsub('-\\d+$','', wic_smp_geom$smp_id)
 map <- leaflet() %>%
   addProviderTiles(providers$OpenStreetMap, group = 'Open Street Map', options = providerTileOptions(maxZoom = 20)) %>%
   addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(maxZoom = 19)) %>%
-  addPolygons(data = wic_smp_geom, label = wic_smp_geom$system_id, color = "blue", group = "sys_geom") %>%
-  addPolygons(data = wic_property_geom, color = "red", group = "property_geom") %>%
-  addPolygons(data = wic_footprint_geom, color = "black", group = "footprint_geom") %>%
-  addLayersControl(overlayGroups = c("sys_geom","property_geom", "footprint_geom"), baseGroups = c("Open Street Map", "ESRI Satellite"))
+  addPolygons(data = wic_smp_geom, label = wic_smp_geom$system_id, color = "blue", group = "System") %>%
+  addPolygons(data = wic_property_geom, color = "red", group = "Property Line") %>%
+  addPolygons(data = wic_footprint_geom, color = "black", group = "Footprint") %>%
+  addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("Open Street Map", "ESRI Satellite"))
 
 # gauge data
 gauge_event <- dbGetQuery(mars_con, "SELECT distinct tbl_gage_event.gage_uid, tbl_gage_event.eventdatastart_edt::date AS event_startdate FROM data.tbl_gage_event where tbl_gage_event.eventdataend_edt > '2010-01-01'")

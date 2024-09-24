@@ -36,7 +36,7 @@ mars_con <- dbConnect(RPostgres::Postgres(),
                       dbname = "mars_data",
                       user = Sys.getenv("shiny_uid"),
                       password = Sys.getenv("shiny_pwd"))
-## 0.3 Loading required tables ----
+## 0.3 Loading required tables & Creating map ----
 # Get wic tables
 # WICS 
 wic_sys <- dbGetQuery(mars_con, "SELECT *, data.fun_date_to_fiscal_quarter(date) as quarter FROM fieldwork.viw_wics_100ft")
@@ -49,18 +49,30 @@ wic_wo_status_lookup <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_w
 
 # WIC Polygons- crs global 4326 for leaflet mapping
 wic_property_geom <- st_read(dsn = mars_con, Id(schema="fieldwork", table = "beta_tbl_wic_propertyline_geom")) %>%
-  st_transform(crs = 4326)
+  st_transform(crs = 4326) %>%
+  filter(address %in% wic_sys$wic_address)
+
 wic_footprint_geom <- st_read(dsn = mars_con, Id(schema="fieldwork", table = "beta_tbl_wic_footprint_geom")) %>%
-  st_transform(crs = 4326)
+  st_transform(crs = 4326) %>%
+  filter(address %in% wic_sys$wic_address)
 
 # Grouping smp polygons by system- setting crs global 4326 for leaflet mapping 
 wic_smp_geom <- st_read(dsn = mars_con, Id(schema="fieldwork", table = "beta_tbl_wic_smp_geom")) %>%
   st_transform(crs = 4326)
 wic_smp_geom['system_id'] <- gsub('-\\d+$','', wic_smp_geom$smp_id)
-wic_sys_geom <- wic_smp_geom %>%
-  group_by(system_id) %>%
-  summarize(sys_geom = st_combine(smp_geom)) %>%
-  st_as_sf()
+# wic_sys_geom <- wic_smp_geom %>%
+#   group_by(system_id) %>%
+#   summarize(sys_geom = st_combine(smp_geom)) %>%
+#   st_as_sf()
+
+# creating basemap
+map <- leaflet() %>%
+  addProviderTiles(providers$OpenStreetMap, group = 'Open Street Map', options = providerTileOptions(maxZoom = 20)) %>%
+  addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(maxZoom = 19)) %>%
+  addPolygons(data = wic_smp_geom, label = wic_smp_geom$system_id, color = "blue", group = "sys_geom") %>%
+  addPolygons(data = wic_property_geom, color = "red", group = "property_geom") %>%
+  addPolygons(data = wic_footprint_geom, color = "black", group = "footprint_geom") %>%
+  addLayersControl(overlayGroups = c("sys_geom","property_geom", "footprint_geom"), baseGroups = c("Open Street Map", "ESRI Satellite"))
 
 # gauge data
 gauge_event <- dbGetQuery(mars_con, "SELECT distinct tbl_gage_event.gage_uid, tbl_gage_event.eventdatastart_edt::date AS event_startdate FROM data.tbl_gage_event where tbl_gage_event.eventdataend_edt > '2010-01-01'")

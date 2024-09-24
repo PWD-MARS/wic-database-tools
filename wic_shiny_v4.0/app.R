@@ -203,12 +203,26 @@ server <- function(input, output, session) {
               pageSizeOptions = c(25, 50, 100),
               defaultPageSize = 25,
               height = 1000,
+              theme = reactableTheme(
+                rowSelectedStyle = list(backgroundColor = "lightblue")
+              ),
               columns = list(
                 `System ID` = colDef(width = 100),
                 `Workorder ID` = colDef(width = 120),
                 `Dist. Property (ft)` = colDef(width = 140),
                 `Dist. Footprint (ft)` = colDef(width = 140),
-                 Phase = colDef(width = 150))
+                 Phase = colDef(width = 150)),
+              details = function(index) {
+                sys_nested_notes <- rv$wic_system_status()[rv$wic_system_status()$system_id == rv$wic_table_filter()$system_id[index], ] %>%
+                  select(`MARS Comments` = notes)
+                htmltools::div(style = "padding: 1rem",
+                               reactable(sys_nested_notes, 
+                                         columns = list(
+                                           `MARS Comments` = colDef(width = 1000)
+                                         ), 
+                                         outlined = TRUE)
+                )
+              }
               ))
   
 

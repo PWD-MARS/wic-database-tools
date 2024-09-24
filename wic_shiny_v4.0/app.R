@@ -12,6 +12,7 @@ library(shinydashboard)
 library(shinyWidgets)
 library(shinythemes)
 library(reactable)
+library(reactablefmtr)
 # Connection
 library(DBI)
 library(odbc)
@@ -92,7 +93,7 @@ status_choice <- wic_system_status_lookup %>%
 
 # 1.0 Define UI ----
 # Define UI
-ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme = shinytheme("flatly"),
+ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme = shinytheme("cyborg"),
                                        ## 1.1 Tab "WIC Status" ----
                                        tabPanel("WIC Status", value = "status", 
                                                 titlePanel("System Status Near WICs"),
@@ -113,7 +114,9 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                                 value = 100),
                                                     checkboxInput("single_wic", "Only Show Most Recent WIC per System ID", value = TRUE, width = NULL),
                                                     fluidRow(column(12, strong("Download all WICs"))),
-                                                    downloadButton("download_table", "Download"), width = 3
+                                                    downloadButton("download_table", "Download"), 
+                                                    #tags$head(tags$style(".butt{background-color:#000066;}")),
+                                                    width = 3
                                                   ),
                                                   
                                                   mainPanel(
@@ -213,9 +216,7 @@ server <- function(input, output, session) {
               pageSizeOptions = c(25, 50, 100),
               defaultPageSize = 25,
               height = 1000,
-              theme = reactableTheme(
-                rowSelectedStyle = list(backgroundColor = "lightblue")
-              ),
+              theme = darkly(),
               columns = list(
                 `System ID` = colDef(width = 100),
                 `Workorder ID` = colDef(width = 120),
@@ -227,6 +228,7 @@ server <- function(input, output, session) {
                   select(`MARS Comments on the System:` = notes)
                 htmltools::div(style = "padding: 1rem",
                                reactable(sys_nested_notes, 
+                                         theme = darkly(),
                                          columns = list(
                                            `MARS Comments on the System:` = colDef(width = 1000)
                                          ), 

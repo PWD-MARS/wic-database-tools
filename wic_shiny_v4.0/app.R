@@ -234,7 +234,24 @@ server <- function(input, output, session) {
                 )
               }
               ))
-  ## 2.4 Switch tab to "WIC Investigation"----
+  
+  
+  ## 2.4 Download button ----
+  output$download_table <- downloadHandler(
+    
+    filename = function() {
+      paste("All WICs (100 ft)", "_", Sys.Date(), ".xlsx", sep = "")
+    },
+    content = function(filename){
+      
+      df_list <- list(rv$wic_table_filter() %>%
+                        inner_join(wic_comments, by = "workorder_id") %>%
+                        select(SystemID = system_id, WorkorderID = workorder_id, Address = wic_address, Date = date, Phase = phase, DistProperty_ft = property_dist_ft, DistFootprint_ft = footprint_dist_ft , SystemStatus = status, CityWorks_Comment = comment))
+      write.xlsx(x = df_list , file = filename)
+    }
+  )
+  
+  ## 2.5 Switch tab to "WIC Investigation"----
   observeEvent(rv$row_wic_table(), {
     if (!is.null(rv$row_wic_table())) {
       updateTabsetPanel(session, "TabPanelID", selected = "wic_insight")

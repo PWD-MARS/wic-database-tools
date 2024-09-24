@@ -246,7 +246,8 @@ server <- function(input, output, session) {
     },
     content = function(filename){
       
-      df_list <- list(rv$wic_table_filter() %>%
+      df_list <- list(wic_sys %>%
+                        inner_join(rv$wic_system_status(), by = "system_id") %>%
                         inner_join(wic_comments, by = "workorder_id") %>%
                         select(SystemID = system_id, WorkorderID = workorder_id, Address = wic_address, Date = date, Phase = phase, DistProperty_ft = property_dist_ft, DistFootprint_ft = footprint_dist_ft , SystemStatus = status, CityWorks_Comment = comment))
       write.xlsx(x = df_list , file = filename)

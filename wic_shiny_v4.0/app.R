@@ -115,7 +115,6 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                     checkboxInput("single_wic", "Only Show Most Recent WIC per System ID", value = TRUE, width = NULL),
                                                     fluidRow(column(12, strong("Download all WICs"))),
                                                     downloadButton("download_table", "Download"), 
-                                                    #tags$head(tags$style(".butt{background-color:#000066;}")),
                                                     width = 3
                                                   ),
                                                   

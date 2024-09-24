@@ -72,7 +72,9 @@ map <- leaflet() %>%
   addPolygons(data = wic_smp_geom, label = wic_smp_geom$system_id, color = "blue", group = "System") %>%
   addPolygons(data = wic_property_geom, color = "red", group = "Property Line") %>%
   addPolygons(data = wic_footprint_geom, color = "black", group = "Footprint") %>%
-  addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("Open Street Map", "ESRI Satellite"))
+  addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("Open Street Map", "ESRI Satellite")) %>%
+  hideGroup(c("Footprint"))
+  
 
 # gauge data
 gauge_event <- dbGetQuery(mars_con, "SELECT distinct tbl_gage_event.gage_uid, tbl_gage_event.eventdatastart_edt::date AS event_startdate FROM data.tbl_gage_event where tbl_gage_event.eventdataend_edt > '2010-01-01'")

@@ -134,6 +134,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                   ),
                                                   mainPanel(
                                                     
+                                                    
                                                   )
                                                 )),
                                        ## 1.3 Tab "Documentation" ----
@@ -199,6 +200,7 @@ server <- function(input, output, session) {
                                              system_id %in% rv$sys_filter() &
                                              status %in% rv$status_filter() &
                                              property_dist_ft <= input$prop_dist))
+  
   ## 2.3 Output wic_table for Tab "WIC Status"----
   output$wic_table <- renderReactable(
     reactable(rv$wic_table_filter() %>%
@@ -232,17 +234,14 @@ server <- function(input, output, session) {
                 )
               }
               ))
-  
-  
-  
-  
   ## 2.4 Switch tab to "WIC Investigation"----
   observeEvent(rv$row_wic_table(), {
     if (!is.null(rv$row_wic_table())) {
       updateTabsetPanel(session, "TabPanelID", selected = "wic_insight")
+      
     }
+    
   })
-  
 }
 
 # Run the application 

@@ -29,14 +29,24 @@ library(xlsx)
 `%!in%` = Negate(`%in%`)
 
 ## 0.2 DB connections ----
-# DB connections
+# DB connections & functions
 mars_con <- dbConnect(RPostgres::Postgres(),
                       host = "PWDMARSDBS1.pwd.phila.local",
                       port = 5434,
                       dbname = "mars_data",
                       user = Sys.getenv("shiny_uid"),
                       password = Sys.getenv("shiny_pwd"))
-## 0.3 Loading required tables & Creating map ----
+
+# replace special characters with friendlier characters
+special_char_replace <- function(note){
+  
+  note_fix <- note %>%
+    str_replace_all(c("•" = "-", "ï‚§" = "-", "“" = '"', '”' = '"'))
+  
+  return(note_fix)
+  
+}
+## 0.3 Loading required tables  ----
 # Get wic tables
 # WICS 
 wic_sys <- dbGetQuery(mars_con, "SELECT *, data.fun_date_to_fiscal_quarter(date) as quarter FROM fieldwork.viw_wics_100ft")
@@ -65,16 +75,6 @@ wic_smp_geom['system_id'] <- gsub('-\\d+$','', wic_smp_geom$smp_id)
 #   summarize(sys_geom = st_combine(smp_geom)) %>%
 #   st_as_sf()
 
-# creating basemap
-map <- leaflet() %>%
-  addProviderTiles(providers$OpenStreetMap, group = 'Open Street Map', options = providerTileOptions(maxZoom = 20)) %>%
-  addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(maxZoom = 19)) %>%
-  addPolygons(data = wic_smp_geom, label = wic_smp_geom$system_id, color = "blue", group = "System") %>%
-  addPolygons(data = wic_property_geom, color = "red", group = "Property Line") %>%
-  addPolygons(data = wic_footprint_geom, color = "black", group = "Footprint") %>%
-  addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("Open Street Map", "ESRI Satellite")) %>%
-  hideGroup(c("Footprint"))
-  
 
 # gauge data
 gauge_event <- dbGetQuery(mars_con, "SELECT distinct tbl_gage_event.gage_uid, tbl_gage_event.eventdatastart_edt::date AS event_startdate FROM data.tbl_gage_event where tbl_gage_event.eventdataend_edt > '2010-01-01'")
@@ -91,6 +91,11 @@ deployments_list <- dbGetQuery(mars_con, "SELECT distinct admin.fun_smp_to_syste
 # System ids
 system_id_all <- odbc::dbGetQuery(mars_con, "select distinct system_id from external.mat_assets where system_id like '%-%'") %>% 
   dplyr::arrange(system_id) %>%  
+  dplyr::pull()
+
+# Workorder ids
+wo_id_all <- wic_sys %>% 
+  select(workorder_id) %>%
   dplyr::pull()
 
 # Fiscal quarter lookup
@@ -141,18 +146,27 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                        ),
                                        ## 1.2 Tab "WIC Investigation" ----
                                        tabPanel("WIC Investigation", value = "wic_insight", 
-                                                titlePanel("WICs around the System"), 
-                                                sidebarLayout(
-                                                  
-                                                  sidebarPanel(
-                                             
-                                                    
+                                                #titlePanel("WICs around the System"), 
+                                                fluidRow(
+                                                  column(7, 
+                                                         fluidRow(
+                                                           column(3, selectizeInput('system_id_edit', "System ID", choices = c("All", system_id_all), selected = "All")),
+                                                           column(3, selectizeInput('workorder_edit', "Work Order ID", choices = c("All", wo_id_all), selected = "All", width = 500)),
+                                                           column(3, selectInput("edit_status", "System Status", choices = c("All", status_choice) , selected = "All")),
+                                                           column(3, selectInput("check_woid", "Work Order Checked?", choices = c("", "Yes", "No"), selected = "")),
+                                
+                                                         ),
+                                                         fluidRow(
+                                                         column(12, textAreaInput("system_note", "Notes", width = "100%", height = "40%"))),
+                                                         fluidRow(column(12, actionButton("save_edit", "Save/Edit"), actionButton("clear", "Clear All Fields"))),
+                                                         h4(textOutput("sys_stat_table_name")),
+                                                         reactableOutput("sys_stat_table"),
+                                                         h4(textOutput("wo_stat_table_name")),
+                                                         reactableOutput("wo_stat_table")
                                                   ),
-                                                  mainPanel(
-                                                    
-                                                    
-                                                  )
-                                                )),
+                                                  column(5,leafletOutput("map",width = "100%" ,height = "1000"))
+                                                )
+                                              ),
                                        ## 1.3 Tab "Documentation" ----
                                        tabPanel("Documentation", value = "document", 
                                                 titlePanel("App History"),
@@ -180,6 +194,10 @@ server <- function(input, output, session) {
   
   #initialzie reactive values
   rv <- reactiveValues()
+  
+  #process text field to prevent sql injection
+  rv$reason_step <- reactive(gsub('\'', '\'\'',  input$system_note))
+  rv$input_note  <- reactive(special_char_replace(rv$reason_step()))
   
   # row selections 
   rv$row_wic_table <- reactive(getReactableState("wic_table", "selected"))
@@ -275,6 +293,39 @@ server <- function(input, output, session) {
     }
     
   })
+  
+  
+ ## 2.6 WIC Investigation Server Side ----
+  output$sys_stat_table_name <- renderText("FARSHAD")
+  output$wo_stat_table_name <- renderText("EBRAHIMI")
+  
+  
+  ### 2.6.7 ----
+  # creating basemap
+  map <- leaflet() %>%
+    addProviderTiles(providers$OpenStreetMap, group = 'Open Street Map', options = providerTileOptions(maxZoom = 20)) %>%
+    addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(maxZoom = 19)) %>%
+    addPolygons(data = wic_smp_geom, label = wic_smp_geom$system_id, color = "blue", group = "System") %>%
+    addPolygons(data = wic_property_geom, color = "red", label = wic_property_geom$address, group = "Property Line") %>%
+    addPolygons(data = wic_footprint_geom, color = "black", label = wic_footprint_geom$address, group = "Footprint") %>%
+    addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("Open Street Map", "ESRI Satellite")) %>%
+    hideGroup(c("Footprint"))
+  
+  output$map <- renderLeaflet({
+    map
+  })
+  
+  
+  # 2.6.7 system and work order status tables ----
+  output$sys_stat_table <- renderReactable(
+    reactable(rv$wic_table_filter()[1:1, ],
+              theme = darkly()))
+  
+  output$wo_stat_table <- renderReactable(
+    reactable(rv$wic_table_filter()[1:8, ],
+              theme = darkly()))
+  
+  
 }
 
 # Run the application 

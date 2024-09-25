@@ -359,16 +359,25 @@ server <- function(input, output, session) {
   ### 2.6.1 Mapping ----
   output$map <- renderLeaflet({
     # Calculate the bounds of the default polygon
-    bounds <- st_bbox(wic_smp_geom %>%
-                        filter(system_id == input$system_id_edit))
+    selected_system_geom <- wic_smp_geom %>%
+      filter(system_id == input$system_id_edit)
+    bounds <- st_bbox(selected_system_geom)
     
-    if (input$system_id_edit == "All" | nrow(filter(wic_smp_geom, system_id == input$system_id_edit)) == 0) {
+    if (nrow(filter(wic_smp_geom, system_id == input$system_id_edit)) == 0) {
       map
     } else {
       # Calculate the center of the bounds
       center_lat <- (unname(bounds["ymin"]) + unname(bounds["ymax"])) / 2
       center_lng <- (unname(bounds["xmin"]) + unname(bounds["xmax"])) / 2
       map %>%
+        addPolygons(data = selected_system_geom,
+                    fillColor = "darkblue",   # Change to desired fill color
+                    color = "darkblue",
+                    weight = 2,           # Border weight
+                    opacity = 1,          # Border opacity
+                    fillOpacity = 0.5,    # Fill opacity
+                    label = paste("Selected System ID:", input$system_id_edit),  # Always visible label
+                    labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px"))) %>%  # Customize label style
         setView(lng = center_lng, lat = center_lat, zoom = 19)  # Adjust zoom level as needed
     }
   

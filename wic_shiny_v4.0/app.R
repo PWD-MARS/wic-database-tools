@@ -75,6 +75,16 @@ wic_smp_geom['system_id'] <- gsub('-\\d+$','', wic_smp_geom$smp_id)
 #   summarize(sys_geom = st_combine(smp_geom)) %>%
 #   st_as_sf()
 
+# creating basemap here to avoid recreating it in the server 
+map <- leaflet() %>%
+  addProviderTiles(providers$OpenStreetMap, group = 'Open Street Map', options = providerTileOptions(maxZoom = 20)) %>%
+  addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(maxZoom = 19)) %>%
+  addPolygons(data = wic_smp_geom, label = wic_smp_geom$system_id, color = "blue", group = "System") %>%
+  addPolygons(data = wic_property_geom, color = "red", label = wic_property_geom$address, group = "Property Line") %>%
+  addPolygons(data = wic_footprint_geom, color = "black", label = wic_footprint_geom$address, group = "Footprint") %>%
+  addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("Open Street Map", "ESRI Satellite")) %>%
+  hideGroup(c("Footprint"))
+
 
 # gauge data
 gauge_event <- dbGetQuery(mars_con, "SELECT distinct tbl_gage_event.gage_uid, tbl_gage_event.eventdatastart_edt::date AS event_startdate FROM data.tbl_gage_event where tbl_gage_event.eventdataend_edt > '2010-01-01'")
@@ -261,7 +271,7 @@ server <- function(input, output, session) {
                                reactable(sys_nested_notes, 
                                          theme = darkly(),
                                          columns = list(
-                                           `MARS Comments on the System:` = colDef(width = 1000)
+                                           `MARS Comments on the System:` = colDef(width = 950)
                                          ), 
                                          outlined = TRUE)
                 )
@@ -300,17 +310,8 @@ server <- function(input, output, session) {
   output$wo_stat_table_name <- renderText("EBRAHIMI")
   
   
-  ### 2.6.7 ----
-  # creating basemap
-  map <- leaflet() %>%
-    addProviderTiles(providers$OpenStreetMap, group = 'Open Street Map', options = providerTileOptions(maxZoom = 20)) %>%
-    addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(maxZoom = 19)) %>%
-    addPolygons(data = wic_smp_geom, label = wic_smp_geom$system_id, color = "blue", group = "System") %>%
-    addPolygons(data = wic_property_geom, color = "red", label = wic_property_geom$address, group = "Property Line") %>%
-    addPolygons(data = wic_footprint_geom, color = "black", label = wic_footprint_geom$address, group = "Footprint") %>%
-    addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("Open Street Map", "ESRI Satellite")) %>%
-    hideGroup(c("Footprint"))
-  
+  ### 2.6.7 Mapping ----
+ 
   output$map <- renderLeaflet({
     map
   })
@@ -318,12 +319,20 @@ server <- function(input, output, session) {
   
   # 2.6.7 system and work order status tables ----
   output$sys_stat_table <- renderReactable(
-    reactable(rv$wic_table_filter()[1:1, ],
-              theme = darkly()))
+    reactable(rv$wic_table_filter()[1,] %>%
+                select(system_id, status, notes),
+              theme = darkly(),
+              defaultPageSize = 1
+              
+    ))
   
   output$wo_stat_table <- renderReactable(
-    reactable(rv$wic_table_filter()[1:8, ],
-              theme = darkly()))
+    reactable(rv$wic_table_filter() %>%
+                select(system_id, workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft),
+              theme = darkly(),
+              defaultPageSize = 15
+             
+    ))
   
   
 }

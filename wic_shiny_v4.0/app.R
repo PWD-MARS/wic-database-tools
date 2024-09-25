@@ -155,28 +155,44 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                 )
                                        ),
                                        ## 1.2 Tab "WIC Investigation" ----
-                                       tabPanel("WIC Investigation", value = "wic_insight", 
-                                                #titlePanel("WICs around the System"), 
+                                       tags$head(
+                                         tags$style(HTML("
+                                                    .custom-box {
+                                                      background-color: #2c2c2c; /* Dark grey background */
+                                                      color: white; /* White text color */
+                                                      border: 1px solid #4d4d4d; /* Border color */
+                                                    }
+                                                    .custom-box .box-header {
+                                                      background-color: #3c3c3c; /* Slightly lighter header */
+                                                      color: white; /* Header text color */
+                                                    }
+                                                  "))
+                                                                                     ),
+                                       tabPanel("WIC Investigation", value = "wic_insight",
                                                 fluidRow(
-                                                  column(7, 
-                                                         fluidRow(
-                                                           column(3, selectizeInput('system_id_edit', "System ID", choices = c("All", system_id_all), selected = "All")),
-                                                           column(3, selectizeInput('workorder_edit', "Work Order ID", choices = c("All", wo_id_all), selected = "All", width = 500)),
-                                                           column(3, selectInput("edit_status", "System Status", choices = c("All", status_choice) , selected = "All")),
-                                                           column(3, selectInput("check_woid", "Work Order Checked?", choices = c("", "Yes", "No"), selected = "")),
-                                
+                                                  column(7,
+                                                         box(width = NULL, solidHeader = TRUE, status = "primary", class = "custom-box",
+                                                             fluidRow(
+                                                               column(3, selectizeInput('system_id_edit', "System ID", choices = c("All", system_id_all), selected = "All")),
+                                                               column(3, selectizeInput('workorder_edit', "Work Order ID", choices = c("All", wo_id_all), selected = "All", width = 500)),
+                                                               column(3, selectInput("edit_status", "System Status", choices = c("All", status_choice), selected = "All")),
+                                                               column(3, selectInput("check_woid", "Work Order Checked?", choices = c("", "Yes", "No"), selected = ""))
+                                                             ),
+                                                             fluidRow(
+                                                               column(12, textAreaInput("system_note", "Notes", width = "100%", height = "40%"))
+                                                             ),
+                                                             fluidRow(
+                                                               column(12, actionButton("save_edit", "Save/Edit"), actionButton("clear", "Clear All Fields"))
+                                                             )
                                                          ),
-                                                         fluidRow(
-                                                         column(12, textAreaInput("system_note", "Notes", width = "100%", height = "40%"))),
-                                                         fluidRow(column(12, actionButton("save_edit", "Save/Edit"), actionButton("clear", "Clear All Fields"))),
                                                          h4(textOutput("sys_stat_table_name")),
                                                          reactableOutput("sys_stat_table"),
                                                          h4(textOutput("wo_stat_table_name")),
                                                          reactableOutput("wo_stat_table")
                                                   ),
-                                                  column(5,leafletOutput("map",width = "100%" ,height = "1000"))
+                                                  column(5, leafletOutput("map", width = "100%", height = "1000"))
                                                 )
-                                              ),
+                                       ),
                                        ## 1.3 Tab "Documentation" ----
                                        tabPanel("Documentation", value = "document", 
                                                 titlePanel("App History"),

@@ -322,6 +322,8 @@ server <- function(input, output, session) {
   observe(toggleState(id = "check_woid", condition = !is.null(rv$row_wo_stat_table())))
   observe(toggleState(id = "edit_status", condition = !is.null(rv$row_sys_stat_table())))
   observe(toggleState(id = "save_edit", condition = !is.null(rv$row_wo_stat_table()) | !is.null(rv$row_sys_stat_table())))
+  observe(toggleState(id = "clear", condition = !is.null(rv$row_wo_stat_table()) | !is.null(rv$row_sys_stat_table())))
+  
   
 
   

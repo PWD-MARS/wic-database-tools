@@ -179,7 +179,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                                column(3, selectInput("check_woid", "Work Order Checked?", choices = c("", "Yes", "No"), selected = ""))
                                                              ),
                                                              fluidRow(
-                                                               column(12, textAreaInput("system_note", "Notes", width = "100%", height = "40%"))
+                                                               column(12, conditionalPanel("input.sys_stat_selected != 0", textAreaInput("system_note", "Notes", width = "100%", height = "40%")))
                                                              ),
                                                              fluidRow(
                                                                column(12, actionButton("save_edit", "Save/Edit"), actionButton("clear", "Clear All Fields"))
@@ -227,6 +227,9 @@ server <- function(input, output, session) {
   
   # row selections 
   rv$row_wic_table <- reactive(getReactableState("wic_table", "selected"))
+  rv$row_sys_stat_table <- reactive(getReactableState("sys_stat_table", "selected"))
+  rv$row_wo_stat_table <- reactive(getReactableState("wo_stat_table", "selected"))
+  
   
   # Tables with the system ids and workorder ids for status record keeping
   rv$wic_system_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_system_status
@@ -312,33 +315,61 @@ server <- function(input, output, session) {
   )
   
   ## 2.5 Switch tab to "WIC Investigation"----
+  
+ # Toggle state to switch select inputs
+  observe(toggleState(id = "system_id_edit", condition = is.null(rv$row_wo_stat_table())  ))
+  observe(toggleState(id = "workorder_edit", condition = !is.null(rv$row_wo_stat_table())))
+  observe(toggleState(id = "check_woid", condition = !is.null(rv$row_wo_stat_table())))
+  observe(toggleState(id = "edit_status", condition = !is.null(rv$row_sys_stat_table())))
+  observe(toggleState(id = "save_edit", condition = !is.null(rv$row_wo_stat_table()) | !is.null(rv$row_sys_stat_table())))
+  
+
+  
   observeEvent(rv$row_wic_table(), {
     if (!is.null(rv$row_wic_table())) {
       updateTabsetPanel(session, "TabPanelID", selected = "wic_insight")
-      
+      updateSelectInput(session, "system_id_edit", selected = rv$wic_table_filter()$system_id[rv$row_wic_table()])
+      updateSelectInput(session, "edit_status", selected = rv$wic_table_filter()$status[rv$row_wic_table()])
+      updateSelectInput(session, "system_note", selected = rv$wic_table_filter()$notes[rv$row_wic_table()])
     }
     
   })
   
+  # Only select one table at a time 
+  observeEvent(rv$row_sys_stat_table(), {
+    if(!is.null(rv$row_sys_stat_table())){
+    updateReactable("wo_stat_table", selected = NA)
+    }
+  }
+  )
   
+  observeEvent(rv$row_wo_stat_table(), {
+    if(!is.null(rv$row_wo_stat_table())){
+    updateReactable("sys_stat_table", selected = NA)
+    }
+  }
+  )
+ 
  ## 2.6 WIC Investigation Server Side ----
   output$sys_stat_table_name <- renderText("FARSHAD")
   output$wo_stat_table_name <- renderText("EBRAHIMI")
   
-  
-  ### 2.6.7 Mapping ----
- 
+  ### 2.6.1 Mapping ----
   output$map <- renderLeaflet({
     map
   })
   
-  
-  # 2.6.7 system and work order status tables ----
+  ### 2.6.2 system and work order status tables ----
   output$sys_stat_table <- renderReactable(
     reactable(rv$wic_table_filter()[1,] %>%
                 select(system_id, status, notes),
               theme = darkly(),
-              defaultPageSize = 1
+              defaultPageSize = 1,
+              fullWidth = TRUE,
+              selection = "single",
+              searchable = TRUE,
+              onClick = "select",
+              selectionId = "sys_stat_selected"
               
     ))
   
@@ -346,10 +377,17 @@ server <- function(input, output, session) {
     reactable(rv$wic_table_filter() %>%
                 select(system_id, workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft),
               theme = darkly(),
-              defaultPageSize = 15
+              defaultPageSize = 15,
+              fullWidth = TRUE,
+              selection = "single",
+              searchable = TRUE,
+              onClick = "select",
+              selectionId = "wo_stat_selected"
+              
              
     ))
   
+
   
 }
 

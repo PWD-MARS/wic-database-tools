@@ -331,13 +331,13 @@ server <- function(input, output, session) {
     if (!is.null(rv$row_wic_table())) {
       updateTabsetPanel(session, "TabPanelID", selected = "wic_insight")
       updateSelectInput(session, "system_id_edit", selected = rv$wic_table_filter()$system_id[rv$row_wic_table()])
-      updateSelectInput(session, "edit_status", selected = rv$wic_table_filter()$status[rv$row_wic_table()])
-      updateSelectInput(session, "system_note", selected = rv$wic_table_filter()$notes[rv$row_wic_table()])
+      # updateSelectInput(session, "edit_status", selected = rv$wic_table_filter()$status[rv$row_wic_table()])
+      # updateSelectInput(session, "system_note", selected = rv$wic_table_filter()$notes[rv$row_wic_table()])
     }
     
   })
   
-  # Only select one table at a time 
+  # Only select row from a single table at a time 
   observeEvent(rv$row_sys_stat_table(), {
     if(!is.null(rv$row_sys_stat_table())){
     updateReactable("wo_stat_table", selected = NA)
@@ -358,7 +358,20 @@ server <- function(input, output, session) {
   
   ### 2.6.1 Mapping ----
   output$map <- renderLeaflet({
-    map
+    # Calculate the bounds of the default polygon
+    bounds <- st_bbox(wic_smp_geom %>%
+                        filter(system_id == input$system_id_edit))
+    
+    if (input$system_id_edit == "All" | nrow(filter(wic_smp_geom, system_id == input$system_id_edit)) == 0) {
+      map
+    } else {
+      # Calculate the center of the bounds
+      center_lat <- (unname(bounds["ymin"]) + unname(bounds["ymax"])) / 2
+      center_lng <- (unname(bounds["xmin"]) + unname(bounds["xmax"])) / 2
+      map %>%
+        setView(lng = center_lng, lat = center_lat, zoom = 19)  # Adjust zoom level as needed
+    }
+  
   })
   
   ### 2.6.2 system and work order status tables ----

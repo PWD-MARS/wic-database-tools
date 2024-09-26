@@ -79,9 +79,9 @@ wic_smp_geom['system_id'] <- gsub('-\\d+$','', wic_smp_geom$smp_id)
 map <- leaflet() %>%
   addProviderTiles(providers$OpenStreetMap, group = 'Open Street Map', options = providerTileOptions(maxZoom = 20)) %>%
   addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(maxZoom = 19)) %>%
-  addPolygons(data = wic_smp_geom, label = wic_smp_geom$system_id, color = "blue", group = "System") %>%
-  addPolygons(data = wic_property_geom, color = "red", label = wic_property_geom$address, group = "Property Line") %>%
-  addPolygons(data = wic_footprint_geom, color = "black", label = wic_footprint_geom$address, group = "Footprint") %>%
+  addPolygons(data = wic_smp_geom, label = wic_smp_geom$system_id, labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), color = "blue", group = "System") %>%
+  addPolygons(data = wic_property_geom, color = "red", label = wic_property_geom$address, labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line") %>%
+  addPolygons(data = wic_footprint_geom, color = "black", label = wic_footprint_geom$address, labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
   addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("Open Street Map", "ESRI Satellite")) %>%
   hideGroup(c("Footprint"))
 
@@ -358,61 +358,98 @@ server <- function(input, output, session) {
   
   ### 2.6.1 Mapping ----
   output$map <- renderLeaflet({
-    # Calculate the bounds of the default polygon
+    # Calculate the bounds of the system polygon the view is set
     selected_system_geom <- wic_smp_geom %>%
       filter(system_id == input$system_id_edit)
     bounds <- st_bbox(selected_system_geom)
+    # Highlighting wics by selection- starting by filtering the wic-geom
+    selected_wic_geom <- wic_property_geom %>%
+      filter(address == ifelse(!is.null(rv$row_wo_stat_table()), rv$wo_stat()[rv$row_wo_stat_table(), "wic_address"], "Ignore"))
     
-    if (nrow(filter(wic_smp_geom, system_id == input$system_id_edit)) == 0) {
+    if (nrow(selected_system_geom) == 0) {
       map
+    } else if (nrow(selected_wic_geom) == 0) {
+      # Calculate the center of the bounds
+      center_lat <- (unname(bounds["ymin"]) + unname(bounds["ymax"])) / 2
+      center_lng <- (unname(bounds["xmin"]) + unname(bounds["xmax"])) / 2
+      map %>%
+        addPolygons(data = selected_system_geom,
+                    fillColor = "#002244",   # Change to desired fill color
+                    color = "#002244",
+                    weight = 2,           # Border weight
+                    opacity = 1,          # Border opacity
+                    fillOpacity = 0.5,    # Fill opacity
+                    label = paste("Selected System ID:", input$system_id_edit),  # Always visible label
+                    labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px"))) %>%
+        setView(lng = center_lng, lat = center_lat, zoom = 19)  # Adjust zoom level as needed
     } else {
       # Calculate the center of the bounds
       center_lat <- (unname(bounds["ymin"]) + unname(bounds["ymax"])) / 2
       center_lng <- (unname(bounds["xmin"]) + unname(bounds["xmax"])) / 2
       map %>%
         addPolygons(data = selected_system_geom,
-                    fillColor = "darkblue",   # Change to desired fill color
-                    color = "darkblue",
+                    fillColor = "#002244",   # Change to desired fill color
+                    color = "#002244",
                     weight = 2,           # Border weight
                     opacity = 1,          # Border opacity
                     fillOpacity = 0.5,    # Fill opacity
                     label = paste("Selected System ID:", input$system_id_edit),  # Always visible label
-                    labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px"))) %>%  # Customize label style
+                    labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px"))) %>%
+        addPolygons(data = selected_wic_geom,
+                    fillColor = "yellow",  # Change to your desired highlight color
+                    color = "yellow",
+                    weight = 2,           # Border weight
+                    opacity = 1,          # Border opacity
+                    fillOpacity = 0.7,    # Fill opacity
+                    label = paste("Selected WIC Address:", selected_wic_geom$address),  # Display address
+                    labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px"))) %>%
         setView(lng = center_lng, lat = center_lat, zoom = 19)  # Adjust zoom level as needed
+      
+      
     }
   
   })
   
   ### 2.6.2 system and work order status tables ----
+  
+  # wo_stat table filtered
+  rv$sys_stat <- reactive(wic_sys %>%
+                            filter(system_id == input$system_id_edit) %>%
+                            inner_join(rv$wic_system_status(), by = "system_id") %>%
+                            select(system_id, status, notes) %>%
+                            distinct())
+  
   output$sys_stat_table <- renderReactable(
-    reactable(rv$wic_table_filter()[1,] %>%
-                select(system_id, status, notes),
+    reactable(rv$sys_stat(),
               theme = darkly(),
               defaultPageSize = 1,
               fullWidth = TRUE,
               selection = "single",
-              searchable = TRUE,
               onClick = "select",
-              selectionId = "sys_stat_selected"
+              selectionId = "sys_stat_selected",
+              searchable = FALSE
+              
               
     ))
   
+  
+  # wo_stat table filtered
+  rv$wo_stat <- reactive(wic_sys %>%
+                           filter(system_id == input$system_id_edit) %>%
+                           select(workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft) %>%
+                           distinct())
+  
   output$wo_stat_table <- renderReactable(
-    reactable(rv$wic_table_filter() %>%
-                select(system_id, workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft),
+    reactable(rv$wo_stat(),
               theme = darkly(),
               defaultPageSize = 15,
               fullWidth = TRUE,
               selection = "single",
-              searchable = TRUE,
               onClick = "select",
-              selectionId = "wo_stat_selected"
-              
-             
-    ))
-  
-
-  
+              selectionId = "wo_stat_selected",
+              searchable = FALSE
+    )
+    )
 }
 
 # Run the application 

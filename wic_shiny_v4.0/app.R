@@ -343,12 +343,13 @@ server <- function(input, output, session) {
   output$map <- renderLeaflet({
     # creating basemap here 
     map <- leaflet() %>%
-      addProviderTiles(providers$OpenStreetMap, group = 'Open Street Map', options = providerTileOptions(maxZoom = 20)) %>%
-      addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(maxZoom = 19)) %>%
-      addPolygons(data = wic_smp_geom, label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), color = "blue", group = "System") %>%
+      addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(maxZoom = 20)) %>%
+      addProviderTiles(providers$Esri.WorldTopoMap, group = 'Esri.WorldTopoMap', options = providerTileOptions(maxZoom = 20)) %>%
+      addProviderTiles(providers$Esri.WorldImagery, group='Esri.WorldImagery', options = providerTileOptions(maxZoom = 19)) %>%
+      addPolygons(data = wic_smp_geom, color = "#000000", label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "System") %>%
       addPolygons(data = wic_property_geom, color = "red", label = paste("Address: ", wic_property_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line") %>%
       addPolygons(data = wic_footprint_geom, color = "purple", label = paste("Address",wic_footprint_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
-      addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("Open Street Map", "ESRI Satellite")) %>%
+      addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("OpenStreetMap", "Esri.WorldTopoMap", "Esri.WorldImagery")) %>%
       hideGroup(c("Footprint")) %>%
       setView(lng = -75.1652 , lat = 39.9526  , zoom = 11) # zoom in philly
     
@@ -370,16 +371,17 @@ server <- function(input, output, session) {
     
     if (nrow(selected_system_geom) == 0) {
       leafletProxy("map") %>%
-        clearGroup("selected_system") %>%
         clearGroup("selected_wic") %>%
+        clearGroup("selected_system") %>%
         setView(lng = -75.1652 , lat = 39.9526  , zoom = 11) 
       
     } else if (nrow(selected_system_geom) > 0 & nrow(selected_wic_geom) == 0) {
       leafletProxy("map") %>%
         clearGroup("selected_wic") %>%
+        clearGroup("selected_system") %>%
         addPolygons(data = selected_system_geom,
-                    fillColor = "#002244",   # Change to desired fill color
-                    color = "#002244",
+                    fillColor = "black",   # Change to desired fill color
+                    color = "yellow",
                     weight = 2,           # Border weight
                     opacity = 1,          # Border opacity
                     fillOpacity = 0.5,    # Fill opacity
@@ -391,9 +393,10 @@ server <- function(input, output, session) {
     } else if(nrow(selected_system_geom) > 0 & nrow(selected_wic_geom) > 0){
       leafletProxy("map") %>%
         clearGroup("selected_wic") %>%
+        clearGroup("selected_system") %>%
         addPolygons(data = selected_system_geom,
-                    fillColor = "#002244",   # Change to desired fill color
-                    color = "#002244",
+                    fillColor = "black",   # Change to desired fill color
+                    color = "yellow",
                     weight = 2,           # Border weight
                     opacity = 1,          # Border opacity
                     fillOpacity = 0.5,    # Fill opacity
@@ -402,7 +405,7 @@ server <- function(input, output, session) {
                     group = "selected_system") %>%
         addPolygons(data = selected_wic_geom,
                     fillColor = "yellow",  # Change to your desired highlight color
-                    color = "yellow",
+                    color = "#ff9900",
                     weight = 2,           # Border weight
                     opacity = 1,          # Border opacity
                     fillOpacity = 0.7,    # Fill opacity

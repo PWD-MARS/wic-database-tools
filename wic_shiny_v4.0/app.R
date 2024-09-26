@@ -305,7 +305,7 @@ server <- function(input, output, session) {
   observe(toggleState(id = "check_woid", condition = !is.null(rv$row_wo_stat_table())))
   observe(toggleState(id = "edit_status", condition = !is.null(rv$row_sys_stat_table())))
   observe(toggleState(id = "save_edit", condition = !is.null(rv$row_wo_stat_table()) | !is.null(rv$row_sys_stat_table())))
-  observe(toggleState(id = "clear", condition = !is.null(rv$row_wo_stat_table()) | !is.null(rv$row_sys_stat_table())))
+  observe(toggleState(id = "clear", condition = !is.null(rv$row_wo_stat_table()) | !is.null(rv$row_sys_stat_table()) | input$system_id_edit != "" ))
   
   
 
@@ -346,7 +346,7 @@ server <- function(input, output, session) {
       addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(maxZoom = 20)) %>%
       addProviderTiles(providers$Esri.WorldTopoMap, group = 'Esri.WorldTopoMap', options = providerTileOptions(maxZoom = 20)) %>%
       addProviderTiles(providers$Esri.WorldImagery, group='Esri.WorldImagery', options = providerTileOptions(maxZoom = 19)) %>%
-      addPolygons(data = wic_smp_geom, color = "#000000", label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "System") %>%
+      addPolygons(data = wic_smp_geom, color = "#000000", label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "System", layerId = ~system_id) %>%
       addPolygons(data = wic_property_geom, color = "red", label = paste("Address: ", wic_property_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line") %>%
       addPolygons(data = wic_footprint_geom, color = "purple", label = paste("Address",wic_footprint_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
       addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("OpenStreetMap", "Esri.WorldTopoMap", "Esri.WorldImagery")) %>%
@@ -387,7 +387,8 @@ server <- function(input, output, session) {
                     fillOpacity = 0.5,    # Fill opacity
                     label = paste("Selected System ID:", input$system_id_edit),  # Always visible label
                     labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")),
-                    group = "selected_system") %>%
+                    group = "selected_system",
+                    layerId = ~system_id) %>%
         setView(lng = center_lng, lat = center_lat, zoom = 19) 
       
     } else if(nrow(selected_system_geom) > 0 & nrow(selected_wic_geom) > 0){
@@ -402,7 +403,8 @@ server <- function(input, output, session) {
                     fillOpacity = 0.5,    # Fill opacity
                     label = paste("Selected System ID:", input$system_id_edit),  # Always visible label
                     labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")),
-                    group = "selected_system") %>%
+                    group = "selected_system", 
+                    layerId = ~system_id) %>%
         addPolygons(data = selected_wic_geom,
                     fillColor = "yellow",  # Change to your desired highlight color
                     color = "#ff9900",
@@ -415,6 +417,18 @@ server <- function(input, output, session) {
         setView(lng = center_lng, lat = center_lat, zoom = 19) 
     }
   })
+  
+  
+  # Observe click events on the map
+  observeEvent(input$map_shape_click, {
+    click <- input$map_shape_click
+    if (!is.null(click)) {
+      system_id_clicked <- click$id  # Get the system_id from the clicked polygon
+      updateSelectInput(session, "system_id_edit", selected = system_id_clicked)
+    }
+  })
+  
+
   
   ### 2.6.2 system and work order status tables ----
   

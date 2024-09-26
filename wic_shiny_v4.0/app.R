@@ -369,7 +369,6 @@ server <- function(input, output, session) {
       filter(address == ifelse(!is.null(rv$row_wo_stat_table()), rv$wo_stat()[rv$row_wo_stat_table(), "wic_address"], "Ignore"))
     
     if (nrow(selected_system_geom) == 0) {
-      
       leafletProxy("map") %>%
         clearGroup("selected_system") %>%
         clearGroup("selected_wic") %>%
@@ -390,7 +389,6 @@ server <- function(input, output, session) {
         setView(lng = center_lng, lat = center_lat, zoom = 19) 
       
     } else if(nrow(selected_system_geom) > 0 & nrow(selected_wic_geom) > 0){
-      
       leafletProxy("map") %>%
         addPolygons(data = selected_system_geom,
                     fillColor = "#002244",   # Change to desired fill color
@@ -411,7 +409,6 @@ server <- function(input, output, session) {
                     labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")),
                     group = "selected_wic") %>%
         setView(lng = center_lng, lat = center_lat, zoom = 19) 
-      
     }
   })
   

@@ -79,9 +79,9 @@ wic_smp_geom['system_id'] <- gsub('-\\d+$','', wic_smp_geom$smp_id)
 map <- leaflet() %>%
   addProviderTiles(providers$OpenStreetMap, group = 'Open Street Map', options = providerTileOptions(maxZoom = 20)) %>%
   addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(maxZoom = 19)) %>%
-  addPolygons(data = wic_smp_geom, label = wic_smp_geom$system_id, labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), color = "blue", group = "System") %>%
-  addPolygons(data = wic_property_geom, color = "red", label = wic_property_geom$address, labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line") %>%
-  addPolygons(data = wic_footprint_geom, color = "black", label = wic_footprint_geom$address, labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
+  addPolygons(data = wic_smp_geom, label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), color = "blue", group = "System") %>%
+  addPolygons(data = wic_property_geom, color = "red", label = paste("Address: ", wic_property_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line") %>%
+  addPolygons(data = wic_footprint_geom, color = "purple", label = paste("Address",wic_footprint_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
   addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("Open Street Map", "ESRI Satellite")) %>%
   hideGroup(c("Footprint"))
 
@@ -362,7 +362,7 @@ server <- function(input, output, session) {
     selected_system_geom <- wic_smp_geom %>%
       filter(system_id == input$system_id_edit)
     bounds <- st_bbox(selected_system_geom)
-    # Highlighting wics by selection- starting by filtering the wic-geom
+    # Highlighting wics by selection- starting by filtering the wic-geom> Filter can't accept NULL. 
     selected_wic_geom <- wic_property_geom %>%
       filter(address == ifelse(!is.null(rv$row_wo_stat_table()), rv$wo_stat()[rv$row_wo_stat_table(), "wic_address"], "Ignore"))
     
@@ -391,8 +391,8 @@ server <- function(input, output, session) {
       center_lng <- (unname(bounds["xmin"]) + unname(bounds["xmax"])) / 2
       map %>%
         addPolygons(data = selected_system_geom,
-                    fillColor = "#002244",   # Change to desired fill color
-                    color = "#002244",
+                    fillColor = "black",   # Change to desired fill color
+                    color = "black",
                     weight = 2,           # Border weight
                     opacity = 1,          # Border opacity
                     fillOpacity = 0.5,    # Fill opacity
@@ -451,6 +451,7 @@ server <- function(input, output, session) {
               onClick = "select",
               selectionId = "wo_stat_selected",
               searchable = FALSE
+
     )
     )
 }

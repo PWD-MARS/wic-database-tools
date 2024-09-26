@@ -390,6 +390,7 @@ server <- function(input, output, session) {
       
     } else if(nrow(selected_system_geom) > 0 & nrow(selected_wic_geom) > 0){
       leafletProxy("map") %>%
+        clearGroup("selected_wic") %>%
         addPolygons(data = selected_system_geom,
                     fillColor = "#002244",   # Change to desired fill color
                     color = "#002244",

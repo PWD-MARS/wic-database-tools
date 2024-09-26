@@ -366,8 +366,10 @@ server <- function(input, output, session) {
     selected_wic_geom <- wic_property_geom %>%
       filter(address == ifelse(!is.null(rv$row_wo_stat_table()), rv$wo_stat()[rv$row_wo_stat_table(), "wic_address"], "Ignore"))
     
+    # If no system_id is selected, just show the entire map
     if (nrow(selected_system_geom) == 0) {
       map
+    # If a system_id is selected, get the coordinate around the system and set the view on the system (zoom in and highlight the system polygon)  
     } else if (nrow(selected_wic_geom) == 0) {
       # Calculate the center of the bounds
       center_lat <- (unname(bounds["ymin"]) + unname(bounds["ymax"])) / 2
@@ -382,6 +384,7 @@ server <- function(input, output, session) {
                     label = paste("Selected System ID:", input$system_id_edit),  # Always visible label
                     labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px"))) %>%
         setView(lng = center_lng, lat = center_lat, zoom = 19)  # Adjust zoom level as needed
+    # if a system is selected and wic row is selected too, highlight the selected wic property too  
     } else {
       # Calculate the center of the bounds
       center_lat <- (unname(bounds["ymin"]) + unname(bounds["ymax"])) / 2

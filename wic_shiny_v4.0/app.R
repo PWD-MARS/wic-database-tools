@@ -70,22 +70,6 @@ wic_footprint_geom <- st_read(dsn = mars_con, Id(schema="fieldwork", table = "be
 wic_smp_geom <- st_read(dsn = mars_con, Id(schema="fieldwork", table = "beta_tbl_wic_smp_geom")) %>%
   st_transform(crs = 4326)
 wic_smp_geom['system_id'] <- gsub('-\\d+$','', wic_smp_geom$smp_id)
-# wic_sys_geom <- wic_smp_geom %>%
-#   group_by(system_id) %>%
-#   summarize(sys_geom = st_combine(smp_geom)) %>%
-#   st_as_sf()
-
-# creating basemap here to avoid recreating it in the server 
-map <- leaflet() %>%
-  addProviderTiles(providers$OpenStreetMap, group = 'Open Street Map', options = providerTileOptions(maxZoom = 20)) %>%
-  addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(maxZoom = 19)) %>%
-  addPolygons(data = wic_smp_geom, label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), color = "blue", group = "System") %>%
-  addPolygons(data = wic_property_geom, color = "red", label = paste("Address: ", wic_property_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line") %>%
-  addPolygons(data = wic_footprint_geom, color = "purple", label = paste("Address",wic_footprint_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
-  addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("Open Street Map", "ESRI Satellite")) %>%
-  hideGroup(c("Footprint"))
-
-
 # gauge data
 gauge_event <- dbGetQuery(mars_con, "SELECT distinct tbl_gage_event.gage_uid, tbl_gage_event.eventdatastart_edt::date AS event_startdate FROM data.tbl_gage_event where tbl_gage_event.eventdataend_edt > '2010-01-01'")
 gauge_sys <- dbGetQuery(mars_con, "select distinct admin.fun_smp_to_system(smp_id) as system_id, gage_uid from admin.tbl_smp_gage where smp_id like '%-%-%'")
@@ -297,7 +281,6 @@ server <- function(input, output, session) {
               }
               ))
   
-  
   ## 2.4 Download button ----
   output$download_table <- downloadHandler(
     
@@ -355,26 +338,46 @@ server <- function(input, output, session) {
  ## 2.6 WIC Investigation Server Side ----
   output$sys_stat_table_name <- renderText("FARSHAD")
   output$wo_stat_table_name <- renderText("EBRAHIMI")
-  
-  ### 2.6.1 Mapping ----
+
+  # ### 2.6.1 Mapping ----
   output$map <- renderLeaflet({
+    # creating basemap here 
+    map <- leaflet() %>%
+      addProviderTiles(providers$OpenStreetMap, group = 'Open Street Map', options = providerTileOptions(maxZoom = 20)) %>%
+      addProviderTiles(providers$Esri.WorldImagery, group='ESRI Satellite', options = providerTileOptions(maxZoom = 19)) %>%
+      addPolygons(data = wic_smp_geom, label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), color = "blue", group = "System") %>%
+      addPolygons(data = wic_property_geom, color = "red", label = paste("Address: ", wic_property_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line") %>%
+      addPolygons(data = wic_footprint_geom, color = "purple", label = paste("Address",wic_footprint_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
+      addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("Open Street Map", "ESRI Satellite")) %>%
+      hideGroup(c("Footprint")) %>%
+      setView(lng = -75.1652 , lat = 39.9526  , zoom = 11) # zoom in philly
+    
+  })
+  
+  observeEvent(list(input$system_id_edit, rv$row_wo_stat_table()), {
     # Calculate the bounds of the system polygon the view is set
     selected_system_geom <- wic_smp_geom %>%
       filter(system_id == input$system_id_edit)
     bounds <- st_bbox(selected_system_geom)
-    # Highlighting wics by selection- starting by filtering the wic-geom> Filter can't accept NULL. 
+    
+    # Calculate the center of the bounds
+    center_lat <- (unname(bounds["ymin"]) + unname(bounds["ymax"])) / 2
+    center_lng <- (unname(bounds["xmin"]) + unname(bounds["xmax"])) / 2
+    
+    # get the selected wic geom to highlight
     selected_wic_geom <- wic_property_geom %>%
       filter(address == ifelse(!is.null(rv$row_wo_stat_table()), rv$wo_stat()[rv$row_wo_stat_table(), "wic_address"], "Ignore"))
     
-    # If no system_id is selected, just show the entire map
     if (nrow(selected_system_geom) == 0) {
-      map
-    # If a system_id is selected, get the coordinate around the system and set the view on the system (zoom in and highlight the system polygon)  
-    } else if (nrow(selected_wic_geom) == 0) {
-      # Calculate the center of the bounds
-      center_lat <- (unname(bounds["ymin"]) + unname(bounds["ymax"])) / 2
-      center_lng <- (unname(bounds["xmin"]) + unname(bounds["xmax"])) / 2
-      map %>%
+      
+      leafletProxy("map") %>%
+        clearGroup("selected_system") %>%
+        clearGroup("selected_wic") %>%
+        setView(lng = -75.1652 , lat = 39.9526  , zoom = 11) 
+      
+    } else if (nrow(selected_system_geom) > 0 & nrow(selected_wic_geom) == 0) {
+      leafletProxy("map") %>%
+        clearGroup("selected_wic") %>%
         addPolygons(data = selected_system_geom,
                     fillColor = "#002244",   # Change to desired fill color
                     color = "#002244",
@@ -382,22 +385,22 @@ server <- function(input, output, session) {
                     opacity = 1,          # Border opacity
                     fillOpacity = 0.5,    # Fill opacity
                     label = paste("Selected System ID:", input$system_id_edit),  # Always visible label
-                    labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px"))) %>%
-        setView(lng = center_lng, lat = center_lat, zoom = 19)  # Adjust zoom level as needed
-    # if a system is selected and wic row is selected too, highlight the selected wic property too  
-    } else {
-      # Calculate the center of the bounds
-      center_lat <- (unname(bounds["ymin"]) + unname(bounds["ymax"])) / 2
-      center_lng <- (unname(bounds["xmin"]) + unname(bounds["xmax"])) / 2
-      map %>%
+                    labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")),
+                    group = "selected_system") %>%
+        setView(lng = center_lng, lat = center_lat, zoom = 19) 
+      
+    } else if(nrow(selected_system_geom) > 0 & nrow(selected_wic_geom) > 0){
+      
+      leafletProxy("map") %>%
         addPolygons(data = selected_system_geom,
-                    fillColor = "black",   # Change to desired fill color
-                    color = "black",
+                    fillColor = "#002244",   # Change to desired fill color
+                    color = "#002244",
                     weight = 2,           # Border weight
                     opacity = 1,          # Border opacity
                     fillOpacity = 0.5,    # Fill opacity
                     label = paste("Selected System ID:", input$system_id_edit),  # Always visible label
-                    labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px"))) %>%
+                    labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")),
+                    group = "selected_system") %>%
         addPolygons(data = selected_wic_geom,
                     fillColor = "yellow",  # Change to your desired highlight color
                     color = "yellow",
@@ -405,12 +408,11 @@ server <- function(input, output, session) {
                     opacity = 1,          # Border opacity
                     fillOpacity = 0.7,    # Fill opacity
                     label = paste("Selected WIC Address:", selected_wic_geom$address),  # Display address
-                    labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px"))) %>%
-        setView(lng = center_lng, lat = center_lat, zoom = 19)  # Adjust zoom level as needed
-      
+                    labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")),
+                    group = "selected_wic") %>%
+        setView(lng = center_lng, lat = center_lat, zoom = 19) 
       
     }
-  
   })
   
   ### 2.6.2 system and work order status tables ----
@@ -432,9 +434,7 @@ server <- function(input, output, session) {
               selectionId = "sys_stat_selected",
               searchable = FALSE
               
-              
     ))
-  
   
   # wo_stat table filtered
   rv$wo_stat <- reactive(wic_sys %>%

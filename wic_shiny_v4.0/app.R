@@ -68,8 +68,19 @@ wic_footprint_geom <- st_read(dsn = mars_con, Id(schema="fieldwork", table = "be
 
 # Grouping smp polygons by system- setting crs global 4326 for leaflet mapping 
 wic_smp_geom <- st_read(dsn = mars_con, Id(schema="fieldwork", table = "beta_tbl_wic_smp_geom")) %>%
+  st_transform(crs = 4326) 
+wic_smp_geom['system_id'] <- gsub('-\\d+$','', wic_smp_geom$smp_id) 
+
+# grouping by system-id and setting CRS= 2272 for st-buffer
+wic_sys_geom <- wic_smp_geom %>%
+  group_by(system_id) %>%
+  summarise(system_geom = st_combine(smp_geom)) %>%
+  st_as_sf() %>%
+  st_transform(crs = 2272)
+# creating a buffer spatial layer for mapping. This is to show intersection of buffer and wics.
+wic_sys_geom_buffered <- st_buffer(wic_sys_geom, 100) %>%
   st_transform(crs = 4326)
-wic_smp_geom['system_id'] <- gsub('-\\d+$','', wic_smp_geom$smp_id)
+
 # gauge data
 gauge_event <- dbGetQuery(mars_con, "SELECT distinct tbl_gage_event.gage_uid, tbl_gage_event.eventdatastart_edt::date AS event_startdate FROM data.tbl_gage_event where tbl_gage_event.eventdataend_edt > '2010-01-01'")
 gauge_sys <- dbGetQuery(mars_con, "select distinct admin.fun_smp_to_system(smp_id) as system_id, gage_uid from admin.tbl_smp_gage where smp_id like '%-%-%'")
@@ -346,11 +357,12 @@ server <- function(input, output, session) {
       addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(maxZoom = 20)) %>%
       addProviderTiles(providers$Esri.WorldTopoMap, group = 'Esri.WorldTopoMap', options = providerTileOptions(maxZoom = 20)) %>%
       addProviderTiles(providers$Esri.WorldImagery, group='Esri.WorldImagery', options = providerTileOptions(maxZoom = 19)) %>%
+      addPolygons(data = wic_sys_geom_buffered, color = "#00ffbf", label = paste("System ID: ", wic_sys_geom_buffered$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Buffer (100ft)") %>%
       addPolygons(data = wic_smp_geom, color = "#000000", label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "System", layerId = ~system_id) %>%
       addPolygons(data = wic_property_geom, color = "red", label = paste("Address: ", wic_property_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line") %>%
       addPolygons(data = wic_footprint_geom, color = "purple", label = paste("Address",wic_footprint_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
-      addLayersControl(overlayGroups = c("System","Property Line", "Footprint"), baseGroups = c("OpenStreetMap", "Esri.WorldTopoMap", "Esri.WorldImagery")) %>%
-      hideGroup(c("Footprint")) %>%
+      addLayersControl(overlayGroups = c("System","Buffer (100ft)","Property Line", "Footprint"), baseGroups = c("OpenStreetMap", "Esri.WorldTopoMap", "Esri.WorldImagery")) %>%
+      hideGroup(c("Footprint", "Buffer (100ft)")) %>%
       setView(lng = -75.1652 , lat = 39.9526  , zoom = 11) # zoom in philly
     
   })

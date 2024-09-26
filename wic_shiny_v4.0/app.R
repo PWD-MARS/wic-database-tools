@@ -418,7 +418,7 @@ server <- function(input, output, session) {
   
   ### 2.6.2 system and work order status tables ----
   
-  # wo_stat table filtered
+  # sys_stat table filtered
   rv$sys_stat <- reactive(wic_sys %>%
                             filter(system_id == input$system_id_edit) %>%
                             inner_join(rv$wic_system_status(), by = "system_id") %>%

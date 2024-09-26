@@ -157,9 +157,9 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                   column(7,
                                                          box(width = NULL, solidHeader = TRUE, status = "primary", class = "custom-box",
                                                              fluidRow(
-                                                               column(3, selectizeInput('system_id_edit', "System ID", choices = c("All", system_id_all), selected = "All")),
-                                                               column(3, selectizeInput('workorder_edit', "Work Order ID", choices = c("All", wo_id_all), selected = "All", width = 500)),
-                                                               column(3, selectInput("edit_status", "System Status", choices = c("All", status_choice), selected = "All")),
+                                                               column(3, selectizeInput('system_id_edit', "System ID", choices = c("", system_id_all), selected = "")),
+                                                               column(3, selectizeInput('workorder_edit', "Work Order ID", choices = c("", wo_id_all), selected = "")),
+                                                               column(3, selectInput("edit_status", "System Status", choices = c("", status_choice), selected = "")),
                                                                column(3, selectInput("check_woid", "Work Order Checked?", choices = c("", "Yes", "No"), selected = ""))
                                                              ),
                                                              fluidRow(

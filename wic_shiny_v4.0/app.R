@@ -325,6 +325,8 @@ server <- function(input, output, session) {
     reset("system_id")
     reset("single_wic")
     reset("table_name")
+    reset("wic_table")
+    updateReactable("wic_table", selected = NA)
     
     removeModal()
   })

@@ -137,8 +137,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                                 max = 100,
                                                                 value = 25),
                                                     checkboxInput("single_wic", "Only Show Most Recent WIC per System ID", value = TRUE, width = NULL),
-                                                    fluidRow(column(12, strong("Download all WICs"))),
-                                                    downloadButton("download_table", "Download"), 
+                                                    downloadButton("download_table", "Download"), actionButton("clear_main", "Clear All Fields"),
                                                     width = 3
                                                   ),
                                                   
@@ -308,7 +307,28 @@ server <- function(input, output, session) {
     }
   )
   
-  ## 2.5 Switch tab to "WIC Investigation"----
+  
+  ## 2.5 Clear button Tab 1----
+  observeEvent(input$clear_main, {
+    showModal(modalDialog(title = "Clear All Fields", 
+                          "Are you sure you want to clear all fields on this tab?", 
+                          modalButton("No"), 
+                          actionButton("confirm_clear_main_pcs", "Yes")))
+  })
+  
+  # clear button
+  observeEvent(input$confirm_clear_main_pcs, {
+    reset("status")
+    reset("prop_dist")
+    reset("f_q")
+    reset("date_range")
+    reset("system_id")
+    reset("single_wic")
+    
+    removeModal()
+  })
+  
+  ## 2.6 Switch tab to "WIC Investigation"----
   
  # Toggle state to switch select inputs
   observe(toggleState(id = "system_id_edit", condition = is.null(rv$row_wo_stat_table())  ))
@@ -571,14 +591,15 @@ server <- function(input, output, session) {
     }
 })
   
+
+  
+  ## 2.6.4 Clear button Tab 2----
   observeEvent(input$clear, {
     showModal(modalDialog(title = "Clear All Fields", 
                           "Are you sure you want to clear all fields on this tab?", 
                           modalButton("No"), 
                           actionButton("confirm_clear_pcs", "Yes")))
   })
-  
-  ## 2.6.4 Clear button----
   
   # clear button
   observeEvent(input$confirm_clear_pcs, {

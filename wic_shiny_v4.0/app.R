@@ -335,10 +335,10 @@ server <- function(input, output, session) {
   
  # Toggle state to switch select inputs
   observe(toggleState(id = "system_id_edit", condition = is.null(rv$row_wo_stat_table())  ))
-  observe(toggleState(id = "workorder_edit", condition = !is.null(rv$row_wo_stat_table())))
+  observe(toggleState(id = "workorder_edit", condition = FALSE))
   observe(toggleState(id = "check_woid", condition = !is.null(rv$row_wo_stat_table())))
   observe(toggleState(id = "edit_status", condition = !is.null(rv$row_sys_stat_table())))
-  observe(toggleState(id = "save_edit", condition = !is.null(rv$row_wo_stat_table()) | !is.null(rv$row_sys_stat_table())))
+  observe(toggleState(id = "save_edit", condition = (!is.null(rv$row_wo_stat_table()) | !is.null(rv$row_sys_stat_table())) & ((input$workorder_edit != "" & input$check_woid !="") | (input$system_id_edit != "" & input$edit_status != ""))))
   observe(toggleState(id = "clear", condition = !is.null(rv$row_wo_stat_table()) | !is.null(rv$row_sys_stat_table()) | input$system_id_edit != "" ))
   
   

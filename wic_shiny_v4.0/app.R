@@ -448,7 +448,7 @@ server <- function(input, output, session) {
 
 
   
-  ## 2.6.2 system and work order status tables ----
+  ## 2.6.2 System and work order status tables ----
   
   # sys_stat table filtered
   rv$sys_stat <- reactive(wic_sys %>%
@@ -522,7 +522,7 @@ server <- function(input, output, session) {
     )
   
   
-  ## 2.6.3 save/edit----
+  ## 2.6.3 Save/edit----
   
   ### On click "save_edit"
   
@@ -536,7 +536,18 @@ server <- function(input, output, session) {
       
       rv$update_sys_status_q <- reactive(paste("Update fieldwork.beta_tbl_wic_system_status SET notes = '",  rv$input_note(), "', wic_system_status_lookup_uid = ", ifelse(length(rv$sys_stat_uid()) == 0, 4, rv$sys_stat_uid())," where system_id = '", input$system_id_edit, "'", sep = ""))
       dbGetQuery(mars_con, rv$update_sys_status_q())
-
+      
+      # refresh data and reset tables
+      rv$wic_system_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_system_status
+                                              INNER JOIN fieldwork.beta_tbl_wic_system_status_lookup
+                                              USING(wic_system_status_lookup_uid)"))
+      
+      reset("sys_stat_table")
+      reset("wo_stat_table")
+      reset("wic_table")
+      reset("edit_status")
+      reset("system_note")
+      
     } else if(!is.null(rv$row_wo_stat_table())) {
       
       rv$wo_stat_uid <- reactive(wic_wo_status_lookup %>%
@@ -547,8 +558,42 @@ server <- function(input, output, session) {
       
       rv$update_wo_status_q <- reactive(paste("Update fieldwork.beta_tbl_wic_wo_status SET wic_wo_status_lookup_uid = ", ifelse(length(rv$wo_stat_uid()) == 0, 2, rv$wo_stat_uid())," where workorder_id = ", input$workorder_edit, sep = ""))
       dbGetQuery(mars_con, rv$update_wo_status_q())
+      
+      # refresh data and reset tables
+      rv$wic_wo_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_wo_status 
+                                              INNER JOIN fieldwork.beta_tbl_wic_wo_status_lookup
+                                              USING(wic_wo_status_lookup_uid)"))
+      reset("sys_stat_table")
+      reset("wo_stat_table")
+      reset("wic_table")
+      reset("workorder_edit")
+      reset("check_woid")
     }
 })
+  
+  observeEvent(input$clear, {
+    showModal(modalDialog(title = "Clear All Fields", 
+                          "Are you sure you want to clear all fields on this tab?", 
+                          modalButton("No"), 
+                          actionButton("confirm_clear_pcs", "Yes")))
+  })
+  
+  ## 2.6.4 Clear button----
+  
+  # clear button
+  observeEvent(input$confirm_clear_pcs, {
+    
+    reset("sys_stat_table")
+    reset("wo_stat_table")
+    reset("wic_table")
+    reset("workorder_edit")
+    reset("check_woid")
+    reset("edit_status")
+    reset("system_note")
+    reset("system_id_edit")
+    
+    removeModal()
+  })
   
 }
 # Run the application 

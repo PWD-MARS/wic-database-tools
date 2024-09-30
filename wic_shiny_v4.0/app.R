@@ -215,7 +215,7 @@ server <- function(input, output, session) {
   
   #initialzie reactive values
   rv <- reactiveValues()
-  
+
   #process text field to prevent sql injection
   rv$reason_step <- reactive(gsub('\'', '\'\'',  input$system_note))
   rv$input_note  <- reactive(special_char_replace(rv$reason_step()))
@@ -359,7 +359,7 @@ server <- function(input, output, session) {
       addProviderTiles(providers$Esri.WorldImagery, group='Esri.WorldImagery', options = providerTileOptions(maxZoom = 19)) %>%
       addPolygons(data = wic_sys_geom_buffered, color = "#00ffbf", label = paste("System ID: ", wic_sys_geom_buffered$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Buffer (100ft)") %>%
       addPolygons(data = wic_smp_geom, color = "#000000", label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "System", layerId = ~system_id) %>%
-      addPolygons(data = wic_property_geom, color = "red", label = paste("Address: ", wic_property_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line") %>%
+      addPolygons(data = wic_property_geom, color = "red", label = paste("Address: ", wic_property_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line", layerId =  ~address) %>%
       addPolygons(data = wic_footprint_geom, color = "purple", label = paste("Address",wic_footprint_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
       addLayersControl(overlayGroups = c("System","Buffer (100ft)","Property Line", "Footprint"), baseGroups = c("OpenStreetMap", "Esri.WorldTopoMap", "Esri.WorldImagery")) %>%
       hideGroup(c("Footprint", "Buffer (100ft)")) %>%
@@ -431,15 +431,29 @@ server <- function(input, output, session) {
   })
   
   
+  # Initialize a reactive value to store highlighted workorder_ids
+  rv$highlight_rows <- reactiveVal(vector())
   # Observe click events on the map
   observeEvent(input$map_shape_click, {
     click <- input$map_shape_click
     if (!is.null(click)) {
-      system_id_clicked <- click$id  # Get the system_id from the clicked polygon
-      updateSelectInput(session, "system_id_edit", selected = system_id_clicked)
+      if (click$id %in% system_id_all) {
+        # click on the system removes row highlighting from the wo_stat_table
+        rv$highlight_rows <- reactiveVal(vector())
+        system_id_clicked <- click$id  # Get the system_id from the clicked polygon
+        updateSelectInput(session, "system_id_edit", selected = system_id_clicked)
+      } else {
+        address_clicked <- click$id  # Get the address from the clicked polygon
+        rv$highlight_rows <- reactive(rv$wo_stat() %>%
+          filter(wic_address %in% address_clicked) %>%
+          select(workorder_id) %>%
+          pull)
+        
+      }
+     
     }
   })
-  
+
 
   
   ### 2.6.2 system and work order status tables ----
@@ -468,7 +482,7 @@ server <- function(input, output, session) {
                            filter(system_id == input$system_id_edit) %>%
                            select(workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft) %>%
                            distinct())
-  
+
   output$wo_stat_table <- renderReactable(
     reactable(rv$wo_stat(),
               theme = darkly(),
@@ -477,7 +491,18 @@ server <- function(input, output, session) {
               selection = "single",
               onClick = "select",
               selectionId = "wo_stat_selected",
-              searchable = FALSE
+              searchable = FALSE,
+              rowStyle = function(index) {
+                #req(rv$highlight_rows())  # Ensure highlight_rows is available
+                # Get the workorder_id for the current row
+                workorder_id <- rv$wo_stat()$workorder_id[index]
+                # Check if the workorder_id is in the highlight_rows vector
+                if (workorder_id %in% rv$highlight_rows()) {
+                  list(background = "brown")  # Highlight color
+                } else {
+                  NULL  # No additional style
+                }
+              }
 
     )
     )

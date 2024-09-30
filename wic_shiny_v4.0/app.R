@@ -359,8 +359,8 @@ server <- function(input, output, session) {
       addProviderTiles(providers$Esri.WorldImagery, group='Esri.WorldImagery', options = providerTileOptions(maxZoom = 19)) %>%
       addPolygons(data = wic_sys_geom_buffered, color = "#00ffbf", label = paste("System ID: ", wic_sys_geom_buffered$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Buffer (100ft)") %>%
       addPolygons(data = wic_smp_geom, color = "#000000", label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "System", layerId = ~system_id) %>%
-      addPolygons(data = wic_property_geom, color = "red", label = paste("Address: ", wic_property_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line", layerId =  ~address) %>%
-      addPolygons(data = wic_footprint_geom, color = "purple", label = paste("Address",wic_footprint_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
+      addPolygons(data = wic_property_geom, color = "red", label = paste("Address: ", wic_property_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line") %>%
+      addPolygons(data = wic_footprint_geom, color = "purple", label = paste("Address", wic_footprint_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
       addLayersControl(overlayGroups = c("System","Buffer (100ft)","Property Line", "Footprint"), baseGroups = c("OpenStreetMap", "Esri.WorldTopoMap", "Esri.WorldImagery")) %>%
       hideGroup(c("Footprint", "Buffer (100ft)")) %>%
       setView(lng = -75.1652 , lat = 39.9526  , zoom = 11) # zoom in philly
@@ -370,7 +370,8 @@ server <- function(input, output, session) {
   observeEvent(list(input$system_id_edit, rv$row_wo_stat_table()), {
     # Calculate the bounds of the system polygon the view is set
     selected_system_geom <- wic_smp_geom %>%
-      filter(system_id == input$system_id_edit)
+      filter(system_id == input$system_id_edit) 
+    
     bounds <- st_bbox(selected_system_geom)
     
     # Calculate the center of the bounds
@@ -379,7 +380,7 @@ server <- function(input, output, session) {
     
     # get the selected wic geom to highlight
     selected_wic_geom <- wic_property_geom %>%
-      filter(address == ifelse(!is.null(rv$row_wo_stat_table()), rv$wo_stat()[rv$row_wo_stat_table(), "wic_address"], "Ignore"))
+      filter(address == ifelse(!is.null(rv$row_wo_stat_table()), rv$wo_stat()[rv$row_wo_stat_table(), "wic_address"], "Ignore")) 
     
     if (nrow(selected_system_geom) == 0) {
       leafletProxy("map") %>%
@@ -399,8 +400,7 @@ server <- function(input, output, session) {
                     fillOpacity = 0.5,    # Fill opacity
                     label = paste("Selected System ID:", input$system_id_edit),  # Always visible label
                     labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")),
-                    group = "selected_system",
-                    layerId = ~system_id) %>%
+                    group = "selected_system") %>%
         setView(lng = center_lng, lat = center_lat, zoom = 19) 
       
     } else if(nrow(selected_system_geom) > 0 & nrow(selected_wic_geom) > 0){
@@ -415,8 +415,7 @@ server <- function(input, output, session) {
                     fillOpacity = 0.5,    # Fill opacity
                     label = paste("Selected System ID:", input$system_id_edit),  # Always visible label
                     labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")),
-                    group = "selected_system", 
-                    layerId = ~system_id) %>%
+                    group = "selected_system") %>%
         addPolygons(data = selected_wic_geom,
                     fillColor = "yellow",  # Change to your desired highlight color
                     color = "#ff9900",
@@ -431,26 +430,12 @@ server <- function(input, output, session) {
   })
   
   
-  # Initialize a reactive value to store highlighted workorder_ids
-  rv$highlight_rows <- reactiveVal(vector())
   # Observe click events on the map
   observeEvent(input$map_shape_click, {
     click <- input$map_shape_click
     if (!is.null(click)) {
-      if (click$id %in% system_id_all) {
-        # click on the system removes row highlighting from the wo_stat_table
-        rv$highlight_rows <- reactiveVal(vector())
         system_id_clicked <- click$id  # Get the system_id from the clicked polygon
         updateSelectInput(session, "system_id_edit", selected = system_id_clicked)
-      } else {
-        address_clicked <- click$id  # Get the address from the clicked polygon
-        rv$highlight_rows <- reactive(rv$wo_stat() %>%
-          filter(wic_address %in% address_clicked) %>%
-          select(workorder_id) %>%
-          pull)
-        
-      }
-     
     }
   })
 
@@ -491,18 +476,7 @@ server <- function(input, output, session) {
               selection = "single",
               onClick = "select",
               selectionId = "wo_stat_selected",
-              searchable = FALSE,
-              rowStyle = function(index) {
-                #req(rv$highlight_rows())  # Ensure highlight_rows is available
-                # Get the workorder_id for the current row
-                workorder_id <- rv$wo_stat()$workorder_id[index]
-                # Check if the workorder_id is in the highlight_rows vector
-                if (workorder_id %in% rv$highlight_rows()) {
-                  list(background = "brown")  # Highlight color
-                } else {
-                  NULL  # No additional style
-                }
-              }
+              searchable = FALSE
 
     )
     )

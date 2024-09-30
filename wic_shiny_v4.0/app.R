@@ -539,6 +539,13 @@ server <- function(input, output, session) {
                                          ), 
                                          outlined = TRUE)
                 )
+              },
+              rowStyle = function(index) {
+                if (rv$wo_stat()$status[index] == "Checked") {
+                  list(backgroundColor = "darkgreen")  # Light green background for checked status
+                } else {
+                  NULL  # No additional style for other statuses
+                }
               }
 
     )

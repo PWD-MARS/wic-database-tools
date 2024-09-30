@@ -324,6 +324,7 @@ server <- function(input, output, session) {
     reset("date_range")
     reset("system_id")
     reset("single_wic")
+    reset("table_name")
     
     removeModal()
   })

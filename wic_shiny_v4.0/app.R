@@ -347,8 +347,8 @@ server <- function(input, output, session) {
   )
  
  ## 2.6 WIC Investigation Server Side ----
-  output$sys_stat_table_name <- renderText("FARSHAD")
-  output$wo_stat_table_name <- renderText("EBRAHIMI")
+  output$sys_stat_table_name <- renderText(paste("System ", input$system_id_edit, " Status and Notes:"))
+  output$wo_stat_table_name <- renderText(paste("System ", input$system_id_edit, " WIC Details:"))
 
   # ### 2.6.1 Mapping ----
   output$map <- renderLeaflet({
@@ -447,18 +447,31 @@ server <- function(input, output, session) {
   rv$sys_stat <- reactive(wic_sys %>%
                             filter(system_id == input$system_id_edit) %>%
                             inner_join(rv$wic_system_status(), by = "system_id") %>%
-                            select(system_id, status, notes) %>%
+                            select(system_id, status) %>%
                             distinct())
   
   output$sys_stat_table <- renderReactable(
-    reactable(rv$sys_stat(),
+    reactable(rv$sys_stat() %>%
+                select(`System ID` = system_id, `System Status` = status),
               theme = darkly(),
               defaultPageSize = 1,
               fullWidth = TRUE,
               selection = "single",
               onClick = "select",
               selectionId = "sys_stat_selected",
-              searchable = FALSE
+              searchable = FALSE,
+              details = function(index) {
+                sys_stat_nested_notes <- rv$wic_system_status()[rv$wic_system_status()$system_id == rv$sys_stat()$system_id[index], ] %>%
+                  select(`MARS Comments on the System:` = notes)
+                htmltools::div(style = "padding: 1rem",
+                               reactable(sys_stat_nested_notes, 
+                                         theme = darkly(),
+                                         columns = list(
+                                           `MARS Comments on the System:` = colDef(width = 950)
+                                         ), 
+                                         outlined = TRUE)
+                )
+              }
               
     ))
   
@@ -469,7 +482,8 @@ server <- function(input, output, session) {
                            distinct())
 
   output$wo_stat_table <- renderReactable(
-    reactable(rv$wo_stat(),
+    reactable(rv$wo_stat() %>%
+                select(`Workorder ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist. Property (ft)` = property_dist_ft, `Dist. Footprint (ft)` = footprint_dist_ft),
               theme = darkly(),
               defaultPageSize = 15,
               fullWidth = TRUE,

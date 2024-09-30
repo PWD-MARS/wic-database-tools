@@ -135,7 +135,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                                 "Property Distance (ft):",
                                                                 min = 0,
                                                                 max = 100,
-                                                                value = 100),
+                                                                value = 25),
                                                     checkboxInput("single_wic", "Only Show Most Recent WIC per System ID", value = TRUE, width = NULL),
                                                     fluidRow(column(12, strong("Download all WICs"))),
                                                     downloadButton("download_table", "Download"), 
@@ -171,7 +171,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                                column(3, selectizeInput('system_id_edit', "System ID", choices = c("", system_id_all), selected = "")),
                                                                column(3, selectizeInput('workorder_edit', "Work Order ID", choices = c("", wo_id_all), selected = "")),
                                                                column(3, selectInput("edit_status", "System Status", choices = c("", status_choice), selected = "")),
-                                                               column(3, selectInput("check_woid", "Work Order Checked?", choices = c("", "Yes", "No"), selected = ""))
+                                                               column(3, selectInput("check_woid", "Work Order Status", choices = c("", "Checked", "Unchecked"), selected = ""))
                                                              ),
                                                              fluidRow(
                                                                column(12, conditionalPanel("input.sys_stat_selected != 0", textAreaInput("system_note", "Notes", width = "100%", height = "40%")))
@@ -325,8 +325,7 @@ server <- function(input, output, session) {
     if (!is.null(rv$row_wic_table())) {
       updateTabsetPanel(session, "TabPanelID", selected = "wic_insight")
       updateSelectInput(session, "system_id_edit", selected = rv$wic_table_filter()$system_id[rv$row_wic_table()])
-      # updateSelectInput(session, "edit_status", selected = rv$wic_table_filter()$status[rv$row_wic_table()])
-      # updateSelectInput(session, "system_note", selected = rv$wic_table_filter()$notes[rv$row_wic_table()])
+     
     }
     
   })
@@ -335,6 +334,10 @@ server <- function(input, output, session) {
   observeEvent(rv$row_sys_stat_table(), {
     if(!is.null(rv$row_sys_stat_table())){
     updateReactable("wo_stat_table", selected = NA)
+    reset("check_woid")
+    reset("workorder_edit")
+    updateSelectInput(session, "edit_status", selected = rv$sys_stat()$status[rv$row_sys_stat_table()])
+    updateTextAreaInput(session, "system_note", value = rv$sys_stat()$notes[rv$row_sys_stat_table()])
     }
   }
   )
@@ -342,6 +345,10 @@ server <- function(input, output, session) {
   observeEvent(rv$row_wo_stat_table(), {
     if(!is.null(rv$row_wo_stat_table())){
     updateReactable("sys_stat_table", selected = NA)
+    reset("edit_status")
+    reset("system_note")
+    updateSelectInput(session, "check_woid", selected = rv$wo_stat()$status[rv$row_wo_stat_table()])
+    updateSelectInput(session, "workorder_edit", selected = rv$wo_stat()$workorder_id[rv$row_wo_stat_table()])  
     }
   }
   )
@@ -441,13 +448,13 @@ server <- function(input, output, session) {
 
 
   
-  ### 2.6.2 system and work order status tables ----
+  ## 2.6.2 system and work order status tables ----
   
   # sys_stat table filtered
   rv$sys_stat <- reactive(wic_sys %>%
                             filter(system_id == input$system_id_edit) %>%
                             inner_join(rv$wic_system_status(), by = "system_id") %>%
-                            select(system_id, status) %>%
+                            select(system_id, status, notes) %>%
                             distinct())
   
   output$sys_stat_table <- renderReactable(
@@ -467,7 +474,7 @@ server <- function(input, output, session) {
                                reactable(sys_stat_nested_notes, 
                                          theme = darkly(),
                                          columns = list(
-                                           `MARS Comments on the System:` = colDef(width = 950)
+                                           `MARS Comments on the System:` = colDef(width = 1000)
                                          ), 
                                          outlined = TRUE)
                 )
@@ -478,23 +485,71 @@ server <- function(input, output, session) {
   # wo_stat table filtered
   rv$wo_stat <- reactive(wic_sys %>%
                            filter(system_id == input$system_id_edit) %>%
-                           select(workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft) %>%
+                           inner_join(rv$wic_wo_status(), by = "workorder_id") %>%
+                           select(workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft, status) %>%
                            distinct())
 
   output$wo_stat_table <- renderReactable(
     reactable(rv$wo_stat() %>%
-                select(`Workorder ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist. Property (ft)` = property_dist_ft, `Dist. Footprint (ft)` = footprint_dist_ft),
+                select(`Workorder ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist. Property (ft)` = property_dist_ft, `Dist. Footprint (ft)` = footprint_dist_ft, `WIC Status` = status),
               theme = darkly(),
               defaultPageSize = 15,
               fullWidth = TRUE,
               selection = "single",
               onClick = "select",
               selectionId = "wo_stat_selected",
-              searchable = FALSE
+              searchable = FALSE,
+              columns = list(
+                `Workorder ID` = colDef(width = 120),
+                Address = colDef(width = 200),
+                `Dist. Property (ft)` = colDef(width = 140),
+                `Dist. Footprint (ft)` = colDef(width = 140),
+                Phase = colDef(width = 150)),
+              details = function(index) {
+                cw_wic_nested_notes <- wic_comments[wic_comments$workorder_id == rv$wo_stat()$workorder_id[index], ] %>%
+                  select(`Cityworks Comments on the Workorder:` = comment)
+                htmltools::div(style = "padding: 1rem",
+                               reactable(cw_wic_nested_notes, 
+                                         theme = darkly(),
+                                         columns = list(
+                                           `Cityworks Comments on the Workorder:` = colDef(width = 1000)
+                                         ), 
+                                         outlined = TRUE)
+                )
+              }
 
     )
     )
+  
+  
+  ## 2.6.3 save/edit----
+  
+  ### On click "save_edit"
+  
+  observeEvent(input$save_edit, {
+    if(!is.null(rv$row_sys_stat_table())){
+      
+      rv$sys_stat_uid <- reactive(wic_system_status_lookup %>%
+        filter(status == input$edit_status) %>%
+        select(wic_system_status_lookup_uid) %>%
+        pull())
+      
+      rv$update_sys_status_q <- reactive(paste("Update fieldwork.beta_tbl_wic_system_status SET notes = '",  rv$input_note(), "', wic_system_status_lookup_uid = ", ifelse(length(rv$sys_stat_uid()) == 0, 4, rv$sys_stat_uid())," where system_id = '", input$system_id_edit, "'", sep = ""))
+      dbGetQuery(mars_con, rv$update_sys_status_q())
+
+    } else if(!is.null(rv$row_wo_stat_table())) {
+      
+      rv$wo_stat_uid <- reactive(wic_wo_status_lookup %>%
+                                    filter(status == input$check_woid) %>%
+                                    select(wic_wo_status_lookup_uid) %>%
+                                    pull())
+      
+      
+      rv$update_wo_status_q <- reactive(paste("Update fieldwork.beta_tbl_wic_wo_status SET wic_wo_status_lookup_uid = ", ifelse(length(rv$wo_stat_uid()) == 0, 2, rv$wo_stat_uid())," where workorder_id = ", input$workorder_edit, sep = ""))
+      dbGetQuery(mars_con, rv$update_wo_status_q())
+    }
+})
+  
 }
-
 # Run the application 
 shinyApp(ui = ui, server = server)

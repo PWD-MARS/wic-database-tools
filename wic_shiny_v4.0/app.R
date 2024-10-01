@@ -473,16 +473,25 @@ server <- function(input, output, session) {
   
   ## 2.6.2 System and work order status tables ----
   
+  # Days from rain calcs
+  rv$sys_rains <- reactive(gauge_sys %>%
+                             inner_join(gauge_event, by = "gage_uid") %>%
+                             filter(system_id == input$system_id_edit) %>%
+                             select(event_startdate) %>%
+                             arrange(desc(event_startdate)))
+  
   # sys_stat table filtered
   rv$sys_stat <- reactive(wic_sys %>%
                             filter(system_id == input$system_id_edit) %>%
                             inner_join(rv$wic_system_status(), by = "system_id") %>%
-                            select(system_id, status, notes) %>%
+                            inner_join(gauge_sys, by = "system_id") %>%
+                            mutate(monitored = ifelse(system_id %in% deployments_list$system_id, "Yes", "No")) %>%
+                            select(system_id, status, notes, monitored, gage_uid) %>%
                             distinct())
   
   output$sys_stat_table <- renderReactable(
     reactable(rv$sys_stat() %>%
-                select(`System ID` = system_id, `System Status` = status),
+                select(`System ID` = system_id, `System Status` = status, `Previously Monitored?` = monitored, `Gauge Id` = gage_uid),
               theme = darkly(),
               defaultPageSize = 1,
               fullWidth = TRUE,
@@ -506,15 +515,27 @@ server <- function(input, output, session) {
     ))
   
   # wo_stat table filtered
-  rv$wo_stat <- reactive(wic_sys %>%
-                           filter(system_id == input$system_id_edit) %>%
-                           inner_join(rv$wic_wo_status(), by = "workorder_id") %>%
-                           select(workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft, status) %>%
-                           distinct())
+  rv$wo_stat <- reactive({
+    wo_tbl <- wic_sys %>%
+                filter(system_id == input$system_id_edit) %>%
+                inner_join(rv$wic_wo_status(), by = "workorder_id") %>%
+                mutate(immediate_event = as.Date(NA)) %>%
+                select(workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft, status, immediate_event) %>%
+                distinct()
+    # determine the immediate rain event
+    if(nrow(wo_tbl) > 0){
+      for (i in 1:nrow(wo_tbl)) {
+        wo_tbl[i,"immediate_event"] <- max(rv$sys_rains()$event_startdate[rv$sys_rains()$event_startdate < wo_tbl$date[i]], na.rm = TRUE)
+      }
+      wo_tbl <- wo_tbl %>%
+        mutate(days_from_rain = date - immediate_event)
+    }
+    return(wo_tbl)
+    })
 
   output$wo_stat_table <- renderReactable(
     reactable(rv$wo_stat() %>%
-                select(`Workorder ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist. Property (ft)` = property_dist_ft, `Dist. Footprint (ft)` = footprint_dist_ft, `WIC Status` = status),
+                select(`WO ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist.Prop (ft)` = property_dist_ft, `Dist.Ftp (ft)` = footprint_dist_ft, `WIC Status` = status, `Recent Rain Date` = immediate_event, `Days from Rain`= days_from_rain),
               theme = darkly(),
               defaultPageSize = 15,
               fullWidth = TRUE,
@@ -523,11 +544,12 @@ server <- function(input, output, session) {
               selectionId = "wo_stat_selected",
               searchable = FALSE,
               columns = list(
-                `Workorder ID` = colDef(width = 120),
-                Address = colDef(width = 200),
-                `Dist. Property (ft)` = colDef(width = 140),
-                `Dist. Footprint (ft)` = colDef(width = 140),
-                Phase = colDef(width = 150)),
+                `WO ID` = colDef(width = 70),
+                Address = colDef(width = 190),
+                `WIC Date` = colDef(width = 100),
+                `Dist.Prop (ft)` = colDef(width = 100),
+                `Dist.Ftp (ft)` = colDef(width = 100),
+                Phase = colDef(width = 130)),
               details = function(index) {
                 cw_wic_nested_notes <- wic_comments[wic_comments$workorder_id == rv$wo_stat()$workorder_id[index], ] %>%
                   select(`Cityworks Comments on the Workorder:` = comment)

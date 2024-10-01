@@ -340,7 +340,7 @@ server <- function(input, output, session) {
     removeModal()
   })
   
-  ## 2.6 Switch tab to "WIC Investigation"----
+  ## Switch tab to "WIC Investigation"
   
  # Toggle state to switch select inputs
   observe(toggleState(id = "system_id_edit", condition = is.null(rv$row_wo_stat_table())  ))

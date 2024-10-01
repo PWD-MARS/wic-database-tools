@@ -545,7 +545,7 @@ server <- function(input, output, session) {
 
   output$wo_stat_table <- renderReactable(
     reactable(rv$wo_stat() %>%
-                select(`WO ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist.Prop (ft)` = property_dist_ft, `Dist.Ftp (ft)` = footprint_dist_ft, `WIC Status` = status, `Recent Rain Date` = immediate_event, `Days from Rain`= days_from_rain),
+                select(`WO ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist.Prop (ft)` = property_dist_ft, `Dist.Ftp (ft)` = footprint_dist_ft, `WIC Status` = status, `Recent Rain Start Date` = immediate_event, `Days from Rain`= days_from_rain),
               theme = darkly(),
               defaultPageSize = 15,
               fullWidth = TRUE,

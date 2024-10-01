@@ -529,7 +529,8 @@ server <- function(input, output, session) {
                 filter(system_id == input$system_id_edit) %>%
                 inner_join(rv$wic_wo_status(), by = "workorder_id") %>%
                 mutate(immediate_event = as.Date(NA)) %>%
-                select(workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft, status, immediate_event) %>%
+                mutate(days_from_rain = as.numeric(NA)) %>%
+                select(workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft, status, immediate_event, days_from_rain) %>%
                 distinct()
     # determine the immediate rain event
     if(nrow(wo_tbl) > 0){

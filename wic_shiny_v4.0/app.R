@@ -189,19 +189,28 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                        ),
                                        ## 1.3 Tab "Documentation" ----
                                        tabPanel("Documentation", value = "document", 
-                                                titlePanel("App History"),
-                                                sidebarLayout(
-                                                  sidebarPanel(
-                                                    fluidRow()
-                                                    
-                                                    
-                                                  ),
-                                                  mainPanel(
-                                                    h2(textOutput("app_notes")),
-                                      
-                                                    
-                                                  ))
-                                                
+                                                titlePanel("Release Notes by Farshad Ebrahimi (Farshad.Ebrahimi@Phila.Gov)"),
+                                                column(8,
+                                                       h3('WIC App v.4.0.0, 10/01/2024:'),
+                                                       h5("1.	The app was reorganized to show system status (E.g., Need 2nd Opinion) and be filterable by sidebar"),
+                                                       h5("2. A landing page showing all WICs and system status was added"),
+                                                       h5("3.	WIC Investigation tab has system-specific meta data"),
+                                                       h5("4.	WIC Investigation tab is interactive now, user can add status to systems as well as check/uncheck each WIC"),
+                                                       h5("5.	Rain gauge meta data, most recent rain date and days from rain meta data was added to WIC Investigation tab"),
+                                                       h5("6.	The map uses leafletletproxy for smoother user experience"),
+                                                       h5("7.	Systems are now clickable in the map, updating the adjacent tables with system data"),
+                                                       h5("8.	All WICs are now shown in the map"),
+                                                       h5("9.	The app now pulls the spatial polygons directly from MARS DB with addition of POSTGIS extention"),
+                                                       h3('WIC App v.3.0.0, 11/02/2023:'),
+                                                       h5("1.	Added “Eligible for Monitoring” column to the WIC app to show if the system is in the unmonitored smp app list"),
+                                                       h5("2.  The adjacent GSI systems have been incorporated  into the map as “All SMP” layer that can be shown through the top right menu of the map (default: hidden)"),
+                                                       h5("3.	Comment section became an arrow (nested table) that expands if the user clicks"),
+                                                       h5("4.	Highlighting keywords such as RAIN, STORMWATER, GSI can help sort out the systems: I added “Keywords” column in the nested table, if empty, no keywords detected "),
+                                                       h5("5.	Changed the columns width so that all columns have appropriate space (system id should be narrow, address line wider) "),
+                                                       h5("6.	Clicking on the table rows should highlight the map polygon in yellow"),
+                                                       h5("7.	At %100 browser zoom level, all components of the app (totalizer, map, and table) are reasonably visible and there is not a need to scroll to see things. "),
+                                                       h5("8.	Totalizer and versioning comments are now under a new tab (“Totalizer”)."))
+                                               
                                        )
 )
 )

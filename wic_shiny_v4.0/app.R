@@ -94,12 +94,18 @@ deployments_list <- dbGetQuery(mars_con, "SELECT distinct admin.fun_smp_to_syste
 
 ## 0.4 Loading UI selection options ---- 
 # System ids
-system_id_all <- wic_smp_geom %>% 
+system_id_assets <- dbGetQuery(mars_con, "SELECT DISTINCT system_id FROM external.mat_assets WHERE system_id ~ '^[0-9]+-[0-9]+$' order by system_id;")
+
+system_id_geom <- wic_smp_geom %>% 
   st_set_geometry(NULL) %>%
   select(system_id) %>%
-  distinct() %>% 
-  arrange(system_id) %>%  
-  pull()
+  distinct()
+
+system_id_all <- union_all(system_id_assets, system_id_geom) %>%
+  distinct() %>%
+  arrange(system_id) %>%
+  pull
+
 
 # Workorder ids
 wo_id_all <- wic_sys %>% 

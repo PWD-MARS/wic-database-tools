@@ -94,9 +94,12 @@ deployments_list <- dbGetQuery(mars_con, "SELECT distinct admin.fun_smp_to_syste
 
 ## 0.4 Loading UI selection options ---- 
 # System ids
-system_id_all <- odbc::dbGetQuery(mars_con, "select distinct system_id from external.mat_assets where system_id like '%-%'") %>% 
-  dplyr::arrange(system_id) %>%  
-  dplyr::pull()
+system_id_all <- wic_smp_geom %>% 
+  st_set_geometry(NULL) %>%
+  select(system_id) %>%
+  distinct() %>% 
+  arrange(system_id) %>%  
+  pull()
 
 # Workorder ids
 wo_id_all <- wic_sys %>% 

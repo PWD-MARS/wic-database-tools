@@ -24,6 +24,7 @@ library(leaflet)
 library(leaflet.extras)
 # else 
 library(xlsx)
+library(data.table)
 
 #create negate of %in%
 `%!in%` = Negate(`%in%`)
@@ -547,7 +548,8 @@ server <- function(input, output, session) {
         wo_tbl[i,"immediate_event"] <- max(rv$sys_rains()$event_startdate[rv$sys_rains()$event_startdate < wo_tbl$date[i]], na.rm = TRUE)
       }
       wo_tbl <- wo_tbl %>%
-        mutate(days_from_rain = date - immediate_event)
+        mutate(days_from_rain = data.table::fifelse((date - immediate_event) == Inf | (date - immediate_event) == -Inf, NA, date - immediate_event)) %>% # If there is no gauge id assigned to a system, return NA for date of rain
+        mutate(immediate_event = data.table::fifelse(immediate_event == Inf | immediate_event == -Inf, NA, immediate_event))
     }
     return(wo_tbl)
     })

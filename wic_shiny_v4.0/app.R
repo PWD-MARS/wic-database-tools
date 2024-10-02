@@ -254,12 +254,13 @@ server <- function(input, output, session) {
                                               USING(wic_wo_status_lookup_uid)"))
   # filtering table to show most recent wo-id per system
   all_wo <- wic_sys %>%
-    select(workorder_id) %>%
+    select(wic_system_uid) %>%
     pull
   single_wo <- wic_sys %>%
     arrange(desc(date)) %>%
     group_by(system_id) %>%
-    summarise(workorder_id = workorder_id[1]) %>%
+    summarise(wic_system_uid = wic_system_uid[1], workorder_id = workorder_id[1]) %>%
+    select(wic_system_uid) %>%
     pull
   # reactive filters
   rv$date_filter <- reactive(ifelse(input$date_range == "To-Date", return(q_list), return(input$f_q)))
@@ -271,7 +272,7 @@ server <- function(input, output, session) {
   # filter the table based on the sidebar inputs-get the most recent wic per system
   rv$wic_table_filter <- reactive(wic_sys %>%
                                     inner_join(rv$wic_system_status(), by = "system_id") %>%
-                                    filter(workorder_id %in% rv$recent_wic_filter() &
+                                    filter(wic_system_uid %in% rv$recent_wic_filter() &
                                              quarter %in% rv$date_filter() &
                                              system_id %in% rv$sys_filter() &
                                              status %in% rv$status_filter() &

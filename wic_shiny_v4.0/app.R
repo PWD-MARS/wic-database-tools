@@ -654,6 +654,7 @@ server <- function(input, output, session) {
     reset("edit_status")
     reset("system_note")
     reset("system_id_edit")
+    reset("map")
     updateReactable("wic_table", selected = NA)
     
     removeModal()

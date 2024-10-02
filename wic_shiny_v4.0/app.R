@@ -503,8 +503,8 @@ server <- function(input, output, session) {
   # sys_stat table filtered
   rv$sys_stat <- reactive(wic_sys %>%
                             filter(system_id == input$system_id_edit) %>%
-                            inner_join(rv$wic_system_status(), by = "system_id") %>%
-                            inner_join(gauge_sys, by = "system_id") %>%
+                            left_join(rv$wic_system_status(), by = "system_id") %>%
+                            left_join(gauge_sys, by = "system_id") %>%
                             mutate(monitored = ifelse(system_id %in% deployments_list$system_id, "Yes", "No")) %>%
                             select(system_id, status, notes, monitored, gage_uid) %>%
                             distinct())
@@ -538,7 +538,7 @@ server <- function(input, output, session) {
   rv$wo_stat <- reactive({
     wo_tbl <- wic_sys %>%
                 filter(system_id == input$system_id_edit) %>%
-                inner_join(rv$wic_wo_status(), by = "workorder_id") %>%
+                left_join(rv$wic_wo_status(), by = "workorder_id") %>%
                 mutate(immediate_event = as.Date(NA)) %>%
                 mutate(days_from_rain = as.numeric(NA)) %>%
                 select(workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft, status, immediate_event, days_from_rain) %>%

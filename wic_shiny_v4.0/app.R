@@ -52,23 +52,23 @@ special_char_replace <- function(note){
 # WICS 
 wic_sys <- dbGetQuery(mars_con, "SELECT *, data.fun_date_to_fiscal_quarter(date) as quarter FROM fieldwork.viw_wics_100ft")
 # WICs Comments
-wic_comments <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_comment")
+wic_comments <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.tbl_wic_comment")
 
 # Look up tables for status record keeping
-wic_system_status_lookup <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_system_status_lookup")
-wic_wo_status_lookup <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_wo_status_lookup")
+wic_system_status_lookup <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.tbl_wic_system_status_lookup")
+wic_wo_status_lookup <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.tbl_wic_wo_status_lookup")
 
 # WIC Polygons- crs global 4326 for leaflet mapping
-wic_property_geom <- st_read(dsn = mars_con, Id(schema="fieldwork", table = "beta_tbl_wic_propertyline_geom")) %>%
+wic_property_geom <- st_read(dsn = mars_con, Id(schema="fieldwork", table = "tbl_wic_propertyline_geom")) %>%
   st_transform(crs = 4326) %>%
   filter(address %in% wic_sys$wic_address)
 
-wic_footprint_geom <- st_read(dsn = mars_con, Id(schema="fieldwork", table = "beta_tbl_wic_footprint_geom")) %>%
+wic_footprint_geom <- st_read(dsn = mars_con, Id(schema="fieldwork", table = "tbl_wic_footprint_geom")) %>%
   st_transform(crs = 4326) %>%
   filter(address %in% wic_sys$wic_address)
 
 # Grouping smp polygons by system- setting crs global 4326 for leaflet mapping 
-wic_smp_geom <- st_read(dsn = mars_con, Id(schema="fieldwork", table = "beta_tbl_wic_smp_geom")) %>%
+wic_smp_geom <- st_read(dsn = mars_con, Id(schema="fieldwork", table = "tbl_wic_smp_geom")) %>%
   st_transform(crs = 4326) 
 wic_smp_geom['system_id'] <- gsub('-\\d+$','', wic_smp_geom$smp_id) 
 
@@ -245,12 +245,12 @@ server <- function(input, output, session) {
   
   
   # Tables with the system ids and workorder ids for status record keeping
-  rv$wic_system_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_system_status
-                                              INNER JOIN fieldwork.beta_tbl_wic_system_status_lookup
+  rv$wic_system_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.tbl_wic_system_status
+                                              INNER JOIN fieldwork.tbl_wic_system_status_lookup
                                               USING(wic_system_status_lookup_uid)"))
   
-  rv$wic_wo_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_wo_status 
-                                              INNER JOIN fieldwork.beta_tbl_wic_wo_status_lookup
+  rv$wic_wo_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.tbl_wic_wo_status 
+                                              INNER JOIN fieldwork.tbl_wic_wo_status_lookup
                                               USING(wic_wo_status_lookup_uid)"))
   # filtering table to show most recent wo-id per system
   all_wo <- wic_sys %>%
@@ -608,12 +608,12 @@ server <- function(input, output, session) {
         select(wic_system_status_lookup_uid) %>%
         pull())
       
-      rv$update_sys_status_q <- reactive(paste("Update fieldwork.beta_tbl_wic_system_status SET notes = '",  rv$input_note(), "', wic_system_status_lookup_uid = ", ifelse(length(rv$sys_stat_uid()) == 0, 4, rv$sys_stat_uid())," where system_id = '", input$system_id_edit, "'", sep = ""))
+      rv$update_sys_status_q <- reactive(paste("Update fieldwork.tbl_wic_system_status SET notes = '",  rv$input_note(), "', wic_system_status_lookup_uid = ", ifelse(length(rv$sys_stat_uid()) == 0, 4, rv$sys_stat_uid())," where system_id = '", input$system_id_edit, "'", sep = ""))
       dbGetQuery(mars_con, rv$update_sys_status_q())
       
       # refresh data and reset tables
-      rv$wic_system_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_system_status
-                                              INNER JOIN fieldwork.beta_tbl_wic_system_status_lookup
+      rv$wic_system_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.tbl_wic_system_status
+                                              INNER JOIN fieldwork.tbl_wic_system_status_lookup
                                               USING(wic_system_status_lookup_uid)"))
       
       reset("sys_stat_table")
@@ -630,12 +630,12 @@ server <- function(input, output, session) {
                                     pull())
       
       
-      rv$update_wo_status_q <- reactive(paste("Update fieldwork.beta_tbl_wic_wo_status SET wic_wo_status_lookup_uid = ", ifelse(length(rv$wo_stat_uid()) == 0, 2, rv$wo_stat_uid())," where workorder_id = ", input$workorder_edit, sep = ""))
+      rv$update_wo_status_q <- reactive(paste("Update fieldwork.tbl_wic_wo_status SET wic_wo_status_lookup_uid = ", ifelse(length(rv$wo_stat_uid()) == 0, 2, rv$wo_stat_uid())," where workorder_id = ", input$workorder_edit, sep = ""))
       dbGetQuery(mars_con, rv$update_wo_status_q())
       
       # refresh data and reset tables
-      rv$wic_wo_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.beta_tbl_wic_wo_status 
-                                              INNER JOIN fieldwork.beta_tbl_wic_wo_status_lookup
+      rv$wic_wo_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.tbl_wic_wo_status 
+                                              INNER JOIN fieldwork.tbl_wic_wo_status_lookup
                                               USING(wic_wo_status_lookup_uid)"))
       reset("sys_stat_table")
       reset("wo_stat_table")

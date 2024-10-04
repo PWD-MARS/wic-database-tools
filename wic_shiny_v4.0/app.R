@@ -153,6 +153,15 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                   
                                                   mainPanel(
                                                     strong(span(textOutput("table_name"), style = "font-size:22px")),
+                                                    tags$head(
+                                                      # Add custom CSS to change the header background color
+                                                      tags$style(HTML("
+                                                                        .rt-th {
+                                                                          background-color:  #00CC99; /* Change this to your desired color */
+                                                                          color: black; /* Text color */
+                                                                        }
+                                                                      "))),
+                                                                                                              
                                                     reactableOutput("wic_table"), width = 9
                                                     
                                                   )

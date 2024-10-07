@@ -195,7 +195,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                                column(12, conditionalPanel("input.sys_stat_selected != 0", textAreaInput("system_note", "Notes", width = "100%", height = "40%")))
                                                              ),
                                                              fluidRow(
-                                                               column(12, actionButton("save_edit", "Save/Edit"), actionButton("clear", "Clear All Fields"))
+                                                               column(12, actionButton("save_edit", "Save/Edit"), actionButton("clear", "Clear All Fields"), actionButton("redraw", "Re-Draw the Map"))
                                                              )
                                                          ),
                                                          h4(textOutput("sys_stat_table_name")),
@@ -402,7 +402,7 @@ server <- function(input, output, session) {
   }
   )
  
- ## 2.6 WIC Investigation Server Side ----
+ # 2.6 WIC Investigation Server Side ----
   output$sys_stat_table_name <- renderText(paste("System ", input$system_id_edit, " Status and Notes:"))
   output$wo_stat_table_name <- renderText(paste("System ", input$system_id_edit, " WIC Details:"))
 
@@ -649,7 +649,7 @@ server <- function(input, output, session) {
   
 
   
-  ## 2.6.4 Clear button Tab 2----
+  ## 2.6.4 Clear button Tab 2 ----
   observeEvent(input$clear, {
     showModal(modalDialog(title = "Clear All Fields", 
                           "Are you sure you want to clear all fields on this tab?", 
@@ -657,7 +657,7 @@ server <- function(input, output, session) {
                           actionButton("confirm_clear_pcs", "Yes")))
   })
   
-  # clear button
+  ## 2.6.5 Re-draw Map ----
   observeEvent(input$confirm_clear_pcs, {
     
     reset("sys_stat_table")
@@ -674,6 +674,83 @@ server <- function(input, output, session) {
     removeModal()
   })
   
+  # Re-Draw map
+  observeEvent(input$redraw, {
+    # re-creating basemap here 
+    map <- leaflet() %>%
+      addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(maxZoom = 20)) %>%
+      addProviderTiles(providers$Esri.WorldTopoMap, group = 'Esri.WorldTopoMap', options = providerTileOptions(maxZoom = 20)) %>%
+      addProviderTiles(providers$Esri.WorldImagery, group='Esri.WorldImagery', options = providerTileOptions(maxZoom = 19)) %>%
+      addPolygons(data = wic_sys_geom_buffered, color = "#00ffbf", label = paste("System ID: ", wic_sys_geom_buffered$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Buffer (100ft)") %>%
+      addPolygons(data = wic_smp_geom, color = "#000000", label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "System", layerId = ~system_id) %>%
+      addPolygons(data = wic_property_geom, color = "red", label = paste("Address: ", wic_property_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line") %>%
+      addPolygons(data = wic_footprint_geom, color = "purple", label = paste("Address", wic_footprint_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
+      addLayersControl(overlayGroups = c("System","Buffer (100ft)","Property Line", "Footprint"), baseGroups = c("OpenStreetMap", "Esri.WorldTopoMap", "Esri.WorldImagery")) %>%
+      hideGroup(c("Footprint", "Buffer (100ft)")) %>%
+      setView(lng = -75.1652 , lat = 39.9526  , zoom = 11) # zoom in philly
+    
+    # Calculate the bounds of the system polygon the view is set
+    selected_system_geom <- wic_smp_geom %>%
+      filter(system_id == input$system_id_edit) 
+    
+    bounds <- st_bbox(selected_system_geom)
+    
+    # Calculate the center of the bounds
+    center_lat <- (unname(bounds["ymin"]) + unname(bounds["ymax"])) / 2
+    center_lng <- (unname(bounds["xmin"]) + unname(bounds["xmax"])) / 2
+    
+    # get the selected wic geom to highlight
+    selected_wic_geom <- wic_property_geom %>%
+      filter(address == ifelse(!is.null(rv$row_wo_stat_table()), rv$wo_stat()[rv$row_wo_stat_table(), "wic_address"], "Ignore")) 
+    
+    if (nrow(selected_system_geom) == 0) {
+      leafletProxy("map") %>%
+        clearGroup("selected_wic") %>%
+        clearGroup("selected_system") %>%
+        setView(lng = -75.1652 , lat = 39.9526  , zoom = 11) 
+      
+    } else if (nrow(selected_system_geom) > 0 & nrow(selected_wic_geom) == 0) {
+      leafletProxy("map") %>%
+        clearGroup("selected_wic") %>%
+        clearGroup("selected_system") %>%
+        addPolygons(data = selected_system_geom,
+                    fillColor = "black",   # Change to desired fill color
+                    color = "yellow",
+                    weight = 2,           # Border weight
+                    opacity = 1,          # Border opacity
+                    fillOpacity = 0.5,    # Fill opacity
+                    label = paste("Selected System ID:", input$system_id_edit),  # Always visible label
+                    labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")),
+                    group = "selected_system") %>%
+        setView(lng = center_lng, lat = center_lat, zoom = 19) 
+      
+    } else if(nrow(selected_system_geom) > 0 & nrow(selected_wic_geom) > 0){
+      leafletProxy("map") %>%
+        clearGroup("selected_wic") %>%
+        clearGroup("selected_system") %>%
+        addPolygons(data = selected_system_geom,
+                    fillColor = "black",   # Change to desired fill color
+                    color = "yellow",
+                    weight = 2,           # Border weight
+                    opacity = 1,          # Border opacity
+                    fillOpacity = 0.5,    # Fill opacity
+                    label = paste("Selected System ID:", input$system_id_edit),  # Always visible label
+                    labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")),
+                    group = "selected_system") %>%
+        addPolygons(data = selected_wic_geom,
+                    fillColor = "yellow",  # Change to your desired highlight color
+                    color = "#ff9900",
+                    weight = 2,           # Border weight
+                    opacity = 1,          # Border opacity
+                    fillOpacity = 0.7,    # Fill opacity
+                    label = paste("Selected WIC Address:", selected_wic_geom$address),  # Display address
+                    labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")),
+                    group = "selected_wic") %>%
+        setView(lng = center_lng, lat = center_lat, zoom = 19) 
+    }
+    
+
+  })
 }
 # Run the application 
 shinyApp(ui = ui, server = server)

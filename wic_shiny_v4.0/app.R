@@ -105,7 +105,6 @@ system_id_all <- union_all(system_id_assets, system_id_geom) %>%
   arrange(system_id) %>%
   pull
 
-
 # Workorder ids
 wo_id_all <- wic_sys %>% 
   select(workorder_id) %>%
@@ -130,7 +129,6 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                        tabPanel("WIC Status", value = "status", 
                                                 titlePanel("System Status Near WICs"),
                                                 sidebarLayout(
-                                                  
                                                   sidebarPanel(
                                                     selectInput("system_id", "System ID", choices = c("All", system_id_all), selected = "All"),
                                                     selectInput("date_range", "Date Range", choices = c("To-Date", "Fiscal Quarter")),
@@ -148,7 +146,6 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                     downloadButton("download_table", "Download"), actionButton("clear_main", "Clear All Fields"),
                                                     width = 3
                                                   ),
-                                                  
                                                   mainPanel(
                                                     strong(span(textOutput("table_name"), style = "font-size:22px")),
                                                     tags$head(
@@ -331,7 +328,6 @@ server <- function(input, output, session) {
     }
   )
   
-  
   ## 2.5 Clear button Tab 1----
   observeEvent(input$clear_main, {
     showModal(modalDialog(title = "Clear All Fields", 
@@ -356,7 +352,6 @@ server <- function(input, output, session) {
   })
   
   ## Switch tab to "WIC Investigation"
-  
  # Toggle state to switch select inputs
   observe(toggleState(id = "system_id_edit", condition = is.null(rv$row_wo_stat_table())  ))
   observe(toggleState(id = "workorder_edit", condition = FALSE))
@@ -364,9 +359,6 @@ server <- function(input, output, session) {
   observe(toggleState(id = "edit_status", condition = !is.null(rv$row_sys_stat_table())))
   observe(toggleState(id = "save_edit", condition = (!is.null(rv$row_wo_stat_table()) | !is.null(rv$row_sys_stat_table())) & ((input$workorder_edit != "" & input$check_woid !="") | (input$system_id_edit != "" & input$edit_status != ""))))
   observe(toggleState(id = "clear", condition = !is.null(rv$row_wo_stat_table()) | !is.null(rv$row_sys_stat_table()) | input$system_id_edit != "" ))
-  
-  
-
   
   observeEvent(rv$row_wic_table(), {
     if (!is.null(rv$row_wic_table())) {
@@ -483,7 +475,6 @@ server <- function(input, output, session) {
     }
   })
   
-  
   # Observe click events on the map
   observeEvent(input$map_shape_click, {
     click <- input$map_shape_click
@@ -493,8 +484,6 @@ server <- function(input, output, session) {
     }
   })
 
-
-  
   ## 2.6.2 System and work order status tables ----
   
   # Days from rain calcs
@@ -591,15 +580,13 @@ server <- function(input, output, session) {
                   NULL  # No additional style for other statuses
                 }
               }
-
     )
     )
-  
   
   ## 2.6.3 Save/edit----
   
   ### On click "save_edit"
-  
+
   observeEvent(input$save_edit, {
     if(!is.null(rv$row_sys_stat_table())){
       
@@ -629,7 +616,6 @@ server <- function(input, output, session) {
                                     select(wic_wo_status_lookup_uid) %>%
                                     pull())
       
-      
       rv$update_wo_status_q <- reactive(paste("Update fieldwork.tbl_wic_wo_status SET wic_wo_status_lookup_uid = ", ifelse(length(rv$wo_stat_uid()) == 0, 2, rv$wo_stat_uid())," where workorder_id = ", input$workorder_edit, sep = ""))
       dbGetQuery(mars_con, rv$update_wo_status_q())
       
@@ -644,8 +630,6 @@ server <- function(input, output, session) {
       reset("check_woid")
     }
 })
-  
-
   
   ## 2.6.4 Clear button Tab 2 ----
   observeEvent(input$clear, {
@@ -668,7 +652,6 @@ server <- function(input, output, session) {
     reset("system_id_edit")
     reset("map")
     updateReactable("wic_table", selected = NA)
-    
     removeModal()
   })
   
@@ -751,7 +734,6 @@ server <- function(input, output, session) {
         setView(lng = center_lng, lat = center_lat, zoom = 19) 
     }
     
-
   })
 }
 # Run the application 

@@ -312,9 +312,6 @@ server <- function(input, output, session) {
                 htmltools::div(style = "padding: 1rem",
                                reactable(sys_nested_notes, 
                                          theme = darkly(),
-                                         columns = list(
-                                           `MARS Comments on the System:` = colDef(width = 950)
-                                         ), 
                                          outlined = TRUE)
                 )
               }
@@ -534,9 +531,6 @@ server <- function(input, output, session) {
                 htmltools::div(style = "padding: 1rem",
                                reactable(sys_stat_nested_notes, 
                                          theme = darkly(),
-                                         columns = list(
-                                           `MARS Comments on the System:` = colDef(width = 1000)
-                                         ), 
                                          outlined = TRUE)
                 )
               }
@@ -583,13 +577,12 @@ server <- function(input, output, session) {
                 Phase = colDef(width = 130)),
               details = function(index) {
                 cw_wic_nested_notes <- wic_comments[wic_comments$workorder_id == rv$wo_stat()$workorder_id[index], ] %>%
-                  select(`Cityworks Comments on the Workorder:` = comment)
+                  arrange(desc(comment_id)) %>%
+                  select(`Comment ID` = comment_id, `Cityworks Comments on the Workorder:` = comment)
                 htmltools::div(style = "padding: 1rem",
-                               reactable(cw_wic_nested_notes, 
+                               reactable(cw_wic_nested_notes,
+                                         list(`Comment ID` = colDef(width = 100)),
                                          theme = darkly(),
-                                         columns = list(
-                                           `Cityworks Comments on the Workorder:` = colDef(width = 1000)
-                                         ), 
                                          outlined = TRUE)
                 )
               },

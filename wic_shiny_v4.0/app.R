@@ -195,7 +195,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                                column(12, conditionalPanel("input.sys_stat_selected != 0", textAreaInput("system_note", "Notes", width = "100%", height = "40%")))
                                                              ),
                                                              fluidRow(
-                                                               column(12, actionButton("save_edit", "Save/Edit"), actionButton("clear", "Clear All Fields"), actionButton("redraw", "Re-Draw the Map"))
+                                                               column(12, actionButton("save_edit", "Save/Edit"), actionButton("clear", "Clear All Fields"), actionButton("redraw", "Re-Draw Map"))
                                                              )
                                                          ),
                                                          h4(textOutput("sys_stat_table_name")),

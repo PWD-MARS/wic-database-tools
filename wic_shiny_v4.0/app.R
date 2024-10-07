@@ -410,8 +410,8 @@ server <- function(input, output, session) {
   output$map <- renderLeaflet({
     # creating basemap here 
     map <- leaflet() %>%
-      addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(maxZoom = 20)) %>%
-      addProviderTiles(providers$Esri.WorldTopoMap, group = 'Esri.WorldTopoMap', options = providerTileOptions(maxZoom = 20)) %>%
+      addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(maxZoom = 19)) %>%
+      addProviderTiles(providers$Esri.WorldTopoMap, group = 'Esri.WorldTopoMap', options = providerTileOptions(maxZoom = 19)) %>%
       addProviderTiles(providers$Esri.WorldImagery, group='Esri.WorldImagery', options = providerTileOptions(maxZoom = 19)) %>%
       addPolygons(data = wic_sys_geom_buffered, color = "#00ffbf", label = paste("System ID: ", wic_sys_geom_buffered$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Buffer (100ft)") %>%
       addPolygons(data = wic_smp_geom, color = "#000000", label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "System", layerId = ~system_id) %>%
@@ -680,8 +680,8 @@ server <- function(input, output, session) {
     output$map <- renderLeaflet({
       # creating basemap here 
       map <- leaflet() %>%
-        addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(maxZoom = 20)) %>%
-        addProviderTiles(providers$Esri.WorldTopoMap, group = 'Esri.WorldTopoMap', options = providerTileOptions(maxZoom = 20)) %>%
+        addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(maxZoom = 19)) %>%
+        addProviderTiles(providers$Esri.WorldTopoMap, group = 'Esri.WorldTopoMap', options = providerTileOptions(maxZoom = 19)) %>%
         addProviderTiles(providers$Esri.WorldImagery, group='Esri.WorldImagery', options = providerTileOptions(maxZoom = 19)) %>%
         addPolygons(data = wic_sys_geom_buffered, color = "#00ffbf", label = paste("System ID: ", wic_sys_geom_buffered$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Buffer (100ft)") %>%
         addPolygons(data = wic_smp_geom, color = "#000000", label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "System", layerId = ~system_id) %>%

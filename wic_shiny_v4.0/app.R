@@ -78,6 +78,7 @@ wic_sys_geom <- wic_smp_geom %>%
   summarise(system_geom = st_combine(smp_geom)) %>%
   st_as_sf() %>%
   st_transform(crs = 2272)
+
 # creating a buffer spatial layer for mapping. This is to show intersection of buffer and wics.
 wic_sys_geom_buffered <- st_buffer(wic_sys_geom, 100) %>%
   st_transform(crs = 4326)
@@ -89,9 +90,6 @@ gauge_sys <- dbGetQuery(mars_con, "select distinct admin.fun_smp_to_system(smp_i
 #Deployment History
 # Get deployment table
 deployments_list <- dbGetQuery(mars_con, "SELECT distinct admin.fun_smp_to_system(smp_id) as system_id FROM fieldwork.viw_deployment_full_cwl") 
-# Find the immediate event_startdate smaller than complaint_date
-#immediate_event <- event_startdate[event_startdate < complaint_date] %>%
-# max(na.rm = TRUE)
 
 ## 0.4 Loading UI selection options ---- 
 # System ids

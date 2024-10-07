@@ -677,17 +677,21 @@ server <- function(input, output, session) {
   # Re-Draw map
   observeEvent(input$redraw, {
     # re-creating basemap here 
-    map <- leaflet() %>%
-      addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(maxZoom = 20)) %>%
-      addProviderTiles(providers$Esri.WorldTopoMap, group = 'Esri.WorldTopoMap', options = providerTileOptions(maxZoom = 20)) %>%
-      addProviderTiles(providers$Esri.WorldImagery, group='Esri.WorldImagery', options = providerTileOptions(maxZoom = 19)) %>%
-      addPolygons(data = wic_sys_geom_buffered, color = "#00ffbf", label = paste("System ID: ", wic_sys_geom_buffered$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Buffer (100ft)") %>%
-      addPolygons(data = wic_smp_geom, color = "#000000", label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "System", layerId = ~system_id) %>%
-      addPolygons(data = wic_property_geom, color = "red", label = paste("Address: ", wic_property_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line") %>%
-      addPolygons(data = wic_footprint_geom, color = "purple", label = paste("Address", wic_footprint_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
-      addLayersControl(overlayGroups = c("System","Buffer (100ft)","Property Line", "Footprint"), baseGroups = c("OpenStreetMap", "Esri.WorldTopoMap", "Esri.WorldImagery")) %>%
-      hideGroup(c("Footprint", "Buffer (100ft)")) %>%
-      setView(lng = -75.1652 , lat = 39.9526  , zoom = 11) # zoom in philly
+    output$map <- renderLeaflet({
+      # creating basemap here 
+      map <- leaflet() %>%
+        addProviderTiles(providers$OpenStreetMap, group = 'OpenStreetMap', options = providerTileOptions(maxZoom = 20)) %>%
+        addProviderTiles(providers$Esri.WorldTopoMap, group = 'Esri.WorldTopoMap', options = providerTileOptions(maxZoom = 20)) %>%
+        addProviderTiles(providers$Esri.WorldImagery, group='Esri.WorldImagery', options = providerTileOptions(maxZoom = 19)) %>%
+        addPolygons(data = wic_sys_geom_buffered, color = "#00ffbf", label = paste("System ID: ", wic_sys_geom_buffered$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Buffer (100ft)") %>%
+        addPolygons(data = wic_smp_geom, color = "#000000", label = paste("System ID: ", wic_smp_geom$system_id), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "System", layerId = ~system_id) %>%
+        addPolygons(data = wic_property_geom, color = "red", label = paste("Address: ", wic_property_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Property Line") %>%
+        addPolygons(data = wic_footprint_geom, color = "purple", label = paste("Address", wic_footprint_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
+        addLayersControl(overlayGroups = c("System","Buffer (100ft)","Property Line", "Footprint"), baseGroups = c("OpenStreetMap", "Esri.WorldTopoMap", "Esri.WorldImagery")) %>%
+        hideGroup(c("Footprint", "Buffer (100ft)")) %>%
+        setView(lng = -75.1652 , lat = 39.9526  , zoom = 11) # zoom in philly
+      
+    })
     
     # Calculate the bounds of the system polygon the view is set
     selected_system_geom <- wic_smp_geom %>%

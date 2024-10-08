@@ -306,6 +306,7 @@ server <- function(input, output, session) {
                 htmltools::div(style = "padding: 1rem",
                                reactable(sys_nested_notes, 
                                          theme = darkly(),
+                                         list(`MARS Comments on the System:`= colDef(html = TRUE, style = list(color = "#F5DEB3", fontweight = "bold"))),
                                          outlined = TRUE)
                 )
               }
@@ -516,6 +517,7 @@ server <- function(input, output, session) {
                   select(`MARS Comments on the System:` = notes)
                 htmltools::div(style = "padding: 1rem",
                                reactable(sys_stat_nested_notes, 
+                                         list(`MARS Comments on the System:`= colDef(html = TRUE, style = list(color = "#F5DEB3", fontweight = "bold"))),
                                          theme = darkly(),
                                          outlined = TRUE)
                 )
@@ -570,8 +572,8 @@ server <- function(input, output, session) {
                   select(`Comment ID` = comment_id, `Cityworks Comments on the Workorder:` = comment)
                 htmltools::div(style = "padding: 1rem",
                                reactable(cw_wic_nested_notes,
-                                         list(`Comment ID` = colDef(width = 100),
-                                              `Cityworks Comments on the Workorder:` = colDef(html = TRUE)),
+                                         list(`Comment ID` = colDef(width = 100, style = list(color = "#F5DEB3", fontweight = "bold")),
+                                              `Cityworks Comments on the Workorder:` = colDef(html = TRUE, style = list(color = "#F5DEB3", fontweight = "bold"))),
                                          theme = darkly(),
                                          outlined = TRUE)
                 )

@@ -214,7 +214,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                        h5("7.	Systems are now clickable in the map, updating the adjacent tables with system data"),
                                                        h5("8.	All WICs are now shown in the map"),
                                                        h5("9.	The app now pulls the spatial polygons directly from MARS DB with addition of POSTGIS extention"),
-                                                       h3('WIC App v.3.0.0, 11/02/2023:'),
+                                                       h4('WIC App v.3.0.0, 11/02/2023:'),
                                                        h5("1.	Added “Eligible for Monitoring” column to the WIC app to show if the system is in the unmonitored smp app list"),
                                                        h5("2.  The adjacent GSI systems have been incorporated  into the map as “All SMP” layer that can be shown through the top right menu of the map (default: hidden)"),
                                                        h5("3.	Comment section became an arrow (nested table) that expands if the user clicks"),

@@ -126,7 +126,7 @@ status_choice <- wic_system_status_lookup %>%
 # Define UI
 ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme = shinytheme("cyborg"),
                                        ## 1.1 Tab "WIC Status" ----
-                                       tabPanel("WIC Status", value = "status", 
+                                       tabPanel("System WIC Status", value = "status", 
                                                 sidebarLayout(
                                                   sidebarPanel(
                                                     selectInput("system_id", "System ID", choices = c("All", system_id_all), selected = "All"),

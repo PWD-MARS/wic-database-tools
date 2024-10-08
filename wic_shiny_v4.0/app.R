@@ -563,7 +563,10 @@ server <- function(input, output, session) {
                 Phase = colDef(width = 130)),
               details = function(index) {
                 cw_wic_nested_notes <- wic_comments[wic_comments$workorder_id == rv$wo_stat()$workorder_id[index], ] %>%
-                  arrange(desc(comment_id)) %>%
+                  arrange(desc(comment_id))
+                # Highlight "rain" in red, considering case and word boundaries
+                cw_wic_nested_notes$comment <- gsub("\\b(rain|raining|rains|rained|storm|storms|storming|gsi|smp)\\b", "<span style='background-color: red; color: white;'>\\1</span>", cw_wic_nested_notes$comment, ignore.case = TRUE)
+                cw_wic_nested_notes <- cw_wic_nested_notes %>%
                   select(`Comment ID` = comment_id, `Cityworks Comments on the Workorder:` = comment)
                 htmltools::div(style = "padding: 1rem",
                                reactable(cw_wic_nested_notes,

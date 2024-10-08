@@ -567,7 +567,8 @@ server <- function(input, output, session) {
                   select(`Comment ID` = comment_id, `Cityworks Comments on the Workorder:` = comment)
                 htmltools::div(style = "padding: 1rem",
                                reactable(cw_wic_nested_notes,
-                                         list(`Comment ID` = colDef(width = 100)),
+                                         list(`Comment ID` = colDef(width = 100),
+                                              `Cityworks Comments on the Workorder:` = colDef(html = TRUE)),
                                          theme = darkly(),
                                          outlined = TRUE)
                 )

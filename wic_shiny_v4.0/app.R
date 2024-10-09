@@ -192,9 +192,9 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                                column(12, actionButton("save_edit", "Save/Edit"), actionButton("clear", "Clear All Fields"), actionButton("redraw", "Re-Draw Map"))
                                                              )
                                                          ),
-                                                         h4(textOutput("sys_stat_table_name")),
+                                                         h4(style = "color: deepskyblue;", textOutput("sys_stat_table_name")),
                                                          reactableOutput("sys_stat_table"),
-                                                         h4(textOutput("wo_stat_table_name")),
+                                                         h4(style = "color: deepskyblue;", textOutput("wo_stat_table_name")),
                                                          reactableOutput("wo_stat_table")
                                                   ),
                                                   column(5, leafletOutput("map", width = "100%", height = "1000"))
@@ -393,8 +393,8 @@ server <- function(input, output, session) {
   )
  
  # 2.6 WIC Investigation Server Side ----
-  output$sys_stat_table_name <- renderText(paste("System ", input$system_id_edit, " Status and Notes:"))
-  output$wo_stat_table_name <- renderText(paste("System ", input$system_id_edit, " WIC Details:"))
+  output$sys_stat_table_name <- renderText(paste("Status and Notes for System: ", input$system_id_edit))
+  output$wo_stat_table_name <- renderText(paste( "WIC Details for System: ", input$system_id_edit))
 
   # ### 2.6.1 Mapping ----
   output$map <- renderLeaflet({

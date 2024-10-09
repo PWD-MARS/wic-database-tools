@@ -411,6 +411,15 @@ server <- function(input, output, session) {
       addPolygons(data = wic_footprint_geom, color = "purple", label = paste("Address", wic_footprint_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
       addLayersControl(overlayGroups = c("System","Buffer (100ft)","Property Line", "Footprint"), baseGroups = c("OpenStreetMap", "Esri.WorldTopoMap", "Esri.WorldImagery")) %>%
       hideGroup(c("Footprint", "Buffer (100ft)")) %>%
+      addLegend(colors = c("#000000","#00ffbf","red","purple"), 
+                labels = c("System","Buffer Area (100ft)" , "WIC Property Line","WIC Building Footprint")) %>%
+      addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
+                     polygonOptions = FALSE,
+                     circleOptions=FALSE,
+                     rectangleOptions=FALSE,
+                     markerOptions=FALSE,
+                     circleMarkerOptions= FALSE,
+                     editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions())) %>%
       setView(lng = -75.1652 , lat = 39.9526  , zoom = 11) # zoom in philly
     
   })
@@ -677,6 +686,15 @@ server <- function(input, output, session) {
         addPolygons(data = wic_footprint_geom, color = "purple", label = paste("Address", wic_footprint_geom$address), labelOptions = labelOptions(style = list("font-weight" = "bold", "font-size" = "14px")), group = "Footprint") %>%
         addLayersControl(overlayGroups = c("System","Buffer (100ft)","Property Line", "Footprint"), baseGroups = c("OpenStreetMap", "Esri.WorldTopoMap", "Esri.WorldImagery")) %>%
         hideGroup(c("Footprint", "Buffer (100ft)")) %>%
+        addLegend(colors = c("#000000","#00ffbf","red","purple"), 
+                  labels = c("System","Buffer Area (100ft)" , "WIC Property Line","WIC Building Footprint")) %>%
+        addDrawToolbar(polylineOptions = drawPolylineOptions(metric = FALSE, feet = TRUE),
+                       polygonOptions = FALSE,
+                       circleOptions=FALSE,
+                       rectangleOptions=FALSE,
+                       markerOptions=FALSE,
+                       circleMarkerOptions= FALSE,
+                       editOptions=editToolbarOptions(selectedPathOptions=selectedPathOptions())) %>%
         setView(lng = -75.1652 , lat = 39.9526  , zoom = 11) # zoom in philly
       
     })

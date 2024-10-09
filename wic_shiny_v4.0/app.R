@@ -644,7 +644,6 @@ server <- function(input, output, session) {
                           actionButton("confirm_clear_pcs", "Yes")))
   })
   
-  ## 2.6.5 Re-draw Map ----
   observeEvent(input$confirm_clear_pcs, {
     
     reset("sys_stat_table")
@@ -660,7 +659,7 @@ server <- function(input, output, session) {
     removeModal()
   })
   
-  # Re-Draw map
+  ## 2.6.5 Re-draw Map ----
   observeEvent(input$redraw, {
     # re-creating basemap here 
     output$map <- renderLeaflet({

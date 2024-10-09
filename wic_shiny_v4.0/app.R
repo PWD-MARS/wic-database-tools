@@ -581,11 +581,10 @@ server <- function(input, output, session) {
                 cw_wic_nested_notes$comment <- gsub("\\b(rain|rainfall|rainy|raining|rains|rained|storm|storms|storming|gsi|smp)\\b", "<span style='background-color: red; color: white;'>\\1</span>", cw_wic_nested_notes$comment, ignore.case = TRUE)
                 cw_wic_nested_notes <- cw_wic_nested_notes %>%
                   arrange(desc(comment_id)) %>%
-                  select(`Comment ID` = comment_id, `Cityworks Comments on the Workorder:` = comment)
+                  select(`Cityworks Comments on the Workorder:` = comment)
                 htmltools::div(style = "padding: 1rem",
                                reactable(cw_wic_nested_notes,
-                                         list(`Comment ID` = colDef(width = 100, style = list(color = "#F5DEB3", fontweight = "bold")),
-                                              `Cityworks Comments on the Workorder:` = colDef(html = TRUE, style = list(color = "#F5DEB3", fontweight = "bold"))),
+                                         list(`Cityworks Comments on the Workorder:` = colDef(html = TRUE, style = list(color = "#F5DEB3", fontweight = "bold"))),
                                          theme = darkly(),
                                          outlined = TRUE)
                 )

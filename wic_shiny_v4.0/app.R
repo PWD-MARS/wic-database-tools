@@ -204,7 +204,8 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                        ## 1.3 Tab "Documentation" ----
                                        tabPanel("Documentation", value = "document", 
                                                 titlePanel(tags$p("Release Notes by ", 
-                                                                  tags$a(href = "mailto:farshad.ebrahimi@phila.gov", "Farshad Ebrahimi"))),                                                column(4,
+                                                                  tags$a(href = "mailto:farshad.ebrahimi@phila.gov", "Farshad Ebrahimi"))),                                               
+                                                column(4,
                                                        h4(style = "color: deepskyblue;", 'WIC App v.4.0.0, 10/01/2024:'),
                                                        h5("1. The app was reorganized to show system status (E.g., Need 2nd Opinion) and be filterable by sidebar"),
                                                        h5("2. A landing page showing all WICs and system status was added"),

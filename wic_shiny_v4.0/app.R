@@ -395,7 +395,7 @@ server <- function(input, output, session) {
   )
  
  # 2.6 WIC Investigation Server Side ----
-  output$sys_stat_table_name <- renderText(paste("Status and Notes for System: ", input$system_id_edit))
+  output$sys_stat_table_name <- renderText(paste("Status & Notes for System: ", input$system_id_edit))
   output$wo_stat_table_name <- renderText(paste( "WIC Details for System: ", input$system_id_edit))
 
   # ### 2.6.1 Mapping ----

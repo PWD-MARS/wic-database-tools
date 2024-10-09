@@ -299,8 +299,8 @@ server <- function(input, output, session) {
               columns = list(
                 `System ID` = colDef(width = 100),
                 `Workorder ID` = colDef(width = 120),
-                `Dist. Property (ft)` = colDef(width = 140),
-                `Dist. Footprint (ft)` = colDef(width = 140),
+                `Dist. Property (ft)` = colDef(width = 140, style = list(textAlign = "center")),
+                `Dist. Footprint (ft)` = colDef(width = 140, style = list(textAlign = "center")),
                  Phase = colDef(width = 150)),
               details = function(index) {
                 sys_nested_notes <- rv$wic_system_status()[rv$wic_system_status()$system_id == rv$wic_table_filter()$system_id[index], ] %>%
@@ -550,7 +550,7 @@ server <- function(input, output, session) {
 
   output$wo_stat_table <- renderReactable(
     reactable(rv$wo_stat() %>%
-                select(`WO ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist.Prop (ft)` = property_dist_ft, `Dist.Ftp (ft)` = footprint_dist_ft, `Recent Rain Start Date` = immediate_event, `Days from Rain`= days_from_rain, `WIC Status` = status),
+                select(`WO ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist.Prop (ft)` = property_dist_ft, `Dist.Ftp (ft)` = footprint_dist_ft, `Rain Date` = immediate_event, `Days from`= days_from_rain, `WIC Status` = status),
               theme = darkly(),
               defaultPageSize = 15,
               fullWidth = TRUE,
@@ -562,8 +562,9 @@ server <- function(input, output, session) {
                 `WO ID` = colDef(width = 70),
                 Address = colDef(width = 190),
                 `WIC Date` = colDef(width = 100),
-                `Dist.Prop (ft)` = colDef(width = 100),
-                `Dist.Ftp (ft)` = colDef(width = 100),
+                `Dist.Prop (ft)` = colDef(width = 100, style = list(textAlign = "center")),
+                `Dist.Ftp (ft)` = colDef(width = 100, style = list(textAlign = "center")),
+                `Days from` = colDef(style = list(textAlign = "center")),
                 Phase = colDef(width = 130)),
               details = function(index) {
                 cw_wic_nested_notes <- wic_comments[wic_comments$workorder_id == rv$wo_stat()$workorder_id[index], ] 

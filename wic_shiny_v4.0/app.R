@@ -506,7 +506,7 @@ server <- function(input, output, session) {
   
   output$sys_stat_table <- renderReactable(
     reactable(rv$sys_stat() %>%
-                select(`System ID` = system_id, `System Status` = status, `Previously Monitored?` = monitored, `Gauge Id` = gage_uid),
+                select(`System ID` = system_id, `Previously Monitored?` = monitored, `Gauge Id` = gage_uid, `System Status` = status),
               theme = darkly(),
               defaultPageSize = 1,
               fullWidth = TRUE,

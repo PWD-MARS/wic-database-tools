@@ -146,7 +146,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                     width = 3
                                                   ),
                                                   mainPanel(
-                                                    strong(span(textOutput("table_name"), style = "font-size:22px")),
+                                                    strong(span(textOutput("table_name"), style = "color: deepskyblue; font-size:22px")),
                                                     tags$head(
                                                       # Add custom CSS to change the header background color
                                                       tags$style(HTML("
@@ -192,10 +192,11 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                                column(12, actionButton("save_edit", "Save/Edit"), actionButton("clear", "Clear All Fields"), actionButton("redraw", "Re-Draw Map"))
                                                              )
                                                          ),
-                                                         h4(style = "color: deepskyblue;", textOutput("sys_stat_table_name")),
+                                                         strong(span(textOutput("sys_stat_table_name"), style = "color: deepskyblue; font-size:22px")),
                                                          reactableOutput("sys_stat_table"),
-                                                         h4(style = "color: deepskyblue;", textOutput("wo_stat_table_name")),
+                                                         strong(span(textOutput("wo_stat_table_name"), style = "color: deepskyblue; font-size:22px")),
                                                          reactableOutput("wo_stat_table")
+                                                        
                                                   ),
                                                   column(5, leafletOutput("map", width = "100%", height = "1000"))
                                                 )

@@ -548,7 +548,7 @@ server <- function(input, output, session) {
 
   output$wo_stat_table <- renderReactable(
     reactable(rv$wo_stat() %>%
-                select(`WO ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist.Prop (ft)` = property_dist_ft, `Dist.Ftp (ft)` = footprint_dist_ft, `WIC Status` = status, `Recent Rain Start Date` = immediate_event, `Days from Rain`= days_from_rain),
+                select(`WO ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist.Prop (ft)` = property_dist_ft, `Dist.Ftp (ft)` = footprint_dist_ft, `Recent Rain Start Date` = immediate_event, `Days from Rain`= days_from_rain, `WIC Status` = status),
               theme = darkly(),
               defaultPageSize = 15,
               fullWidth = TRUE,
@@ -566,7 +566,7 @@ server <- function(input, output, session) {
               details = function(index) {
                 cw_wic_nested_notes <- wic_comments[wic_comments$workorder_id == rv$wo_stat()$workorder_id[index], ] 
                 # Highlight "rain" in red, considering case and word boundaries
-                cw_wic_nested_notes$comment <- gsub("\\b(rain|rainy|raining|rains|rained|storm|storms|storming|gsi|smp)\\b", "<span style='background-color: red; color: white;'>\\1</span>", cw_wic_nested_notes$comment, ignore.case = TRUE)
+                cw_wic_nested_notes$comment <- gsub("\\b(rain|rainfall|rainy|raining|rains|rained|storm|storms|storming|gsi|smp)\\b", "<span style='background-color: red; color: white;'>\\1</span>", cw_wic_nested_notes$comment, ignore.case = TRUE)
                 cw_wic_nested_notes <- cw_wic_nested_notes %>%
                   arrange(desc(comment_id)) %>%
                   select(`Comment ID` = comment_id, `Cityworks Comments on the Workorder:` = comment)

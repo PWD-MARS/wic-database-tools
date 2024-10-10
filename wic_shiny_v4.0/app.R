@@ -126,15 +126,15 @@ status_choice <- wic_system_status_lookup %>%
 # Define UI
 ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme = shinytheme("cyborg"),
                                        ## 1.1 Tab "WIC Status" ----
-                                       tabPanel("System WIC Status", value = "status", 
+                                       tabPanel("System WIC Status", value = "status",
                                                 sidebarLayout(
                                                   sidebarPanel(
                                                     selectInput("system_id", "System ID", choices = c("All", system_id_all), selected = "All"),
                                                     selectInput("date_range", "Date Range", choices = c("To-Date", "Fiscal Quarter")),
-                                                    conditionalPanel(condition = "input.date_range == 'Fiscal Quarter'", 
+                                                    conditionalPanel(condition = "input.date_range == 'Fiscal Quarter'",
                                                                      fluidRow(column(12,
                                                                                      selectInput("f_q", "Fiscal Quarter", choices = q_list, selected = "FY24Q2")))
-                                                    ), 
+                                                    ),
                                                     selectInput("status", "System Status", choices = c("All", status_choice) , selected = "All"),
                                                     sliderInput("prop_dist",
                                                                 "Property Distance (ft):",
@@ -155,9 +155,9 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                                           color: black; /* Text color */
                                                                         }
                                                                       "))),
-                                                                                                              
+
                                                     reactableOutput("wic_table"), width = 9
-                                                    
+
                                                   )
                                                 )
                                        ),
@@ -196,15 +196,15 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                          reactableOutput("sys_stat_table"),
                                                          strong(span(textOutput("wo_stat_table_name"), style = "color: deepskyblue; font-size:22px")),
                                                          reactableOutput("wo_stat_table")
-                                                        
+
                                                   ),
                                                   column(5, leafletOutput("map", width = "100%", height = "1000"))
                                                 )
                                        ),
                                        ## 1.3 Tab "Documentation" ----
-                                       tabPanel("Documentation", value = "document", 
-                                                titlePanel(tags$p("Release Notes by ", 
-                                                                  tags$a(href = "mailto:farshad.ebrahimi@phila.gov", "Farshad Ebrahimi"))),                                               
+                                       tabPanel("Documentation", value = "document",
+                                                titlePanel(tags$p("Release Notes by ",
+                                                                  tags$a(href = "mailto:farshad.ebrahimi@phila.gov", "Farshad Ebrahimi"))),
                                                 column(4,
                                                        h4(style = "color: deepskyblue;", 'WIC App v.4.0.0, 10/01/2024:'),
                                                        h5("1. The app was reorganized to show system status (E.g., Need 2nd Opinion) and be filterable by sidebar"),
@@ -225,7 +225,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                        h5("6.	Clicking on the table rows should highlight the map polygon in yellow"),
                                                        h5("7.	At %100 browser zoom level, all components of the app (totalizer, map, and table) are reasonably visible and there is not a need to scroll to see things. "),
                                                        h5("8.	Totalizer and versioning comments are now under a new tab (“Totalizer”)."))
-                                               
+                                                
                                        )
 )
 )

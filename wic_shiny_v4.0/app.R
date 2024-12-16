@@ -122,6 +122,14 @@ status_choice <- wic_system_status_lookup %>%
   distinct() %>%
   pull
 
+# life cycle status
+lifecycle_status <- dbGetQuery(mars_con,"select distinct system_id, lifecycle_status from external.viw_assets_smp_lifecycle_status")
+
+
+# cipit status
+systembdv <- dbGetQuery(mars_con,"select distinct system_id, sys_dataphase, cipit_status from external.tbl_systembdv")
+
+
 # 1.0 Define UI ----
 # Define UI
 ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme = shinytheme("cyborg"),
@@ -509,13 +517,15 @@ server <- function(input, output, session) {
                             filter(system_id == input$system_id_edit) %>%
                             left_join(rv$wic_system_status(), by = "system_id") %>%
                             left_join(gauge_sys, by = "system_id") %>%
+                            left_join(systembdv, by = "system_id") %>%
+                            left_join(lifecycle_status, by = "system_id") %>%
                             mutate(monitored = ifelse(system_id %in% deployments_list$system_id, "Yes", "No")) %>%
-                            select(system_id, status, notes, monitored, gage_uid) %>%
+                            select(system_id, status, notes, monitored, gage_uid, sys_dataphase, cipit_status, lifecycle_status) %>%
                             distinct())
   
   output$sys_stat_table <- renderReactable(
     reactable(rv$sys_stat() %>%
-                select(`System ID` = system_id, `Previously Monitored?` = monitored, `Gauge Id` = gage_uid, `System Status` = status),
+                select(`System ID` = system_id, `Previously Monitored?` = monitored, `System Status` = status, `Data Phase` = sys_dataphase, `CIPIT Status` = cipit_status, `Lifecycle Status`= lifecycle_status, `Gauge Id` = gage_uid),
               theme = darkly(),
               defaultPageSize = 1,
               fullWidth = TRUE,
@@ -523,6 +533,8 @@ server <- function(input, output, session) {
               onClick = "select",
               selectionId = "sys_stat_selected",
               searchable = FALSE,
+              columns = list(
+                `Previously Monitored?` = colDef(width = 200)),
               details = function(index) {
                 sys_stat_nested_notes <- rv$wic_system_status()[rv$wic_system_status()$system_id == rv$sys_stat()$system_id[index], ] %>%
                   select(`MARS Comments on the System:` = notes)

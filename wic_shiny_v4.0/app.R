@@ -149,7 +149,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme 
                                                                 min = 0,
                                                                 max = 100,
                                                                 value = 25),
-                                                    checkboxInput("single_wic", "Only Show Most Recent WIC per System ID", value = TRUE, width = NULL),
+                                                    checkboxInput("single_wic", "Only Show Most Recent WIC per System ID", value = FALSE, width = NULL),
                                                     downloadButton("download_table", "Download"), actionButton("clear_main", "Clear All Fields"),
                                                     width = 3
                                                   ),

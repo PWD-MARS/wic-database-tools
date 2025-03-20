@@ -132,7 +132,7 @@ systembdv <- dbGetQuery(mars_con,"select distinct system_id, sys_dataphase, cipi
 
 # 1.0 Define UI ----
 # Define UI
-ui <- tagList(useShinyjs(), navbarPage("WIC App v4.0", id = "TabPanelID", theme = shinytheme("cyborg"),
+ui <- tagList(useShinyjs(), navbarPage("WIC App", id = "TabPanelID", theme = shinytheme("cyborg"),
                                        ## 1.1 Tab "WIC Status" ----
                                        tabPanel("System WIC Status", value = "status",
                                                 sidebarLayout(

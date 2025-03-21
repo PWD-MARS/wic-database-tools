@@ -13,6 +13,7 @@ library(shinyWidgets)
 library(shinythemes)
 library(reactable)
 library(reactablefmtr)
+library(shinycssloaders)
 # Connection
 library(DBI)
 library(odbc)
@@ -210,7 +211,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App", id = "TabPanelID", theme = shi
                                                          reactableOutput("wo_stat_table")
 
                                                   ),
-                                                  column(5, leafletOutput("map", width = "100%", height = "1000"))
+                                                  column(5, leafletOutput("map", width = "100%", height = "1000") %>% withSpinner(color="#0dc5c1"))
                                                 )
                                        ),
                                        ## 1.3 Tab "Documentation" ----

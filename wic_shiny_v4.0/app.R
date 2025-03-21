@@ -208,7 +208,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App", id = "TabPanelID", theme = shi
                                                          strong(span(textOutput("sys_stat_table_name"), style = "color: deepskyblue; font-size:22px")),
                                                          reactableOutput("sys_stat_table") %>% withSpinner(color="#0dc5c1"),
                                                          strong(span(textOutput("wo_stat_table_name"), style = "color: deepskyblue; font-size:22px")),
-                                                         reactableOutput("wo_stat_table") %>% withSpinner(color="#0dc5c1")
+                                                         reactableOutput("wo_stat_table")
 
                                                   ),
                                                   column(5, leafletOutput("map", width = "100%", height = "1000") %>% withSpinner(color="#0dc5c1"))

@@ -181,7 +181,11 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App", id = "TabPanelID", theme = shi
                                                       background-color: #3c3c3c; /* Slightly lighter header */
                                                       color: white; /* Header text color */
                                                     }
-                                                  "))
+                                                    #system_note {
+                                                      color: black !important;  /* Ensures text color is black */
+                                                      font-weight: bold !important;  /* Makes the text bold */
+                                                    }
+                                                                                                    "))
                                                                                      ),
                                        tabPanel("WIC Investigation", value = "wic_insight",
                                                 fluidRow(
@@ -194,7 +198,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App", id = "TabPanelID", theme = shi
                                                                column(3, selectInput("check_woid", "Work Order Status", choices = c("", "Checked", "Unchecked"), selected = ""))
                                                              ),
                                                              fluidRow(
-                                                               column(12, conditionalPanel("input.sys_stat_selected != 0", textAreaInput("system_note", "Notes", width = "100%", height = "40%")))
+                                                               column(12, conditionalPanel("input.sys_stat_selected != 0", textAreaInput("system_note", "Notes", width = "100%", height = 100)))
                                                              ),
                                                              fluidRow(
                                                                column(12, actionButton("save_edit", "Save/Edit"), actionButton("clear", "Clear All Fields"), actionButton("redraw", "Re-Draw Map"))

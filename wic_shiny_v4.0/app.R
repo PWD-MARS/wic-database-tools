@@ -165,7 +165,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App", id = "TabPanelID", theme = shi
                                                                         }
                                                                       "))),
 
-                                                    reactableOutput("wic_table"), width = 9
+                                                    reactableOutput("wic_table") %>% withSpinner(color="#0dc5c1"), width = 9
 
                                                   )
                                                 )

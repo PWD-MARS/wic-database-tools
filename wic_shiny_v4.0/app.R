@@ -377,7 +377,7 @@ server <- function(input, output, session) {
   observeEvent(rv$row_wic_table(), {
     if (!is.null(rv$row_wic_table())) {
       updateTabsetPanel(session, "TabPanelID", selected = "wic_insight")
-      updateSelectInput(session, "system_id_edit", selected = rv$wic_table_filter()$system_id[rv$row_wic_table()])
+      delay(300, updateSelectInput(session, "system_id_edit", selected = rv$wic_table_filter()$system_id[rv$row_wic_table()]))
      
     }
     

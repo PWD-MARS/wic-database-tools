@@ -84,7 +84,7 @@ wic_sys_geom_buffered <- st_buffer(wic_sys_geom, 100) %>%
   st_transform(crs = 4326)
 
 # gauge data
-gauge_event <- dbGetQuery(mars_con, "SELECT distinct tbl_gage_event.gage_uid, tbl_gage_event.eventdatastart_edt::date AS event_startdate FROM data.tbl_gage_event where tbl_gage_event.eventdataend_edt > '2010-01-01'")
+gauge_event <- dbGetQuery(mars_con, "SELECT distinct tbl_gage_event.gage_uid, tbl_gage_event.eventdatastart_local::date AS event_startdate FROM data.tbl_gage_event where tbl_gage_event.eventdataend_local > '2010-01-01'")
 gauge_sys <- dbGetQuery(mars_con, "select distinct admin.fun_smp_to_system(smp_id) as system_id, gage_uid from admin.tbl_smp_gage where smp_id like '%-%-%'")
 
 # Deployment History

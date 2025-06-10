@@ -1,0 +1,12 @@
+name: dtime-wic_shiny_v4
+title: dtime-wic_shiny_v4
+username: Jonathan.Bryant
+account: Jonathan.Bryant
+server: pwdrstudio.phila.gov
+hostUrl: https://pwdrstudio.phila.gov/__api__
+appId: 511
+bundleId: 3281
+url: https://pwdrstudio.phila.gov/content/818f9065-503e-4fd9-af91-fc10cf4c209a/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

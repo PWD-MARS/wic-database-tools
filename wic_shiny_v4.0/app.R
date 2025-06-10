@@ -35,7 +35,7 @@ library(data.table)
 mars_con <- dbConnect(RPostgres::Postgres(),
   host = "PWDMARSDBS1.pwd.phila.local",
   port = 5434,
-  dbname = "sandbox_dtime",
+  dbname = "mars_prod",
   user = Sys.getenv("shiny_uid"),
   password = Sys.getenv("shiny_pwd")
 )

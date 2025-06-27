@@ -50,13 +50,13 @@ special_char_replace <- function(note) {
 ## 0.3 Loading required tables  ----
 # Get wic tables
 # WICS
-wic_sys <- dbGetQuery(mars_con, "SELECT *, data.fun_date_to_fiscal_quarter(date) as quarter FROM fieldwork.viw_wics_100ft")
+wic_sys <- dbGetQuery(mars_con, "SELECT *, data.fun_date_to_fiscal_quarter(date) as quarter FROM fieldwork.viw_wics_100ft_dev")
 # WICs Comments
 wic_comments <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.tbl_wic_comment")
 
 # Look up tables for status record keeping
 wic_system_status_lookup <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.tbl_wic_system_status_lookup")
-wic_wo_status_lookup <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.tbl_wic_wo_status_lookup")
+wic_wo_status_lookup <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.tbl_wic_wo_status_lookup_dev")
 
 # WIC Polygons- crs global 4326 for leaflet mapping
 wic_property_geom <- st_read(dsn = mars_con, Id(schema = "fieldwork", table = "tbl_wic_propertyline_geom")) %>%
@@ -116,6 +116,12 @@ q_list <- fq_lookup %>%
   select(fiscal_quarter) %>%
   pull()
 
+wic_conphase_lookup <- dbGetQuery(mars_con, "SELECT * FROM fieldwork.tbl_wic_conphase")
+conphase_list <- wic_conphase_lookup %>%
+  select(phase) %>%
+  pull()
+  
+
 # WIC system Status list
 status_choice <- wic_system_status_lookup %>%
   select(status) %>%
@@ -125,10 +131,11 @@ status_choice <- wic_system_status_lookup %>%
 # life cycle status
 lifecycle_status <- dbGetQuery(mars_con, "select distinct system_id, lifecycle_status from external.viw_assets_smp_lifecycle_status")
 
-
 # cipit status
 systembdv <- dbGetQuery(mars_con, "select distinct system_id, sys_dataphase, cipit_status from external.tbl_systembdv")
 
+# active deployments
+active_deployments <- dbGetQuery(mars_con, "SELECT *, cast(deployment_dtime AS DATE) as deployment_dtime_cast, admin.fun_smp_to_system(smp_id) as system_id FROM fieldwork.viw_deployment_full where collection_dtime is NULL")
 
 # 1.0 Define UI ----
 # Define UI
@@ -149,6 +156,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App",
           ))
         ),
         selectInput("status", "System Status", choices = c("All", status_choice), selected = "All"),
+        selectInput("conphase", "Construction Phase", choices = c("All", conphase_list), selected = "All"),
         sliderInput("prop_dist",
           "Property Distance (ft):",
           min = 0,
@@ -204,7 +212,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App",
             column(3, selectizeInput("system_id_edit", "System ID", choices = c("", system_id_all), selected = "")),
             column(3, selectizeInput("workorder_edit", "Work Order ID", choices = c("", wo_id_all), selected = "")),
             column(3, selectInput("edit_status", "System Status", choices = c("", status_choice), selected = "")),
-            column(3, selectInput("check_woid", "Work Order Status", choices = c("", "Checked", "Unchecked"), selected = ""))
+            column(3, selectInput("check_woid", "Work Order Status", choices = c("", "Issue", "Non-issue"), selected = ""))
           ),
           fluidRow(
             column(12, conditionalPanel("input.sys_stat_selected != 0", textAreaInput("system_note", "Notes", width = "100%", height = 100)))
@@ -215,6 +223,8 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App",
         ),
         strong(span(textOutput("sys_stat_table_name"), style = "color: deepskyblue; font-size:22px")),
         reactableOutput("sys_stat_table") %>% withSpinner(color = "#0dc5c1"),
+        strong(span(textOutput("active_deployment_table_name"), style = "color: deepskyblue; font-size:22px")),
+        reactableOutput("active_deployment_table") %>% withSpinner(color = "#0dc5c1"),
         strong(span(textOutput("wo_stat_table_name"), style = "color: deepskyblue; font-size:22px")),
         reactableOutput("wo_stat_table")
       ),
@@ -277,9 +287,6 @@ server <- function(input, output, session) {
                                               INNER JOIN fieldwork.tbl_wic_system_status_lookup
                                               USING(wic_system_status_lookup_uid)"))
 
-  rv$wic_wo_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.tbl_wic_wo_status 
-                                              INNER JOIN fieldwork.tbl_wic_wo_status_lookup
-                                              USING(wic_wo_status_lookup_uid)"))
   # filtering table to show most recent wo-id per system
   all_wo <- wic_sys %>%
     select(wic_system_uid) %>%
@@ -293,6 +300,7 @@ server <- function(input, output, session) {
   # reactive filters
   rv$date_filter <- reactive(ifelse(input$date_range == "To-Date", return(q_list), return(input$f_q)))
   rv$sys_filter <- reactive(ifelse(input$system_id == "All", return(system_id_all), return(input$system_id)))
+  rv$conphase_filter <- reactive(ifelse(input$conphase == "All", return(conphase_list), return(input$conphase)))
   rv$status_filter <- reactive(ifelse(input$status == "All", return(status_choice), return(input$status)))
   rv$recent_wic_filter <- reactive(ifelse(input$single_wic, return(single_wo), return(all_wo)))
 
@@ -304,6 +312,7 @@ server <- function(input, output, session) {
       quarter %in% rv$date_filter() &
       system_id %in% rv$sys_filter() &
       status %in% rv$status_filter() &
+      phase %in% rv$conphase_filter() &
       property_dist_ft <= input$prop_dist))
 
   ## 2.3 Output wic_table for Tab "WIC Status"----
@@ -414,13 +423,14 @@ server <- function(input, output, session) {
       updateReactable("sys_stat_table", selected = NA)
       reset("edit_status")
       reset("system_note")
-      updateSelectInput(session, "check_woid", selected = rv$wo_stat()$status[rv$row_wo_stat_table()])
+      updateSelectInput(session, "check_woid", selected = rv$wo_stat()$wo_status[rv$row_wo_stat_table()])
       updateSelectInput(session, "workorder_edit", selected = rv$wo_stat()$workorder_id[rv$row_wo_stat_table()])
     }
   })
 
   # 2.6 WIC Investigation Server Side ----
   output$sys_stat_table_name <- renderText(paste("Status & Notes for System: ", input$system_id_edit))
+  output$active_deployment_table_name <- renderText(paste("Active Deployments for System: ", input$system_id_edit))
   output$wo_stat_table_name <- renderText(paste("WIC Details for System: ", input$system_id_edit))
 
   # ### 2.6.1 Mapping ----
@@ -575,15 +585,27 @@ server <- function(input, output, session) {
       }
     )
   )
+  
+  # active deployments
+  output$active_deployment_table <- renderReactable(
+    reactable(
+      active_deployments %>%
+        dplyr::filter(system_id == input$system_id_edit) %>%
+        select(`SMP ID` = smp_id,  `Deployment Date` = deployment_dtime_cast, `Collection Date`= collection_dtime, `Location` = ow_suffix, Type = type, Term = term) %>%
+        dplyr::distinct(),
+      theme = darkly(),
+      fullWidth = TRUE,
+      searchable = FALSE
+    )
+  )
 
   # wo_stat table filtered
   rv$wo_stat <- reactive({
     wo_tbl <- wic_sys %>%
       filter(system_id == input$system_id_edit) %>%
-      left_join(rv$wic_wo_status(), by = "workorder_id") %>%
       mutate(immediate_event = as.Date(NA)) %>%
       mutate(days_from_rain = as.numeric(NA)) %>%
-      select(workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft, status, immediate_event, days_from_rain) %>%
+      select(wic_system_uid, workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft, wo_status, immediate_event, days_from_rain) %>%
       distinct()
     # determine the immediate rain event
     if (nrow(wo_tbl) > 0) {
@@ -600,7 +622,7 @@ server <- function(input, output, session) {
   output$wo_stat_table <- renderReactable(
     reactable(
       rv$wo_stat() %>%
-        select(`WO ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist.Prop (ft)` = property_dist_ft, `Dist.Ftp (ft)` = footprint_dist_ft, `Rain Date` = immediate_event, `Days from` = days_from_rain, `WIC Status` = status),
+        select(`WO ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist.Prop (ft)` = property_dist_ft, `Dist.Ftp (ft)` = footprint_dist_ft, `Rain Date` = immediate_event, `Days from` = days_from_rain, `WIC Status` = wo_status),
       theme = darkly(),
       defaultPageSize = 15,
       fullWidth = TRUE,
@@ -634,8 +656,10 @@ server <- function(input, output, session) {
         )
       },
       rowStyle = function(index) {
-        if (rv$wo_stat()$status[index] == "Checked") {
+        if (rv$wo_stat()$wo_status[index] == "Non-issue") {
           list(backgroundColor = "darkgreen") # Light green background for checked status
+        } else if (rv$wo_stat()$wo_status[index] == "Issue") {
+          list(backgroundColor = "red") # Light green background for checked status
         } else {
           NULL # No additional style for other statuses
         }
@@ -669,17 +693,37 @@ server <- function(input, output, session) {
       reset("system_note")
     } else if (!is.null(rv$row_wo_stat_table())) {
       rv$wo_stat_uid <- reactive(wic_wo_status_lookup %>%
-        filter(status == input$check_woid) %>%
+        filter(wo_status == input$check_woid) %>%
         select(wic_wo_status_lookup_uid) %>%
         pull())
 
-      rv$update_wo_status_q <- reactive(paste("Update fieldwork.tbl_wic_wo_status SET wic_wo_status_lookup_uid = ", ifelse(length(rv$wo_stat_uid()) == 0, 2, rv$wo_stat_uid()), " where workorder_id = ", input$workorder_edit, sep = ""))
+      rv$update_wo_status_q <- reactive(paste("Update fieldwork.tbl_wic_system SET wic_wo_status_lookup_uid = ", ifelse(length(rv$wo_stat_uid()) == 0, 3, rv$wo_stat_uid()), " where wic_system_uid = ", rv$wo_stat()$wic_system_uid[rv$row_wo_stat_table()], sep = ""))
       dbGetQuery(mars_con, rv$update_wo_status_q())
-
-      # refresh data and reset tables
-      rv$wic_wo_status <- reactive(dbGetQuery(mars_con, "SELECT * FROM fieldwork.tbl_wic_wo_status 
-                                              INNER JOIN fieldwork.tbl_wic_wo_status_lookup
-                                              USING(wic_wo_status_lookup_uid)"))
+      
+      
+      # Rerun to refresh the tables
+      wic_sys <- dbGetQuery(mars_con, "SELECT *, data.fun_date_to_fiscal_quarter(date) as quarter FROM fieldwork.viw_wics_100ft_dev")
+      
+      # wo_stat table filtered
+      rv$wo_stat <- reactive({
+        wo_tbl <- wic_sys %>%
+          filter(system_id == input$system_id_edit) %>%
+          mutate(immediate_event = as.Date(NA)) %>%
+          mutate(days_from_rain = as.numeric(NA)) %>%
+          select(wic_system_uid, workorder_id, wic_address, date, phase, property_dist_ft, footprint_dist_ft, wo_status, immediate_event, days_from_rain) %>%
+          distinct()
+        # determine the immediate rain event
+        if (nrow(wo_tbl) > 0) {
+          for (i in 1:nrow(wo_tbl)) {
+            wo_tbl[i, "immediate_event"] <- max(rv$sys_rains()$event_startdate[rv$sys_rains()$event_startdate < wo_tbl$date[i]], na.rm = TRUE)
+          }
+          wo_tbl <- wo_tbl %>%
+            mutate(days_from_rain = data.table::fifelse((date - immediate_event) == Inf | (date - immediate_event) == -Inf, NA, date - immediate_event)) %>% # If there is no gauge id assigned to a system, return NA for date of rain
+            mutate(immediate_event = data.table::fifelse(immediate_event == Inf | immediate_event == -Inf, NA, immediate_event))
+        }
+        return(wo_tbl)
+      })
+      
       reset("sys_stat_table")
       reset("wo_stat_table")
       reset("wic_table")

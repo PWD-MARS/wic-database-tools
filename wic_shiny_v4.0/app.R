@@ -137,6 +137,11 @@ systembdv <- dbGetQuery(mars_con, "select distinct system_id, sys_dataphase, cip
 # active deployments
 active_deployments <- dbGetQuery(mars_con, "SELECT *, cast(deployment_dtime AS DATE) as deployment_dtime_cast, admin.fun_smp_to_system(smp_id) as system_id FROM fieldwork.viw_deployment_full where collection_dtime is NULL")
 
+# latest exec successful
+last_update <- dbGetQuery(mars_con, "SELECT max(date) as date FROM log.tbl_script_wic where note = 'Execution successful.'") %>%
+  dplyr::pull() %>%
+  as.Date()
+
 # 1.0 Define UI ----
 # Define UI
 ui <- tagList(useShinyjs(), navbarPage("WIC App",
@@ -169,6 +174,7 @@ ui <- tagList(useShinyjs(), navbarPage("WIC App",
       ),
       mainPanel(
         strong(span(textOutput("table_name"), style = "color: deepskyblue; font-size:22px")),
+        span(paste("WIC Data Last Updated on: ", last_update), style = "color: deepskyblue; font-size:18px"),
         tags$head(
           # Add custom CSS to change the header background color
           tags$style(HTML("

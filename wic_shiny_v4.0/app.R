@@ -630,7 +630,7 @@ server <- function(input, output, session) {
       rv$wo_stat() %>%
         select(`WO ID` = workorder_id, `Address` = wic_address, `WIC Date` = date, Phase = phase, `Dist.Prop (ft)` = property_dist_ft, `Dist.Ftp (ft)` = footprint_dist_ft, `Rain Date` = immediate_event, `Days from` = days_from_rain, `WIC Status` = wo_status),
       theme = darkly(),
-      defaultPageSize = 15,
+      defaultPageSize = 10,
       fullWidth = TRUE,
       selection = "single",
       onClick = "select",
